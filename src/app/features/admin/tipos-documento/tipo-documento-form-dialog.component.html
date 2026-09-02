@@ -1,0 +1,65 @@
+<h2 mat-dialog-title>{{ editando ? 'Editar tipo de documento' : 'Nuevo tipo de documento' }}</h2>
+<mat-dialog-content class="form-dialogo">
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Nombre</mat-label>
+    <input matInput [(ngModel)]="nombre" name="nombre" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Descripción</mat-label>
+    <textarea matInput [(ngModel)]="descripcion" name="descripcion" rows="2"></textarea>
+  </mat-form-field>
+
+  @if (editando) {
+    <mat-slide-toggle [(ngModel)]="activo" name="activo">Activo</mat-slide-toggle>
+  }
+
+  <mat-divider />
+  <h3>Campos propios de este tipo de documento</h3>
+  <p class="form-dialogo__ayuda">Además de los campos fijos (proveedor, valor, fecha, número de referencia).</p>
+
+  @for (campo of campos; track $index) {
+    <div class="campo-fila">
+      <mat-form-field appearance="outline" class="campo-fila__nombre">
+        <mat-label>Clave</mat-label>
+        <input matInput [(ngModel)]="campo.nombre" [name]="'campoNombre' + $index" placeholder="centroCosto" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="campo-fila__etiqueta">
+        <mat-label>Etiqueta visible</mat-label>
+        <input matInput [(ngModel)]="campo.etiqueta" [name]="'campoEtiqueta' + $index" placeholder="Centro de costo" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="campo-fila__tipo">
+        <mat-label>Tipo</mat-label>
+        <mat-select [(ngModel)]="campo.tipoCampo" [name]="'campoTipo' + $index">
+          @for (tipoCampo of tiposCampo; track tipoCampo) {
+            <mat-option [value]="tipoCampo">{{ tipoCampo }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (campo.tipoCampo === 'Seleccion') {
+        <mat-form-field appearance="outline" class="campo-fila__opciones">
+          <mat-label>Opciones (separadas por coma)</mat-label>
+          <input matInput [(ngModel)]="campo.opcionesTexto" [name]="'campoOpciones' + $index" />
+        </mat-form-field>
+      }
+
+      <mat-checkbox [(ngModel)]="campo.requerido" [name]="'campoRequerido' + $index">Requerido</mat-checkbox>
+
+      <button mat-icon-button color="warn" type="button" (click)="quitarCampo($index)" aria-label="Quitar campo">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  }
+
+  <button mat-stroked-button type="button" (click)="agregarCampo()">
+    <mat-icon>add</mat-icon>
+    Agregar campo
+  </button>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="guardar()">Guardar</button>
+</mat-dialog-actions>

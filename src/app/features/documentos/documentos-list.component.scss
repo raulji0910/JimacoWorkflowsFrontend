@@ -1,0 +1,39 @@
+.documentos {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  &__vacio {
+    padding: 1.5rem;
+    text-align: center;
+    opacity: 0.6;
+  }
+
+  &__paso {
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+
+  &__chip {
+    &--enproceso {
+      background: #fff3cd;
+    }
+    &--devuelto {
+      background: #ffe0b2;
+    }
+    &--completado {
+      background: #c8e6c9;
+    }
+    &--rechazado {
+      background: #ffcdd2;
+    }
+  }
+}
+
+.tabla-responsiva {
+  width: 100%;
+}

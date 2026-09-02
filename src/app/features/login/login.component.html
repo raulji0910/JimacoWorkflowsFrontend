@@ -1,0 +1,47 @@
+<div class="login">
+  <mat-card class="login__tarjeta">
+    <h1 class="login__titulo">Jimaco Aprobaciones</h1>
+    <p class="login__subtitulo">Flujos de aprobación de documentos</p>
+
+    <mat-card-content>
+      <form class="login__form" (ngSubmit)="ingresar()">
+        <mat-form-field appearance="outline" class="login__campo">
+          <mat-label>Correo</mat-label>
+          <input id="email" matInput type="email" [(ngModel)]="email" name="email" required autocomplete="username" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="login__campo">
+          <mat-label>Contraseña</mat-label>
+          <input
+            id="password"
+            matInput
+            [type]="mostrarPassword() ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
+            required
+            autocomplete="current-password"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="mostrarPassword.set(!mostrarPassword())"
+            [attr.aria-label]="'Mostrar contraseña'"
+          >
+            <mat-icon>{{ mostrarPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </mat-form-field>
+
+        @if (error()) {
+          <p class="login__error">{{ error() }}</p>
+        }
+
+        <button mat-flat-button color="primary" type="submit" class="login__boton" [disabled]="cargando()">
+          {{ cargando() ? 'Ingresando...' : 'Ingresar' }}
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <span class="login__version">v{{ version }}</span>
+</div>

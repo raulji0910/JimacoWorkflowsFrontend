@@ -1,0 +1,65 @@
+<h2 mat-dialog-title>Nuevo flujo</h2>
+<mat-dialog-content class="form-dialogo">
+  <p class="form-dialogo__ayuda">
+    Al guardar, este flujo queda Activo y reemplaza al que estaba activo para este tipo de documento (si había uno).
+  </p>
+
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Nombre del flujo</mat-label>
+    <input matInput [(ngModel)]="nombre" name="nombre" placeholder="Flujo OC" required />
+  </mat-form-field>
+
+  <mat-divider />
+  <h3>Pasos (en orden)</h3>
+
+  @for (paso of pasos; track $index) {
+    <div class="paso-fila">
+      <div class="paso-fila__fila">
+        <strong>Paso {{ $index + 1 }}</strong>
+        <button mat-icon-button color="warn" type="button" (click)="quitarPaso($index)" aria-label="Quitar paso">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+
+      <mat-form-field appearance="outline" class="form-dialogo__campo">
+        <mat-label>Nombre del paso</mat-label>
+        <input matInput [(ngModel)]="paso.nombre" [name]="'pasoNombre' + $index" placeholder="Aprobación comercial" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="form-dialogo__campo">
+        <mat-label>Roles habilitados para actuar</mat-label>
+        <mat-select [(ngModel)]="paso.rolesIds" [name]="'pasoRoles' + $index" multiple>
+          @for (rol of data.roles; track rol.id) {
+            <mat-option [value]="rol.id">{{ rol.nombre }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="paso-fila__fila">
+        <mat-checkbox [(ngModel)]="paso.permiteDevolver" [name]="'pasoDevolver' + $index">Permite devolver</mat-checkbox>
+        <mat-checkbox [(ngModel)]="paso.permiteRechazar" [name]="'pasoRechazar' + $index">Permite rechazar</mat-checkbox>
+      </div>
+
+      @if (paso.permiteDevolver) {
+        <mat-form-field appearance="outline" class="form-dialogo__campo">
+          <mat-label>Al devolver, vuelve a</mat-label>
+          <mat-select [(ngModel)]="paso.pasoDestinoDevolucionOrden" [name]="'pasoDestino' + $index">
+            <mat-option [value]="0">El emisor (reingresa por el paso 1)</mat-option>
+            @for (orden of ordenesDisponibles($index); track orden) {
+              <mat-option [value]="orden">Paso {{ orden }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+    </div>
+  }
+
+  <button mat-stroked-button type="button" (click)="agregarPaso()">
+    <mat-icon>add</mat-icon>
+    Agregar paso
+  </button>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="guardar()">Guardar y activar</button>
+</mat-dialog-actions>

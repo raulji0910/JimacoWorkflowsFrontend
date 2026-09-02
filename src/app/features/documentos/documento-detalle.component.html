@@ -1,0 +1,93 @@
+@if (cargando()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (documento(); as d) {
+  <div class="detalle">
+    <button mat-button (click)="volver()">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+
+    <mat-card class="detalle__card">
+      <mat-card-header>
+        <mat-card-title>{{ d.tipoDocumentoNombre }} {{ d.numeroReferencia || '' }}</mat-card-title>
+        <mat-card-subtitle>Emitido por {{ d.creadoPorNombre }} — {{ d.fechaCreacion | date: 'd MMM y, HH:mm' }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="detalle__estado">
+          <mat-chip>{{ d.estado }}</mat-chip>
+          @if (d.pasoActualNombre) {
+            <span class="detalle__paso">Paso actual: {{ d.pasoActualNombre }}</span>
+          }
+        </div>
+
+        <dl class="detalle__campos">
+          @if (d.proveedor) {
+            <div><dt>Proveedor</dt><dd>{{ d.proveedor }}</dd></div>
+          }
+          @if (d.valor != null) {
+            <div><dt>Valor</dt><dd>{{ d.valor | number: '1.0-0' }}</dd></div>
+          }
+          @if (d.fechaDocumento) {
+            <div><dt>Fecha del documento</dt><dd>{{ d.fechaDocumento | date: 'd MMM y' }}</dd></div>
+          }
+          @for (entry of datosEntries; track entry[0]) {
+            <div><dt>{{ entry[0] }}</dt><dd>{{ entry[1] }}</dd></div>
+          }
+        </dl>
+
+        <h3>Adjuntos</h3>
+        <mat-nav-list>
+          @for (adjunto of d.adjuntos; track adjunto.id) {
+            <a mat-list-item (click)="descargarAdjunto(adjunto.id, adjunto.nombreArchivo)">
+              <mat-icon matListItemIcon>attach_file</mat-icon>
+              <span matListItemTitle>{{ adjunto.nombreArchivo }}</span>
+            </a>
+          } @empty {
+            <p class="detalle__vacio">Sin adjuntos todavía.</p>
+          }
+        </mat-nav-list>
+
+        <input #inputArchivo type="file" hidden (change)="subirAdjunto($event)" />
+        <button mat-stroked-button [disabled]="procesando()" (click)="inputArchivo.click()">
+          <mat-icon>upload_file</mat-icon>
+          Adjuntar archivo
+        </button>
+
+        <h3>Historial</h3>
+        <mat-nav-list>
+          @for (item of d.historial; track item.id) {
+            <div class="detalle__historial-item">
+              <strong>{{ item.accion }}</strong>
+              <span> — {{ item.usuarioNombre }}</span>
+              @if (item.pasoNombre) {
+                <span> ({{ item.pasoNombre }})</span>
+              }
+              <span class="detalle__historial-fecha"> · {{ item.fecha | date: 'd MMM y, HH:mm' }}</span>
+              @if (item.comentario) {
+                <p class="detalle__historial-comentario">{{ item.comentario }}</p>
+              }
+            </div>
+          }
+        </mat-nav-list>
+      </mat-card-content>
+
+      <mat-card-actions>
+        @if (d.estado === 'EnProceso') {
+          <button mat-flat-button color="primary" [disabled]="procesando()" (click)="aprobar()">Aprobar</button>
+          @if (d.pasoActualPermiteDevolver) {
+            <button mat-stroked-button [disabled]="procesando()" (click)="devolver()">Devolver</button>
+          }
+          @if (d.pasoActualPermiteRechazar) {
+            <button mat-stroked-button color="warn" [disabled]="procesando()" (click)="rechazar()">Rechazar</button>
+          }
+        }
+        @if (d.estado === 'Devuelto') {
+          <button mat-flat-button color="primary" [disabled]="procesando()" (click)="reenviar()">Reenviar</button>
+        }
+      </mat-card-actions>
+    </mat-card>
+  </div>
+}

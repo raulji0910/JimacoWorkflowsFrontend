@@ -1,0 +1,41 @@
+<h2 mat-dialog-title>{{ editando ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+<mat-dialog-content class="form-dialogo">
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Nombre</mat-label>
+    <input matInput [(ngModel)]="nombre" name="nombre" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Correo</mat-label>
+    <input matInput type="email" [(ngModel)]="email" name="email" required [disabled]="editando" />
+  </mat-form-field>
+
+  @if (!editando) {
+    <mat-form-field appearance="outline" class="form-dialogo__campo">
+      <mat-label>Contraseña</mat-label>
+      <input matInput type="password" [(ngModel)]="password" name="password" required />
+    </mat-form-field>
+  }
+
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Teléfono (WhatsApp)</mat-label>
+    <input matInput [(ngModel)]="telefono" name="telefono" placeholder="+57 300 0000000" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Roles</mat-label>
+    <mat-select [(ngModel)]="rolesIds" name="roles" multiple>
+      @for (rol of data.roles; track rol.id) {
+        <mat-option [value]="rol.id">{{ rol.nombre }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (editando) {
+    <mat-slide-toggle [(ngModel)]="activo" name="activo">Activo</mat-slide-toggle>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="guardar()">Guardar</button>
+</mat-dialog-actions>

@@ -1,0 +1,55 @@
+<div class="admin-list">
+  <div class="admin-list__header">
+    <h2>Usuarios</h2>
+    <button mat-flat-button color="primary" (click)="abrirNuevo()">
+      <mat-icon>add</mat-icon>
+      Nuevo usuario
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  <table mat-table [dataSource]="usuarios()" class="tabla-responsiva">
+    <ng-container matColumnDef="nombre">
+      <th mat-header-cell *matHeaderCellDef>Nombre</th>
+      <td mat-cell *matCellDef="let u" data-label="Nombre">{{ u.nombre }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef>Correo</th>
+      <td mat-cell *matCellDef="let u" data-label="Correo">{{ u.email }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="roles">
+      <th mat-header-cell *matHeaderCellDef>Roles</th>
+      <td mat-cell *matCellDef="let u" data-label="Roles">
+        @for (rol of u.roles; track rol.id) {
+          <mat-chip>{{ rol.nombre }}</mat-chip>
+        }
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="estado">
+      <th mat-header-cell *matHeaderCellDef>Estado</th>
+      <td mat-cell *matCellDef="let u" data-label="Estado">{{ u.activo ? 'Activo' : 'Inactivo' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="acciones">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let u" data-label="">
+        <button mat-icon-button (click)="abrirEditar(u)">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+    <tr mat-row *matRowDef="let u; columns: columnas"></tr>
+
+    <tr class="admin-list__vacio-fila" *matNoDataRow>
+      <td [attr.colspan]="columnas.length" class="admin-list__vacio">No hay usuarios registrados.</td>
+    </tr>
+  </table>
+</div>

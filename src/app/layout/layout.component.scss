@@ -1,0 +1,50 @@
+.layout {
+  height: 100vh;
+
+  &__sidenav {
+    width: 15rem;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0;
+  }
+
+  &__logo {
+    padding: 1rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  &__divisor {
+    margin: 0.5rem 0;
+  }
+
+  &__version {
+    margin-top: auto;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    opacity: 0.6;
+  }
+
+  &__titulo {
+    margin-left: 0.5rem;
+  }
+
+  &__spacer {
+    flex: 1 1 auto;
+  }
+
+  &__usuario {
+    margin-right: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  &__contenido {
+    padding: 1.5rem;
+    max-width: 75rem;
+    margin: 0 auto;
+  }
+}
+
+.activo {
+  background: rgba(0, 0, 0, 0.06);
+}

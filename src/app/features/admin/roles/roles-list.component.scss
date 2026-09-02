@@ -1,0 +1,18 @@
+.admin-list {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  &__vacio {
+    padding: 1.5rem;
+    text-align: center;
+    opacity: 0.6;
+  }
+}
+
+.tabla-responsiva {
+  width: 100%;
+}

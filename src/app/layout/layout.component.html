@@ -1,0 +1,60 @@
+<mat-sidenav-container class="layout">
+  <mat-sidenav #sidenav [mode]="esMovil() ? 'over' : 'side'" [opened]="!esMovil()" class="layout__sidenav">
+    <div class="layout__logo">Jimaco Aprobaciones</div>
+
+    <mat-nav-list>
+      <a mat-list-item routerLink="/pendientes" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+        <mat-icon matListItemIcon>pending_actions</mat-icon>
+        <span matListItemTitle>Pendientes</span>
+      </a>
+      <a mat-list-item routerLink="/documentos/mios" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+        <mat-icon matListItemIcon>description</mat-icon>
+        <span matListItemTitle>Mis documentos</span>
+      </a>
+      <a mat-list-item routerLink="/documentos/nuevo" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+        <mat-icon matListItemIcon>add_circle</mat-icon>
+        <span matListItemTitle>Nuevo documento</span>
+      </a>
+
+      @if (esAdmin) {
+        <mat-divider class="layout__divisor" />
+        <a mat-list-item routerLink="/admin/roles" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>badge</mat-icon>
+          <span matListItemTitle>Roles</span>
+        </a>
+        <a mat-list-item routerLink="/admin/usuarios" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>group</mat-icon>
+          <span matListItemTitle>Usuarios</span>
+        </a>
+        <a mat-list-item routerLink="/admin/tipos-documento" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>article</mat-icon>
+          <span matListItemTitle>Tipos de documento</span>
+        </a>
+        <a mat-list-item routerLink="/admin/flujos" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>account_tree</mat-icon>
+          <span matListItemTitle>Flujos</span>
+        </a>
+      }
+    </mat-nav-list>
+
+    <span class="layout__version">v{{ version }}</span>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar color="primary" class="layout__toolbar">
+      <button mat-icon-button (click)="sidenav.toggle()" aria-label="Abrir menú">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="layout__titulo">Jimaco Aprobaciones</span>
+      <span class="layout__spacer"></span>
+      <span class="layout__usuario">{{ usuario()?.nombre }}</span>
+      <button mat-icon-button (click)="cerrarSesion()" aria-label="Cerrar sesión">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <main class="layout__contenido">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

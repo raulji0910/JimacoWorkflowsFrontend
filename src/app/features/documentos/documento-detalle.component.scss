@@ -1,0 +1,55 @@
+.detalle {
+  &__card {
+    margin-top: 0.5rem;
+  }
+
+  &__estado {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__paso {
+    opacity: 0.7;
+    font-size: 0.9rem;
+  }
+
+  &__campos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 0.75rem;
+    margin: 0 0 1.5rem;
+
+    dt {
+      font-size: 0.75rem;
+      opacity: 0.6;
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 500;
+    }
+  }
+
+  &__vacio {
+    opacity: 0.6;
+    padding: 0 1rem;
+  }
+
+  &__historial-item {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  &__historial-fecha {
+    opacity: 0.6;
+    font-size: 0.85rem;
+  }
+
+  &__historial-comentario {
+    margin: 0.25rem 0 0;
+    opacity: 0.8;
+    font-style: italic;
+  }
+}

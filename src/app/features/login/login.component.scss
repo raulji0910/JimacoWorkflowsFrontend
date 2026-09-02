@@ -1,0 +1,48 @@
+.login {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+
+  &__tarjeta {
+    width: 22rem;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  &__titulo {
+    margin: 0.5rem 0 0;
+  }
+
+  &__subtitulo {
+    opacity: 0.7;
+    margin-bottom: 1rem;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: left;
+  }
+
+  &__campo {
+    width: 100%;
+  }
+
+  &__error {
+    color: var(--mat-sys-error, #b3261e);
+    font-size: 0.85rem;
+  }
+
+  &__boton {
+    margin-top: 0.5rem;
+  }
+
+  &__version {
+    font-size: 0.75rem;
+    opacity: 0.5;
+  }
+}

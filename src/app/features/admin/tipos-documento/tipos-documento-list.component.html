@@ -1,0 +1,56 @@
+<div class="admin-list">
+  <div class="admin-list__header">
+    <h2>Tipos de documento</h2>
+    <button mat-flat-button color="primary" (click)="abrirNuevo()">
+      <mat-icon>add</mat-icon>
+      Nuevo tipo de documento
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  <table mat-table [dataSource]="tipos()" class="tabla-responsiva">
+    <ng-container matColumnDef="nombre">
+      <th mat-header-cell *matHeaderCellDef>Nombre</th>
+      <td mat-cell *matCellDef="let t" data-label="Nombre">{{ t.nombre }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="descripcion">
+      <th mat-header-cell *matHeaderCellDef>Descripción</th>
+      <td mat-cell *matCellDef="let t" data-label="Descripción">{{ t.descripcion || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="campos">
+      <th mat-header-cell *matHeaderCellDef>Campos propios</th>
+      <td mat-cell *matCellDef="let t" data-label="Campos propios">{{ t.campos.length }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="estado">
+      <th mat-header-cell *matHeaderCellDef>Estado</th>
+      <td mat-cell *matCellDef="let t" data-label="Estado">
+        <mat-chip>{{ t.activo ? 'Activo' : 'Inactivo' }}</mat-chip>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="acciones">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let t" data-label="">
+        <button mat-icon-button (click)="abrirEditar(t)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <a mat-icon-button [routerLink]="['/admin/flujos']" [queryParams]="{ tipoDocumentoId: t.id }" title="Ver flujo">
+          <mat-icon>account_tree</mat-icon>
+        </a>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+    <tr mat-row *matRowDef="let t; columns: columnas"></tr>
+
+    <tr class="admin-list__vacio-fila" *matNoDataRow>
+      <td [attr.colspan]="columnas.length" class="admin-list__vacio">No hay tipos de documento creados.</td>
+    </tr>
+  </table>
+</div>

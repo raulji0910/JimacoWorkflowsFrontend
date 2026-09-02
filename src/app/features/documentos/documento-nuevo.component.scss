@@ -1,0 +1,17 @@
+.nuevo {
+  max-width: 32rem;
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__campo {
+    width: 100%;
+  }
+
+  &__adjunto {
+    margin-bottom: 0.5rem;
+  }
+}

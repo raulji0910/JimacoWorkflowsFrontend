@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>{{ data.titulo }}</h2>
+<mat-dialog-content>
+  <p>{{ data.descripcion }}</p>
+  <mat-form-field appearance="outline" style="width: 100%">
+    <mat-label>Comentario{{ data.requerido ? '' : ' (opcional)' }}</mat-label>
+    <textarea matInput rows="3" [(ngModel)]="comentario" name="comentario"></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="confirmar()" [disabled]="data.requerido && !comentario.trim()">
+    {{ data.textoConfirmar }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,20 @@
+<h2 mat-dialog-title>{{ editando ? 'Editar rol' : 'Nuevo rol' }}</h2>
+<mat-dialog-content class="form-dialogo">
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Nombre</mat-label>
+    <input matInput [(ngModel)]="nombre" name="nombre" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Descripción</mat-label>
+    <textarea matInput [(ngModel)]="descripcion" name="descripcion" rows="2"></textarea>
+  </mat-form-field>
+
+  @if (editando) {
+    <mat-slide-toggle [(ngModel)]="activo" name="activo">Activo</mat-slide-toggle>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="guardar()" [disabled]="!nombre.trim()">Guardar</button>
+</mat-dialog-actions>

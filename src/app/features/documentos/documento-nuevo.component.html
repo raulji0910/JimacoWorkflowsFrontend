@@ -1,0 +1,76 @@
+<mat-card class="nuevo">
+  <mat-card-header>
+    <mat-card-title>Nuevo documento</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <form class="nuevo__form">
+      <mat-form-field appearance="outline" class="nuevo__campo">
+        <mat-label>Tipo de documento</mat-label>
+        <mat-select [(ngModel)]="tipoSeleccionadoId" name="tipoDocumento" (ngModelChange)="seleccionarTipo()">
+          @for (tipo of tipos(); track tipo.id) {
+            <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (tipoSeleccionado; as tipo) {
+        <mat-form-field appearance="outline" class="nuevo__campo">
+          <mat-label>Número de referencia</mat-label>
+          <input matInput [(ngModel)]="numeroReferencia" name="numeroReferencia" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="nuevo__campo">
+          <mat-label>Proveedor</mat-label>
+          <input matInput [(ngModel)]="proveedor" name="proveedor" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="nuevo__campo">
+          <mat-label>Valor</mat-label>
+          <input matInput type="number" [(ngModel)]="valor" name="valor" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="nuevo__campo">
+          <mat-label>Fecha del documento</mat-label>
+          <input matInput [matDatepicker]="picker" [(ngModel)]="fechaDocumento" name="fechaDocumento" />
+          <mat-datepicker-toggle matSuffix [for]="picker" />
+          <mat-datepicker #picker />
+        </mat-form-field>
+
+        @for (campo of tipo.campos; track campo.id) {
+          @if (campo.tipoCampo !== 'Adjunto') {
+            <mat-form-field appearance="outline" class="nuevo__campo">
+              <mat-label>{{ campo.etiqueta }}{{ campo.requerido ? ' *' : '' }}</mat-label>
+              @if (campo.tipoCampo === 'Seleccion') {
+                <mat-select [(ngModel)]="datos[campo.nombre]" [name]="campo.nombre">
+                  @for (opcion of campo.opciones; track opcion) {
+                    <mat-option [value]="opcion">{{ opcion }}</mat-option>
+                  }
+                </mat-select>
+              } @else {
+                <input
+                  matInput
+                  [type]="campo.tipoCampo === 'Numero' ? 'number' : campo.tipoCampo === 'Fecha' ? 'date' : 'text'"
+                  [(ngModel)]="datos[campo.nombre]"
+                  [name]="campo.nombre"
+                />
+              }
+            </mat-form-field>
+          }
+        }
+
+        <div class="nuevo__adjunto">
+          <input #inputArchivo type="file" hidden (change)="seleccionarArchivo($event)" />
+          <button mat-stroked-button type="button" (click)="inputArchivo.click()">
+            <mat-icon>upload_file</mat-icon>
+            {{ archivo ? archivo.name : 'Adjuntar PDF' }}
+          </button>
+        </div>
+
+        <button mat-flat-button color="primary" type="button" [disabled]="guardando()" (click)="guardar()">
+          {{ guardando() ? 'Creando...' : 'Crear documento' }}
+        </button>
+      }
+    </form>
+  </mat-card-content>
+</mat-card>
