@@ -44,13 +44,19 @@ body {
   flex-direction: column;
   gap: 0.25rem;
   min-width: 22rem;
-  // El primer campo suele ser un mat-form-field "outline" pegado al borde superior del
-  // contenido del diálogo — sin este espacio, su etiqueta flotante queda recortada por el
-  // overflow del mat-dialog-content (se ve la etiqueta "cortada" arriba de todo).
-  padding-top: 0.5rem;
 
   &__campo {
     width: 100%;
+  }
+
+  // El primer mat-form-field "outline" queda pegado al borde superior de
+  // mat-dialog-content (que tiene overflow-y: auto) — sin este margen, su etiqueta
+  // flotante sobresale ~7px por encima de ese borde y queda recortada (se ve "Nombre"
+  // cortado arriba). Iba como padding-top en el contenedor, pero Angular Material
+  // inyecta su propia regla de padding para .mat-mdc-dialog-content con la misma
+  // especificidad y gana por orden de carga — por eso el margen va en el campo mismo.
+  mat-form-field:first-of-type {
+    margin-top: 0.75rem;
   }
 }
 
