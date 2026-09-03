@@ -44,6 +44,10 @@ body {
   flex-direction: column;
   gap: 0.25rem;
   min-width: 22rem;
+  // El primer campo suele ser un mat-form-field "outline" pegado al borde superior del
+  // contenido del diálogo — sin este espacio, su etiqueta flotante queda recortada por el
+  // overflow del mat-dialog-content (se ve la etiqueta "cortada" arriba de todo).
+  padding-top: 0.5rem;
 
   &__campo {
     width: 100%;

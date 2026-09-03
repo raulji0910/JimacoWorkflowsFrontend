@@ -86,9 +86,10 @@ export class FlujosListComponent implements OnInit {
   abrirNuevoFlujo(): void {
     if (!this.tipoDocumentoId) return;
 
+    const flujoActivo = this.flujoActivo;
     const dialogRef = this.dialog.open(FlujoFormDialogComponent, {
-      width: '44rem',
-      data: { tipoDocumentoId: this.tipoDocumentoId, roles: this.roles() }
+      width: '46rem',
+      data: { tipoDocumentoId: this.tipoDocumentoId, roles: this.roles(), flujoActivo }
     });
 
     dialogRef.afterClosed().subscribe((resultado) => {
@@ -96,7 +97,7 @@ export class FlujosListComponent implements OnInit {
 
       this.flujoService.crear(resultado).subscribe({
         next: () => {
-          this.snackBar.open('Flujo creado y activado', 'Cerrar', { duration: 3000 });
+          this.snackBar.open(flujoActivo ? 'Flujo actualizado' : 'Flujo creado y activado', 'Cerrar', { duration: 3000 });
           this.cargar();
         },
         error: (error) => {

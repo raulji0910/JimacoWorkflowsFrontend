@@ -1,7 +1,12 @@
-<h2 mat-dialog-title>Nuevo flujo</h2>
+<h2 mat-dialog-title>{{ editando ? 'Editar flujo' : 'Nuevo flujo' }}</h2>
 <mat-dialog-content class="form-dialogo">
   <p class="form-dialogo__ayuda">
-    Al guardar, este flujo queda Activo y reemplaza al que estaba activo para este tipo de documento (si había uno).
+    @if (editando) {
+      Estos son los pasos del flujo activo — modificalos, agregá o quitá pasos según necesites. Al
+      guardar se crea una nueva versión activa (la anterior queda inactiva, pero no se borra).
+    } @else {
+      Al guardar, este flujo queda Activo para este tipo de documento.
+    }
   </p>
 
   <mat-form-field appearance="outline" class="form-dialogo__campo">
@@ -61,5 +66,5 @@
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>
-  <button mat-flat-button color="primary" (click)="guardar()">Guardar y activar</button>
+  <button mat-flat-button color="primary" (click)="guardar()">{{ editando ? 'Guardar cambios' : 'Guardar y activar' }}</button>
 </mat-dialog-actions>

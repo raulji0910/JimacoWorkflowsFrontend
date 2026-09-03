@@ -52,7 +52,7 @@ export class RolesListComponent implements OnInit {
   }
 
   private abrirDialogo(rol: Rol | null): void {
-    const dialogRef = this.dialog.open(RolFormDialogComponent, { width: '26rem', data: { rol } });
+    const dialogRef = this.dialog.open(RolFormDialogComponent, { width: '28rem', data: { rol } });
 
     dialogRef.afterClosed().subscribe((resultado) => {
       if (!resultado) return;

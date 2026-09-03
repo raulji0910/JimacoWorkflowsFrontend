@@ -56,7 +56,7 @@
   }
 
   <button mat-flat-button color="primary" [disabled]="!tipoDocumentoId" (click)="abrirNuevoFlujo()" style="margin-top: 1rem">
-    <mat-icon>add</mat-icon>
-    {{ flujoActivo ? 'Reemplazar flujo' : 'Crear flujo' }}
+    <mat-icon>{{ flujoActivo ? 'edit' : 'add' }}</mat-icon>
+    {{ flujoActivo ? 'Editar flujo' : 'Crear flujo' }}
   </button>
 </div>

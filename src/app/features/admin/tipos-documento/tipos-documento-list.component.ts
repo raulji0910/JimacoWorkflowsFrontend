@@ -53,7 +53,7 @@ export class TiposDocumentoListComponent implements OnInit {
   }
 
   private abrirDialogo(tipo: TipoDocumento | null): void {
-    const dialogRef = this.dialog.open(TipoDocumentoFormDialogComponent, { width: '38rem', data: { tipo } });
+    const dialogRef = this.dialog.open(TipoDocumentoFormDialogComponent, { width: '40rem', data: { tipo } });
 
     dialogRef.afterClosed().subscribe((resultado) => {
       if (!resultado) return;

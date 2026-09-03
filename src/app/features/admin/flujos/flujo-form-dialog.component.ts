@@ -8,12 +8,14 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { DefinicionFlujoCrear } from '../../../core/models/flujo.model';
+import { DefinicionFlujo, DefinicionFlujoCrear } from '../../../core/models/flujo.model';
 import { Rol } from '../../../core/models/rol.model';
 
 export interface FlujoFormDialogData {
   tipoDocumentoId: number;
   roles: Rol[];
+  /** Flujo activo actual, si hay uno — se usa para precargar los pasos y poder editarlos en vez de arrancar de cero. */
+  flujoActivo: DefinicionFlujo | null;
 }
 
 interface PasoEditable {
@@ -45,10 +47,26 @@ export class FlujoFormDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<FlujoFormDialogComponent>);
   readonly data = inject<FlujoFormDialogData>(MAT_DIALOG_DATA);
 
-  nombre = '';
-  pasos: PasoEditable[] = [
-    { nombre: '', permiteDevolver: true, permiteRechazar: false, pasoDestinoDevolucionOrden: 0, rolesIds: [] }
-  ];
+  readonly editando = this.data.flujoActivo !== null;
+
+  nombre = this.data.flujoActivo?.nombre ?? '';
+  pasos: PasoEditable[] = this.data.flujoActivo
+    ? this.mapearPasosExistentes(this.data.flujoActivo)
+    : [{ nombre: '', permiteDevolver: true, permiteRechazar: false, pasoDestinoDevolucionOrden: 0, rolesIds: [] }];
+
+  private mapearPasosExistentes(flujo: DefinicionFlujo): PasoEditable[] {
+    const ordenPorId = new Map(flujo.pasos.map((p) => [p.id, p.orden]));
+    return flujo.pasos
+      .slice()
+      .sort((a, b) => a.orden - b.orden)
+      .map((p) => ({
+        nombre: p.nombre,
+        permiteDevolver: p.permiteDevolver,
+        permiteRechazar: p.permiteRechazar,
+        pasoDestinoDevolucionOrden: p.pasoDestinoDevolucionId ? (ordenPorId.get(p.pasoDestinoDevolucionId) ?? 0) : 0,
+        rolesIds: [...p.rolesIds]
+      }));
+  }
 
   agregarPaso(): void {
     this.pasos.push({ nombre: '', permiteDevolver: true, permiteRechazar: false, pasoDestinoDevolucionOrden: 0, rolesIds: [] });

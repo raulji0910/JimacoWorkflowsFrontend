@@ -58,7 +58,7 @@ export class UsuariosListComponent implements OnInit {
 
   private abrirDialogo(usuario: Usuario | null): void {
     const dialogRef = this.dialog.open(UsuarioFormDialogComponent, {
-      width: '28rem',
+      width: '30rem',
       data: { usuario, roles: this.roles() }
     });
 
