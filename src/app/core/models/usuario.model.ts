@@ -19,6 +19,7 @@ export interface UsuarioCrear {
 
 export interface UsuarioActualizar {
   nombre: string;
+  email: string;
   telefono: string | null;
   activo: boolean;
   rolesIds: number[];

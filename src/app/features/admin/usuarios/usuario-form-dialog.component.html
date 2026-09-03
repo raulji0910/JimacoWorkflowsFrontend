@@ -7,8 +7,11 @@
 
   <mat-form-field appearance="outline" class="form-dialogo__campo">
     <mat-label>Correo</mat-label>
-    <input matInput type="email" [(ngModel)]="email" name="email" required [disabled]="editando" />
+    <input matInput type="email" [(ngModel)]="email" name="email" required />
   </mat-form-field>
+  @if (editando) {
+    <p class="form-dialogo__ayuda">Si lo cambiás, esta persona debe usar el correo nuevo para ingresar al sistema.</p>
+  }
 
   @if (!editando) {
     <mat-form-field appearance="outline" class="form-dialogo__campo">

@@ -42,11 +42,12 @@ export class UsuarioFormDialogComponent {
   rolesIds: number[] = this.data.usuario?.roles.map((r) => r.id) ?? [];
 
   guardar(): void {
-    if (!this.nombre.trim() || (!this.editando && (!this.email.trim() || !this.password))) return;
+    if (!this.nombre.trim() || !this.email.trim() || (!this.editando && !this.password)) return;
 
     if (this.editando) {
       const dto: UsuarioActualizar = {
         nombre: this.nombre,
+        email: this.email,
         telefono: this.telefono || null,
         activo: this.activo,
         rolesIds: this.rolesIds
