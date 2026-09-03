@@ -86,6 +86,26 @@ npm test                           # ng test (vitest)
 Compose port (offset from Jimaco Cotizaciones' 8080, see that repo's `docker-compose.yml`
 comment). `environment.production.ts` uses `/api` (same-origin, nginx proxies it — see `nginx.conf`).
 
+## Non-obvious gotchas
+
+- **Angular Material dialog CSS: don't fight `.mat-mdc-dialog-content`'s own padding with a
+  same-specificity global class.** `.form-dialogo` (this app's shared dialog-content class) tried
+  `padding-top` to give the first `mat-form-field`'s floating label room above the content's
+  `overflow-y: auto` boundary — it silently did nothing, because Material injects its own
+  `.mat-mdc-dialog-content` rule (same specificity, single class) later in the cascade, so it wins
+  regardless of source order in `styles.scss`. Confirmed by inspecting real computed styles
+  (`getComputedStyle` on the live DOM), not by guessing from a screenshot — `contentPaddingTop`
+  measured `0px` even with the rule present. The fix that actually works: `margin-top` on
+  `.form-dialogo mat-form-field:first-of-type` — a margin on *your own* child element doesn't
+  compete with Material's rule on the parent. If a future dialog still shows a clipped label,
+  check computed styles before adding more CSS — a plausible-looking fix can be a complete no-op.
+- **Visually verifying a CSS fix needs a real browser, not just re-reading the CSS.** This
+  machine has Edge and Chrome installed; `playwright-core` (no browser binary download) launched
+  with `channel: 'msedge'` drives either one headless — no need for Playwright's own downloaded
+  Chromium. Useful recipe for confirming any visual bug fix in this repo: launch, log in, open the
+  dialog/page in question, `getBoundingClientRect()` the elements involved (not just a screenshot —
+  the numbers tell you *why*, a screenshot only tells you *that*), then screenshot to confirm.
+
 ## Production deployment — NOT set up yet
 
 No server assigned. See the backend repo's `CLAUDE.md` "Production deployment" section — same
