@@ -45,4 +45,10 @@ export class DocumentoService {
   descargarAdjunto(adjuntoId: number): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/adjuntos/${adjuntoId}`, { responseType: 'blob' });
   }
+
+  // Mismo motivo que descargarAdjunto — el PDF también exige JWT, así que se trae como blob y se
+  // arma un object URL en el componente en vez de apuntar un <iframe>/<a> directo a la API.
+  obtenerPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${id}/pdf`, { responseType: 'blob' });
+  }
 }

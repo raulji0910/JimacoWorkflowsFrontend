@@ -1,5 +1,5 @@
 .nuevo {
-  max-width: 32rem;
+  max-width: 44rem;
 
   &__form {
     display: flex;
@@ -13,5 +13,20 @@
 
   &__adjunto {
     margin-bottom: 0.5rem;
+  }
+
+  &__renglon-total {
+    align-self: center;
+    font-weight: 500;
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__totales {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1.5rem;
+    padding: 0.5rem 0 1rem;
+    font-variant-numeric: tabular-nums;
   }
 }

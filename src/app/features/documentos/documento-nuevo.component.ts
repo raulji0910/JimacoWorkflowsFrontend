@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -12,12 +13,22 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TipoDocumentoService } from '../../core/services/tipo-documento.service';
 import { DocumentoService } from '../../core/services/documento.service';
 import { TipoDocumento } from '../../core/models/tipo-documento.model';
+import { RenglonInput } from '../../core/models/documento.model';
+
+interface RenglonEditable extends RenglonInput {
+  total: number;
+}
+
+function renglonVacio(): RenglonEditable {
+  return { codigo: '', descripcion: '', cantidad: 1, unidadMedida: 'Und.', valorUnitario: 0, porcentajeIva: 0.19, total: 0 };
+}
 
 @Component({
   selector: 'app-documento-nuevo',
   standalone: true,
   imports: [
     FormsModule,
+    DecimalPipe,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -42,12 +53,24 @@ export class DocumentoNuevoComponent implements OnInit {
 
   numeroReferencia = '';
   proveedor = '';
-  valor: number | null = null;
   fechaDocumento: Date | null = null;
   datos: Record<string, string> = {};
+  renglones: RenglonEditable[] = [renglonVacio()];
 
   get tipoSeleccionado(): TipoDocumento | null {
     return this.tipos().find((t) => t.id === this.tipoSeleccionadoId) ?? null;
+  }
+
+  get subtotal(): number {
+    return this.renglones.reduce((suma, r) => suma + r.cantidad * r.valorUnitario, 0);
+  }
+
+  get totalIva(): number {
+    return this.renglones.reduce((suma, r) => suma + r.cantidad * r.valorUnitario * r.porcentajeIva, 0);
+  }
+
+  get total(): number {
+    return this.subtotal + this.totalIva;
   }
 
   ngOnInit(): void {
@@ -56,6 +79,15 @@ export class DocumentoNuevoComponent implements OnInit {
 
   seleccionarTipo(): void {
     this.datos = {};
+  }
+
+  agregarRenglon(): void {
+    this.renglones.push(renglonVacio());
+  }
+
+  quitarRenglon(index: number): void {
+    this.renglones.splice(index, 1);
+    if (this.renglones.length === 0) this.agregarRenglon();
   }
 
   seleccionarArchivo(event: Event): void {
@@ -73,15 +105,22 @@ export class DocumentoNuevoComponent implements OnInit {
       return;
     }
 
+    const renglonesCompletos = this.renglones.filter((r) => r.descripcion.trim() && r.cantidad > 0);
+    if (renglonesCompletos.length === 0) {
+      this.snackBar.open('Agregá al menos un renglón con descripción y cantidad.', 'Cerrar', { duration: 4000 });
+      return;
+    }
+
     this.guardando.set(true);
     this.documentoService
       .crear({
         tipoDocumentoId: tipo.id,
         numeroReferencia: this.numeroReferencia || null,
         proveedor: this.proveedor || null,
-        valor: this.valor,
+        valor: null, // se calcula en el backend sumando los renglones
         fechaDocumento: this.fechaDocumento ? this.fechaDocumento.toISOString() : null,
-        datos: Object.keys(this.datos).length > 0 ? this.datos : null
+        datos: Object.keys(this.datos).length > 0 ? this.datos : null,
+        renglones: renglonesCompletos.map(({ total: _total, ...r }) => r)
       })
       .subscribe({
         next: (documento) => {

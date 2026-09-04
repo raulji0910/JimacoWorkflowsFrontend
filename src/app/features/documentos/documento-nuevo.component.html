@@ -26,11 +26,6 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="nuevo__campo">
-          <mat-label>Valor</mat-label>
-          <input matInput type="number" [(ngModel)]="valor" name="valor" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="nuevo__campo">
           <mat-label>Fecha del documento</mat-label>
           <input matInput [matDatepicker]="picker" [(ngModel)]="fechaDocumento" name="fechaDocumento" />
           <mat-datepicker-toggle matSuffix [for]="picker" />
@@ -58,6 +53,64 @@
             </mat-form-field>
           }
         }
+
+        <h3>Renglones</h3>
+        @for (renglon of renglones; track $index) {
+          <div class="paso-fila">
+            <div class="paso-fila__fila">
+              <strong>Ítem {{ $index + 1 }}</strong>
+              <button mat-icon-button color="warn" type="button" (click)="quitarRenglon($index)" aria-label="Quitar renglón">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <div class="paso-fila__fila">
+              <mat-form-field appearance="outline" style="flex: 0 0 8rem">
+                <mat-label>Código</mat-label>
+                <input matInput [(ngModel)]="renglon.codigo" [name]="'renglonCodigo' + $index" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" style="flex: 1 1 16rem">
+                <mat-label>Descripción</mat-label>
+                <input matInput [(ngModel)]="renglon.descripcion" [name]="'renglonDescripcion' + $index" required />
+              </mat-form-field>
+            </div>
+
+            <div class="paso-fila__fila">
+              <mat-form-field appearance="outline" style="flex: 0 0 6rem">
+                <mat-label>Cantidad</mat-label>
+                <input matInput type="number" [(ngModel)]="renglon.cantidad" [name]="'renglonCantidad' + $index" min="0" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" style="flex: 0 0 6rem">
+                <mat-label>U. Medida</mat-label>
+                <input matInput [(ngModel)]="renglon.unidadMedida" [name]="'renglonUnidad' + $index" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" style="flex: 0 0 8rem">
+                <mat-label>Valor unitario</mat-label>
+                <input matInput type="number" [(ngModel)]="renglon.valorUnitario" [name]="'renglonValor' + $index" min="0" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" style="flex: 0 0 6rem">
+                <mat-label>IVA</mat-label>
+                <mat-select [(ngModel)]="renglon.porcentajeIva" [name]="'renglonIva' + $index">
+                  <mat-option [value]="0">0%</mat-option>
+                  <mat-option [value]="0.05">5%</mat-option>
+                  <mat-option [value]="0.19">19%</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <span class="nuevo__renglon-total">{{ renglon.cantidad * renglon.valorUnitario | number: '1.0-0' }}</span>
+            </div>
+          </div>
+        }
+
+        <button mat-stroked-button type="button" (click)="agregarRenglon()">
+          <mat-icon>add</mat-icon>
+          Agregar renglón
+        </button>
+
+        <div class="nuevo__totales">
+          <span>Subtotal: <strong>{{ subtotal | number: '1.0-0' }}</strong></span>
+          <span>IVA: <strong>{{ totalIva | number: '1.0-0' }}</strong></span>
+          <span>Total: <strong>{{ total | number: '1.0-0' }}</strong></span>
+        </div>
 
         <div class="nuevo__adjunto">
           <input #inputArchivo type="file" hidden (change)="seleccionarArchivo($event)" />

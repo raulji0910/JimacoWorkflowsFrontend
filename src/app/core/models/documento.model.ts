@@ -2,6 +2,20 @@ export type EstadoInstanciaDocumento = 'EnProceso' | 'Devuelto' | 'Completado' |
 
 export type TipoAccion = 'Creado' | 'Aprobado' | 'Devuelto' | 'Rechazado' | 'Reenviado';
 
+export interface RenglonInput {
+  codigo: string | null;
+  descripcion: string;
+  cantidad: number;
+  unidadMedida: string | null;
+  valorUnitario: number;
+  porcentajeIva: number;
+}
+
+export interface Renglon extends RenglonInput {
+  id: number;
+  total: number;
+}
+
 export interface DocumentoCrear {
   tipoDocumentoId: number;
   numeroReferencia: string | null;
@@ -9,6 +23,7 @@ export interface DocumentoCrear {
   valor: number | null;
   fechaDocumento: string | null;
   datos: Record<string, string> | null;
+  renglones: RenglonInput[] | null;
 }
 
 export interface HistorialAccionItem {
@@ -57,6 +72,7 @@ export interface DocumentoDetalle {
   fechaCreacion: string;
   adjuntos: Adjunto[];
   historial: HistorialAccionItem[];
+  renglones: Renglon[];
 }
 
 export interface EjecutarAccion {
