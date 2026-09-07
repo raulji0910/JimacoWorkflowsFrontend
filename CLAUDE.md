@@ -105,6 +105,15 @@ comment). `environment.production.ts` uses `/api` (same-origin, nginx proxies it
   Chromium. Useful recipe for confirming any visual bug fix in this repo: launch, log in, open the
   dialog/page in question, `getBoundingClientRect()` the elements involved (not just a screenshot —
   the numbers tell you *why*, a screenshot only tells you *that*), then screenshot to confirm.
+- **`accion-correo/:id` (2026-09-07) — approve/reject from the email link, no login.** Lives
+  outside the `authGuard`-protected parent route in `app.routes.ts` on purpose. Its API calls carry
+  a one-off token (from the email link's `?token=` query param) instead of the logged-in session
+  token — `TOKEN_CORREO`, an `HttpContextToken` defined in `auth.interceptor.ts`, lets
+  `DocumentoService` pass that token per-request (`{ context }` on the `HttpClient` call), and the
+  interceptor prefers it over `authService.token` when present, and skips the auto-logout-on-401
+  side effect for it (a stale/wrong email link isn't "your session expired"). Backend enforces the
+  actual scoping (one document, view + act only) — see backend `CLAUDE.md`, "Aprobar/rechazar desde
+  el correo" — this frontend page trusts whatever the API returns, same as any other page.
 
 ## Production deployment — NOT set up yet
 

@@ -7,6 +7,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/login/login.component').then((m) => m.LoginComponent)
   },
   {
+    // Fuera del authGuard a propósito: se accede desde el link del correo de notificación, sin
+    // sesión iniciada — la autorización la da el token de la URL, no el login normal.
+    path: 'accion-correo/:id',
+    loadComponent: () => import('./features/accion-correo/accion-correo.component').then((m) => m.AccionCorreoComponent)
+  },
+  {
     path: '',
     loadComponent: () => import('./layout/layout.component').then((m) => m.LayoutComponent),
     canActivate: [authGuard],

@@ -1,0 +1,76 @@
+<div class="pagina">
+  <header class="pagina__marca">Jimaco Aprobaciones</header>
+
+  @if (cargando()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (error(); as mensajeError) {
+    <mat-card class="pagina__card pagina__card--error">
+      <mat-card-content>
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ mensajeError }}</p>
+      </mat-card-content>
+    </mat-card>
+  } @else if (documento(); as d) {
+    <mat-card class="pagina__card">
+      <mat-card-header>
+        <mat-card-title>{{ d.tipoDocumentoNombre }} {{ d.numeroReferencia || '' }}</mat-card-title>
+        <mat-card-subtitle>Emitido por {{ d.creadoPorNombre }} — {{ d.fechaCreacion | date: 'd MMM y, HH:mm' }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="pagina__estado">
+          <mat-chip>{{ d.estado }}</mat-chip>
+          @if (d.pasoActualNombre) {
+            <span>Paso actual: {{ d.pasoActualNombre }}</span>
+          }
+        </div>
+
+        <dl class="pagina__campos">
+          @if (d.proveedor) {
+            <div><dt>Proveedor</dt><dd>{{ d.proveedor }}</dd></div>
+          }
+          @if (d.valor != null) {
+            <div><dt>Valor</dt><dd>{{ d.valor | number: '1.0-0' }}</dd></div>
+          }
+          @if (d.fechaDocumento) {
+            <div><dt>Fecha del documento</dt><dd>{{ d.fechaDocumento | date: 'd MMM y' }}</dd></div>
+          }
+        </dl>
+
+        <button mat-stroked-button [disabled]="cargandoPdf()" (click)="verPdf()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          {{ pdfUrl() ? 'Cerrar vista previa' : cargandoPdf() ? 'Generando...' : 'Ver documento (PDF)' }}
+        </button>
+
+        @if (pdfUrl(); as url) {
+          <iframe [src]="url" class="pagina__pdf" title="Vista previa del documento"></iframe>
+        }
+
+        @if (mensajeExito(); as ok) {
+          <p class="pagina__exito">
+            <mat-icon>check_circle</mat-icon>
+            {{ ok }}
+          </p>
+        }
+      </mat-card-content>
+
+      @if (!mensajeExito() && d.estado === 'EnProceso') {
+        <mat-card-actions>
+          <button mat-flat-button color="primary" [disabled]="procesando()" (click)="aprobar()">Aprobar</button>
+          @if (d.pasoActualPermiteDevolver) {
+            <button mat-stroked-button [disabled]="procesando()" (click)="devolver()">Devolver</button>
+          }
+          @if (d.pasoActualPermiteRechazar) {
+            <button mat-stroked-button color="warn" [disabled]="procesando()" (click)="rechazar()">Rechazar</button>
+          }
+        </mat-card-actions>
+      }
+    </mat-card>
+
+    <p class="pagina__nota">
+      Este link es personal y no requiere iniciar sesión. Si preferís, también podés entrar al sistema normalmente.
+    </p>
+  }
+</div>
