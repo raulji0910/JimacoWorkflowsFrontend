@@ -127,6 +127,15 @@
           @if (d.pasoActualPermiteRechazar) {
             <button mat-stroked-button color="warn" [disabled]="procesando()" (click)="rechazar()">Rechazar</button>
           }
+          <button
+            mat-button
+            [disabled]="procesando()"
+            (click)="reenviarNotificacion()"
+            matTooltip="Le vuelve a avisar por correo a quien tiene que actuar en el paso actual, sin cambiar nada del documento"
+          >
+            <mat-icon>mail</mat-icon>
+            Reenviar notificación
+          </button>
         }
         @if (d.estado === 'Devuelto') {
           <button mat-flat-button color="primary" [disabled]="procesando()" (click)="reenviar()">Reenviar</button>

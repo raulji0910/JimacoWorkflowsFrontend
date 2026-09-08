@@ -79,3 +79,8 @@ export interface EjecutarAccion {
   accion: 'Aprobado' | 'Devuelto' | 'Rechazado';
   comentario: string | null;
 }
+
+export interface ReenvioNotificacionResultado {
+  enviadas: number;
+  fallidas: number;
+}

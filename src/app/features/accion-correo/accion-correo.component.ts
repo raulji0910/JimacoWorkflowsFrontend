@@ -67,6 +67,9 @@ export class AccionCorreoComponent implements OnInit, OnDestroy {
       next: (documento) => {
         this.documento.set(documento);
         this.cargando.set(false);
+        // La vista previa se abre sola — quien llega desde el correo necesita ver el documento
+        // de una, sin un clic extra.
+        this.verPdf();
       },
       error: () => {
         this.error.set(

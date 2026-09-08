@@ -3,7 +3,14 @@ import { HttpClient, HttpContext } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { TOKEN_CORREO } from '../interceptors/auth.interceptor';
-import { Adjunto, DocumentoCrear, DocumentoDetalle, DocumentoResumen, EjecutarAccion } from '../models/documento.model';
+import {
+  Adjunto,
+  DocumentoCrear,
+  DocumentoDetalle,
+  DocumentoResumen,
+  EjecutarAccion,
+  ReenvioNotificacionResultado
+} from '../models/documento.model';
 
 @Injectable({ providedIn: 'root' })
 export class DocumentoService {
@@ -39,6 +46,10 @@ export class DocumentoService {
 
   reenviar(id: number): Observable<DocumentoDetalle> {
     return this.http.post<DocumentoDetalle>(`${this.baseUrl}/${id}/reenviar`, {});
+  }
+
+  reenviarNotificacion(id: number): Observable<ReenvioNotificacionResultado> {
+    return this.http.post<ReenvioNotificacionResultado>(`${this.baseUrl}/${id}/reenviar-notificacion`, {});
   }
 
   subirAdjunto(id: number, archivo: File): Observable<Adjunto> {

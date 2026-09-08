@@ -9,6 +9,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatListModule } from '@angular/material/list';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DocumentoService } from '../../core/services/documento.service';
@@ -28,7 +29,8 @@ import { ComentarioDialogComponent } from '../../shared/comentario-dialog.compon
     MatChipsModule,
     MatProgressBarModule,
     MatListModule,
-    MatTableModule
+    MatTableModule,
+    MatTooltipModule
   ],
   templateUrl: './documento-detalle.component.html',
   styleUrl: './documento-detalle.component.scss'
@@ -117,6 +119,21 @@ export class DocumentoDetalleComponent implements OnInit, OnDestroy {
         this.documento.set(documento);
         this.procesando.set(false);
         this.snackBar.open('Documento reenviado', 'Cerrar', { duration: 3000 });
+      },
+      error: (error) => this.manejarError(error)
+    });
+  }
+
+  reenviarNotificacion(): void {
+    this.procesando.set(true);
+    this.documentoService.reenviarNotificacion(this.id).subscribe({
+      next: ({ enviadas, fallidas }) => {
+        this.procesando.set(false);
+        const mensaje =
+          fallidas === 0
+            ? `Notificación reenviada (${enviadas} correo${enviadas === 1 ? '' : 's'} enviado${enviadas === 1 ? '' : 's'}).`
+            : `Ojo: ${fallidas} correo${fallidas === 1 ? '' : 's'} no se pudo${fallidas === 1 ? '' : 'ieron'} enviar (revisá SMTP/DNS).`;
+        this.snackBar.open(mensaje, 'Cerrar', { duration: 6000 });
       },
       error: (error) => this.manejarError(error)
     });
