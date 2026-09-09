@@ -23,6 +23,7 @@ export interface TipoDocumento {
   id: number;
   nombre: string;
   descripcion: string | null;
+  prefijoWorldOffice: string;
   activo: boolean;
   campos: CampoTipoDocumento[];
 }
@@ -30,12 +31,14 @@ export interface TipoDocumento {
 export interface TipoDocumentoCrear {
   nombre: string;
   descripcion: string | null;
+  prefijoWorldOffice: string;
   campos: CampoTipoDocumentoInput[];
 }
 
 export interface TipoDocumentoActualizar {
   nombre: string;
   descripcion: string | null;
+  prefijoWorldOffice: string;
   activo: boolean;
   campos: CampoTipoDocumentoInput[];
 }

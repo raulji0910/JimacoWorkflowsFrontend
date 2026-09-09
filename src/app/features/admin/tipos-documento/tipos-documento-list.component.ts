@@ -19,7 +19,7 @@ import { TipoDocumentoFormDialogComponent } from './tipo-documento-form-dialog.c
   styleUrl: '../roles/roles-list.component.scss'
 })
 export class TiposDocumentoListComponent implements OnInit {
-  readonly columnas = ['nombre', 'descripcion', 'campos', 'estado', 'acciones'];
+  readonly columnas = ['nombre', 'descripcion', 'prefijoWorldOffice', 'campos', 'estado', 'acciones'];
   readonly tipos = signal<TipoDocumento[]>([]);
   readonly cargando = signal(false);
 

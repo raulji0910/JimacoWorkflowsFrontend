@@ -51,6 +51,7 @@ export class TipoDocumentoFormDialogComponent {
 
   nombre = this.data.tipo?.nombre ?? '';
   descripcion = this.data.tipo?.descripcion ?? '';
+  prefijoWorldOffice = this.data.tipo?.prefijoWorldOffice ?? '';
   activo = this.data.tipo?.activo ?? true;
 
   campos: CampoEditable[] =
@@ -71,7 +72,7 @@ export class TipoDocumentoFormDialogComponent {
   }
 
   guardar(): void {
-    if (!this.nombre.trim()) return;
+    if (!this.nombre.trim() || !this.prefijoWorldOffice.trim()) return;
     if (this.campos.some((c) => !c.nombre.trim() || !c.etiqueta.trim())) return;
 
     const camposDto = this.campos.map((c, index) => ({
@@ -89,16 +90,24 @@ export class TipoDocumentoFormDialogComponent {
           : null
     }));
 
+    const prefijo = this.prefijoWorldOffice.trim().toUpperCase();
+
     if (this.editando) {
       const dto: TipoDocumentoActualizar = {
         nombre: this.nombre,
         descripcion: this.descripcion || null,
+        prefijoWorldOffice: prefijo,
         activo: this.activo,
         campos: camposDto
       };
       this.dialogRef.close(dto);
     } else {
-      const dto: TipoDocumentoCrear = { nombre: this.nombre, descripcion: this.descripcion || null, campos: camposDto };
+      const dto: TipoDocumentoCrear = {
+        nombre: this.nombre,
+        descripcion: this.descripcion || null,
+        prefijoWorldOffice: prefijo,
+        campos: camposDto
+      };
       this.dialogRef.close(dto);
     }
   }

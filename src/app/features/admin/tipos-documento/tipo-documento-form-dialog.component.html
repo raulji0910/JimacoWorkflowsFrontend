@@ -10,6 +10,16 @@
     <textarea matInput [(ngModel)]="descripcion" name="descripcion" rows="2"></textarea>
   </mat-form-field>
 
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Prefijo en World Office</mat-label>
+    <input matInput [(ngModel)]="prefijoWorldOffice" name="prefijoWorldOffice" placeholder="ej. OC" required />
+    <mat-hint>
+      El prefijo exacto que usa World Office para este documento (ej. "OC"). Dos tipos con prefijos distintos son
+      documentos distintos aunque se llamen parecido — el Sincronizador lo usa para saber a cuál de tus tipos de
+      documento corresponde cada uno.
+    </mat-hint>
+  </mat-form-field>
+
   @if (editando) {
     <mat-slide-toggle [(ngModel)]="activo" name="activo">Activo</mat-slide-toggle>
   }

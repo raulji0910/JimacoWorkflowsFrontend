@@ -22,6 +22,11 @@
       <td mat-cell *matCellDef="let t" data-label="Descripción">{{ t.descripcion || '—' }}</td>
     </ng-container>
 
+    <ng-container matColumnDef="prefijoWorldOffice">
+      <th mat-header-cell *matHeaderCellDef>Prefijo WO</th>
+      <td mat-cell *matCellDef="let t" data-label="Prefijo WO">{{ t.prefijoWorldOffice }}</td>
+    </ng-container>
+
     <ng-container matColumnDef="campos">
       <th mat-header-cell *matHeaderCellDef>Campos propios</th>
       <td mat-cell *matCellDef="let t" data-label="Campos propios">{{ t.campos.length }}</td>
