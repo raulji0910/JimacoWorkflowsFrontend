@@ -58,6 +58,22 @@ body {
   mat-form-field:first-of-type {
     margin-top: 0.75rem;
   }
+
+  // Un mat-hint que se envuelve a más de una línea se desborda sobre el elemento
+  // siguiente. La causa real (confirmada inspeccionando la geometría con Playwright,
+  // no adivinada): Material posiciona el ".mat-mdc-form-field-hint-wrapper" interno
+  // con position:absolute a propósito (para que aparecer un error no empuje el resto
+  // del formulario) — por eso el texto real del hint NUNCA aporta altura a su padre,
+  // aunque el padre tenga height:auto; un hijo absolute no cuenta para el tamaño del
+  // contenedor. Acá sí interesa que empuje (no hay error que deba superponerse sin
+  // mover nada), así que se vuelve a flujo normal.
+  .mat-mdc-form-field-subscript-wrapper {
+    height: auto;
+  }
+
+  .mat-mdc-form-field-hint-wrapper {
+    position: static;
+  }
 }
 
 .tabla-responsiva {
