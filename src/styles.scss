@@ -73,6 +73,13 @@ body {
 
   .mat-mdc-form-field-hint-wrapper {
     position: static;
+    padding-top: 0.35rem;
+    padding-bottom: 0.5rem;
+  }
+
+  mat-hint {
+    display: block;
+    line-height: 1.4;
   }
 }
 
