@@ -73,6 +73,11 @@ export interface DocumentoDetalle {
   adjuntos: Adjunto[];
   historial: HistorialAccionItem[];
   renglones: Renglon[];
+  idAsientoContableOrigen: number | null;
+  prefijoOrigen: string | null;
+  pendienteEscrituraWO: boolean;
+  conflictoWO: string | null;
+  fechaEscrituraWO: string | null;
 }
 
 export interface EjecutarAccion {

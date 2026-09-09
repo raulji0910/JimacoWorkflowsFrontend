@@ -38,6 +38,24 @@
     font-size: 0.9rem;
   }
 
+  &__chip-wo {
+    background: #fff3cd !important;
+    color: #7a5b00 !important;
+    font-size: 0.75rem;
+  }
+
+  &__conflicto-wo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #fdecea;
+    color: #7a1f1f;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+
   &__campos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));

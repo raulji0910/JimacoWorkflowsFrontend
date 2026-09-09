@@ -31,7 +31,17 @@
           @if (d.pasoActualNombre) {
             <span class="detalle__paso">Paso actual: {{ d.pasoActualNombre }}</span>
           }
+          @if (d.pendienteEscrituraWO) {
+            <mat-chip class="detalle__chip-wo">Pendiente de reflejar en World Office</mat-chip>
+          }
         </div>
+
+        @if (d.conflictoWO) {
+          <div class="detalle__conflicto-wo">
+            <mat-icon>warning</mat-icon>
+            <span>No se pudo reflejar la aprobación en World Office: {{ d.conflictoWO }}</span>
+          </div>
+        }
 
         <dl class="detalle__campos">
           @if (d.proveedor) {

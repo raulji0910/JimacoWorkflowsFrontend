@@ -37,6 +37,7 @@ export class UsuarioFormDialogComponent {
   nombre = this.data.usuario?.nombre ?? '';
   email = this.data.usuario?.email ?? '';
   telefono = this.data.usuario?.telefono ?? '';
+  usuarioWO = this.data.usuario?.usuarioWO ?? '';
   activo = this.data.usuario?.activo ?? true;
   password = '';
   rolesIds: number[] = this.data.usuario?.roles.map((r) => r.id) ?? [];
@@ -49,6 +50,7 @@ export class UsuarioFormDialogComponent {
         nombre: this.nombre,
         email: this.email,
         telefono: this.telefono || null,
+        usuarioWO: this.usuarioWO || null,
         activo: this.activo,
         rolesIds: this.rolesIds
       };
@@ -59,6 +61,7 @@ export class UsuarioFormDialogComponent {
         email: this.email,
         password: this.password,
         telefono: this.telefono || null,
+        usuarioWO: this.usuarioWO || null,
         rolesIds: this.rolesIds
       };
       this.dialogRef.close(dto);

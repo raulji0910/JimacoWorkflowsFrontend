@@ -26,6 +26,12 @@
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Usuario en World Office</mat-label>
+    <input matInput [(ngModel)]="usuarioWO" name="usuarioWO" placeholder="ej. ANDERSON" />
+    <mat-hint>Se usa cuando esta persona aprueba un documento sincronizado desde World Office, para que quede a nombre de su propio usuario allá.</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
     <mat-label>Roles</mat-label>
     <mat-select [(ngModel)]="rolesIds" name="roles" multiple>
       @for (rol of data.roles; track rol.id) {

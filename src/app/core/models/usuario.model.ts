@@ -5,6 +5,7 @@ export interface Usuario {
   nombre: string;
   email: string;
   telefono: string | null;
+  usuarioWO: string | null;
   activo: boolean;
   roles: Rol[];
 }
@@ -14,6 +15,7 @@ export interface UsuarioCrear {
   email: string;
   password: string;
   telefono: string | null;
+  usuarioWO: string | null;
   rolesIds: number[];
 }
 
@@ -21,6 +23,7 @@ export interface UsuarioActualizar {
   nombre: string;
   email: string;
   telefono: string | null;
+  usuarioWO: string | null;
   activo: boolean;
   rolesIds: number[];
 }
