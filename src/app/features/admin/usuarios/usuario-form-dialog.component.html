@@ -20,6 +20,35 @@
     </mat-form-field>
   }
 
+  @if (editando) {
+    @if (!mostrarRestablecer()) {
+      <button mat-stroked-button type="button" (click)="mostrarRestablecer.set(true)">
+        <mat-icon>lock_reset</mat-icon>
+        Restablecer contraseña
+      </button>
+    } @else {
+      <div class="restablecer-password">
+        <mat-form-field appearance="outline" class="form-dialogo__campo">
+          <mat-label>Contraseña nueva</mat-label>
+          <input matInput type="password" [(ngModel)]="passwordNueva" name="passwordNueva" minlength="6" />
+          <mat-hint>Mínimo 6 caracteres. Se aplica de inmediato al confirmar, no hace falta "Guardar".</mat-hint>
+        </mat-form-field>
+        <div class="restablecer-password__acciones">
+          <button mat-button type="button" (click)="mostrarRestablecer.set(false); passwordNueva = ''">Cancelar</button>
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="passwordNueva.length < 6 || restableciendo()"
+            (click)="restablecerPassword()"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    }
+  }
+
   <mat-form-field appearance="outline" class="form-dialogo__campo">
     <mat-label>Teléfono (WhatsApp)</mat-label>
     <input matInput [(ngModel)]="telefono" name="telefono" placeholder="+57 300 0000000" />
@@ -29,6 +58,12 @@
     <mat-label>Usuario en World Office</mat-label>
     <input matInput [(ngModel)]="usuarioWO" name="usuarioWO" placeholder="ej. ANDERSON" />
     <mat-hint>Se usa cuando esta persona aprueba un documento sincronizado desde World Office, para que quede a nombre de su propio usuario allá.</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Nombre(s) completo(s) en World Office</mat-label>
+    <input matInput [(ngModel)]="nombresCompletosWO" name="nombresCompletosWO" placeholder="ej. LAURA SOFIA HERNANDEZ CARO" />
+    <mat-hint>Como aparece en "Elaborado por" de la Cotización. Le llegan los avisos de Alistamiento de esas cotizaciones. Varios nombres separados por ";" para compartir avisos.</mat-hint>
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="form-dialogo__campo">

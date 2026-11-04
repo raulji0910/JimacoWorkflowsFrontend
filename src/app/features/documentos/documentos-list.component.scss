@@ -12,8 +12,36 @@
     opacity: 0.6;
   }
 
+  &__ayuda {
+    opacity: 0.7;
+    margin-bottom: 1rem;
+    max-width: 48rem;
+  }
+
+  &__buscador {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__buscador-campo {
+    flex: 1;
+    max-width: 20rem;
+  }
+
+  // Chip de estado + nombre del paso actual apilados en columna: si van en la misma línea, el
+  // texto del paso (a veces largo, ej. "Aprobacion comercial") envuelve y termina superpuesto con
+  // el chip en vez de correrse debajo prolijamente.
+  &__estado-celda {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding-block: 0.35rem;
+  }
+
   &__paso {
-    margin-left: 0.5rem;
     font-size: 0.8rem;
     opacity: 0.7;
   }

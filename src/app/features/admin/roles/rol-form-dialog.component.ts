@@ -15,7 +15,8 @@ export interface RolFormDialogData {
   selector: 'app-rol-form-dialog',
   standalone: true,
   imports: [FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSlideToggleModule, MatButtonModule],
-  templateUrl: './rol-form-dialog.component.html'
+  templateUrl: './rol-form-dialog.component.html',
+  styleUrl: './rol-form-dialog.component.scss'
 })
 export class RolFormDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<RolFormDialogComponent>);
@@ -26,15 +27,31 @@ export class RolFormDialogComponent {
   nombre = this.data.rol?.nombre ?? '';
   descripcion = this.data.rol?.descripcion ?? '';
   activo = this.data.rol?.activo ?? true;
+  puedeDevolverCualquierDocumento = this.data.rol?.puedeDevolverCualquierDocumento ?? false;
+  puedeGestionarAlistamiento = this.data.rol?.puedeGestionarAlistamiento ?? false;
+  puedeVerAlistamiento = this.data.rol?.puedeVerAlistamiento ?? false;
 
   guardar(): void {
     if (!this.nombre.trim()) return;
 
     if (this.editando) {
-      const dto: RolActualizar = { nombre: this.nombre, descripcion: this.descripcion || null, activo: this.activo };
+      const dto: RolActualizar = {
+        nombre: this.nombre,
+        descripcion: this.descripcion || null,
+        activo: this.activo,
+        puedeDevolverCualquierDocumento: this.puedeDevolverCualquierDocumento,
+        puedeGestionarAlistamiento: this.puedeGestionarAlistamiento,
+        puedeVerAlistamiento: this.puedeVerAlistamiento
+      };
       this.dialogRef.close(dto);
     } else {
-      const dto: RolCrear = { nombre: this.nombre, descripcion: this.descripcion || null };
+      const dto: RolCrear = {
+        nombre: this.nombre,
+        descripcion: this.descripcion || null,
+        puedeDevolverCualquierDocumento: this.puedeDevolverCualquierDocumento,
+        puedeGestionarAlistamiento: this.puedeGestionarAlistamiento,
+        puedeVerAlistamiento: this.puedeVerAlistamiento
+      };
       this.dialogRef.close(dto);
     }
   }

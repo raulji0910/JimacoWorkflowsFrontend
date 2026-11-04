@@ -6,6 +6,7 @@ export interface Usuario {
   email: string;
   telefono: string | null;
   usuarioWO: string | null;
+  nombresCompletosWO: string | null;
   activo: boolean;
   roles: Rol[];
 }
@@ -16,6 +17,7 @@ export interface UsuarioCrear {
   password: string;
   telefono: string | null;
   usuarioWO: string | null;
+  nombresCompletosWO: string | null;
   rolesIds: number[];
 }
 
@@ -24,11 +26,16 @@ export interface UsuarioActualizar {
   email: string;
   telefono: string | null;
   usuarioWO: string | null;
+  nombresCompletosWO: string | null;
   activo: boolean;
   rolesIds: number[];
 }
 
 export interface CambiarPassword {
   passwordActual: string;
+  passwordNueva: string;
+}
+
+export interface RestablecerPassword {
   passwordNueva: string;
 }

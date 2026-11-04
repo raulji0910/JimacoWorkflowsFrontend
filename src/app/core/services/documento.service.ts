@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { TOKEN_CORREO } from '../interceptors/auth.interceptor';
@@ -52,10 +52,22 @@ export class DocumentoService {
     return this.http.post<ReenvioNotificacionResultado>(`${this.baseUrl}/${id}/reenviar-notificacion`, {});
   }
 
-  subirAdjunto(id: number, archivo: File): Observable<Adjunto> {
+  // Permiso administrativo (ver AuthService.puedeDevolverCualquierDocumento) — busca sin importar
+  // paso/rol y devuelve sin importar en qué paso esté.
+  buscar(numeroReferencia: string): Observable<DocumentoResumen[]> {
+    const params = new HttpParams().set('numeroReferencia', numeroReferencia);
+    return this.http.get<DocumentoResumen[]>(`${this.baseUrl}/buscar`, { params });
+  }
+
+  devolverForzado(id: number, comentario: string): Observable<DocumentoDetalle> {
+    return this.http.post<DocumentoDetalle>(`${this.baseUrl}/${id}/devolver-forzado`, { comentario });
+  }
+
+  subirAdjunto(id: number, archivo: File, esSoportePago = false, tokenCorreo?: string): Observable<Adjunto> {
     const formData = new FormData();
     formData.append('archivo', archivo);
-    return this.http.post<Adjunto>(`${this.baseUrl}/${id}/adjuntos`, formData);
+    const params = new HttpParams().set('esSoportePago', esSoportePago);
+    return this.http.post<Adjunto>(`${this.baseUrl}/${id}/adjuntos`, formData, { params, context: this.contexto(tokenCorreo) });
   }
 
   // La descarga va autenticada (el controller exige JWT), así que no sirve un <a href> plano

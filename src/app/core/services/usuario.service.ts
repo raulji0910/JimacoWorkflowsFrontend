@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CambiarPassword, Usuario, UsuarioActualizar, UsuarioCrear } from '../models/usuario.model';
+import { CambiarPassword, RestablecerPassword, Usuario, UsuarioActualizar, UsuarioCrear } from '../models/usuario.model';
 
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
@@ -24,5 +24,9 @@ export class UsuarioService {
 
   cambiarMiPassword(dto: CambiarPassword): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/mi-password`, dto);
+  }
+
+  restablecerPassword(id: number, dto: RestablecerPassword): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${id}/restablecer-password`, dto);
   }
 }

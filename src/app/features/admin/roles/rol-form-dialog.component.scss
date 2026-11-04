@@ -1,0 +1,17 @@
+// .form-dialogo__ayuda trae un margin-top negativo pensado para pegarse a un
+// mat-form-field/mat-checkbox puntual (ver styles.scss) — acá hay TRES pares
+// seguidos de toggle+ayuda dentro del mismo flex column de gap chico
+// (.form-dialogo), y ese margen negativo los hacía superponerse entre sí
+// (reportado por el usuario: "se ve amontonado... los botones superpuestos").
+// Se agrupa cada par en su propio bloque con su propio ritmo, separado del
+// siguiente por un margen real en vez de depender del gap del padre.
+.rol-dialogo__opcion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+
+  .form-dialogo__ayuda {
+    margin-top: 0;
+  }
+}

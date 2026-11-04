@@ -16,47 +16,75 @@
     <mat-progress-bar mode="indeterminate" />
   }
 
-  @if (flujoActivo; as flujo) {
-    <h3>Flujo activo: {{ flujo.nombre }}</h3>
-    <table mat-table [dataSource]="flujo.pasos" class="tabla-responsiva">
-      <ng-container matColumnDef="orden">
-        <th mat-header-cell *matHeaderCellDef>#</th>
-        <td mat-cell *matCellDef="let p" data-label="#">{{ p.orden }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="nombre">
-        <th mat-header-cell *matHeaderCellDef>Paso</th>
-        <td mat-cell *matCellDef="let p" data-label="Paso">{{ p.nombre }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="roles">
-        <th mat-header-cell *matHeaderCellDef>Roles habilitados</th>
-        <td mat-cell *matCellDef="let p" data-label="Roles habilitados">
-          @for (rolId of p.rolesIds; track rolId) {
-            <mat-chip>{{ nombreRol(rolId) }}</mat-chip>
+  @if (flujos().length > 0) {
+    @for (flujo of flujos(); track flujo.id) {
+      <div class="admin-list__seccion" style="margin-top: 1.5rem">
+        <div class="paso-fila__fila">
+          <h3 style="margin: 0">
+            {{ flujo.nombre }}
+            <mat-chip [color]="flujo.activo ? 'primary' : undefined" [highlighted]="flujo.activo">
+              {{ flujo.activo ? 'Activo' : 'Inactivo' }}
+            </mat-chip>
+          </h3>
+          <span style="flex: 1"></span>
+          <button mat-stroked-button [disabled]="procesandoId() === flujo.id" (click)="duplicar(flujo)">
+            <mat-icon>content_copy</mat-icon>
+            Duplicar
+          </button>
+          @if (flujo.activo) {
+            <button mat-stroked-button color="warn" [disabled]="procesandoId() === flujo.id" (click)="desactivar(flujo)">
+              Desactivar
+            </button>
+          } @else {
+            <button mat-stroked-button color="primary" [disabled]="procesandoId() === flujo.id" (click)="activar(flujo)">
+              Activar
+            </button>
           }
-        </td>
-      </ng-container>
+        </div>
 
-      <ng-container matColumnDef="devolver">
-        <th mat-header-cell *matHeaderCellDef>Devolver</th>
-        <td mat-cell *matCellDef="let p" data-label="Devolver">{{ p.permiteDevolver ? 'Sí' : 'No' }}</td>
-      </ng-container>
+        <p class="admin-list__vacio" style="margin: 0.25rem 0 0.75rem">Aplica cuando: {{ condicion(flujo) }}</p>
 
-      <ng-container matColumnDef="rechazar">
-        <th mat-header-cell *matHeaderCellDef>Rechazar</th>
-        <td mat-cell *matCellDef="let p" data-label="Rechazar">{{ p.permiteRechazar ? 'Sí' : 'No' }}</td>
-      </ng-container>
+        <table mat-table [dataSource]="flujo.pasos" class="tabla-responsiva">
+          <ng-container matColumnDef="orden">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let p" data-label="#">{{ p.orden }}</td>
+          </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
-      <tr mat-row *matRowDef="let p; columns: columnas"></tr>
-    </table>
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>Paso</th>
+            <td mat-cell *matCellDef="let p" data-label="Paso">{{ p.nombre }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="roles">
+            <th mat-header-cell *matHeaderCellDef>Roles habilitados</th>
+            <td mat-cell *matCellDef="let p" data-label="Roles habilitados">
+              @for (rolId of p.rolesIds; track rolId) {
+                <mat-chip>{{ nombreRol(rolId) }}</mat-chip>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="devolver">
+            <th mat-header-cell *matHeaderCellDef>Devolver</th>
+            <td mat-cell *matCellDef="let p" data-label="Devolver">{{ p.permiteDevolver ? 'Sí' : 'No' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="rechazar">
+            <th mat-header-cell *matHeaderCellDef>Rechazar</th>
+            <td mat-cell *matCellDef="let p" data-label="Rechazar">{{ p.permiteRechazar ? 'Sí' : 'No' }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+          <tr mat-row *matRowDef="let p; columns: columnas"></tr>
+        </table>
+      </div>
+    }
   } @else if (!cargando() && tipoDocumentoId) {
-    <p class="admin-list__vacio">Este tipo de documento todavía no tiene un flujo configurado.</p>
+    <p class="admin-list__vacio">Este tipo de documento todavía no tiene ningún flujo configurado.</p>
   }
 
-  <button mat-flat-button color="primary" [disabled]="!tipoDocumentoId" (click)="abrirNuevoFlujo()" style="margin-top: 1rem">
-    <mat-icon>{{ flujoActivo ? 'edit' : 'add' }}</mat-icon>
-    {{ flujoActivo ? 'Editar flujo' : 'Crear flujo' }}
+  <button mat-flat-button color="primary" [disabled]="!tipoDocumentoId" (click)="abrirNuevoFlujo()" style="margin-top: 1.5rem">
+    <mat-icon>add</mat-icon>
+    Crear flujo nuevo
   </button>
 </div>

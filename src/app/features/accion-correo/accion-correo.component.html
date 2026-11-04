@@ -21,7 +21,7 @@
 
       <mat-card-content>
         <div class="pagina__estado">
-          <mat-chip>{{ d.estado }}</mat-chip>
+          <mat-chip>{{ d.estado | estadoLabel }}</mat-chip>
           @if (d.pasoActualNombre) {
             <span>Paso actual: {{ d.pasoActualNombre }}</span>
           }
@@ -41,7 +41,15 @@
 
         <button mat-stroked-button [disabled]="cargandoPdf()" (click)="verPdf()">
           <mat-icon>picture_as_pdf</mat-icon>
-          {{ pdfUrl() ? 'Cerrar vista previa' : cargandoPdf() ? 'Generando...' : 'Ver documento (PDF)' }}
+          {{
+            pdfUrl()
+              ? 'Cerrar vista previa'
+              : cargandoPdf()
+                ? 'Generando...'
+                : esMovil
+                  ? 'Abrir PDF'
+                  : 'Ver documento (PDF)'
+          }}
         </button>
 
         @if (pdfUrl(); as url) {
@@ -54,9 +62,25 @@
             {{ ok }}
           </p>
         }
+
+        @if (!mensajeExito() && enlaceYaNoAplica) {
+          <p class="pagina__exito">
+            <mat-icon>info</mat-icon>
+            Este enlace ya fue utilizado — el documento ya avanzó a otro paso (quizás ya actuaste con este
+            mismo link, o alguien más lo hizo desde el sistema). Entrá con tu usuario si necesitás ver su
+            estado actual.
+          </p>
+        }
       </mat-card-content>
 
-      @if (!mensajeExito() && d.estado === 'EnProceso') {
+      @if (!mensajeExito() && !enlaceYaNoAplica && d.estado === 'EnProceso') {
+        @if (d.pasoActualRequiereSoportePagoAlAprobar) {
+          <p class="pagina__nota">Al aprobar te va a pedir adjuntar el soporte de pago (PDF).</p>
+        } @else if (d.pasoActualRequiereComprobanteEgreso) {
+          <p class="pagina__nota">Al aprobar te va a pedir el número del Comprobante de Egreso de World Office.</p>
+        } @else if (d.pasoActualRequiereComentarioAlAprobar) {
+          <p class="pagina__nota">Al aprobar te va a pedir un comentario obligatorio.</p>
+        }
         <mat-card-actions>
           <button mat-flat-button color="primary" [disabled]="procesando()" (click)="aprobar()">Aprobar</button>
           @if (d.pasoActualPermiteDevolver) {
@@ -64,6 +88,9 @@
           }
           @if (d.pasoActualPermiteRechazar) {
             <button mat-stroked-button color="warn" [disabled]="procesando()" (click)="rechazar()">Rechazar</button>
+          }
+          @if (d.pasoActualPermiteRedirigirAPagoContado) {
+            <button mat-stroked-button [disabled]="procesando()" (click)="redirigirAPagoContado()">Redirigir a pago en efectivo</button>
           }
         </mat-card-actions>
       }

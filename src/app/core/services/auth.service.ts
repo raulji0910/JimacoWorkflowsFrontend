@@ -60,6 +60,22 @@ export class AuthService {
     return this.sesion()?.roles?.includes(nombreRol) ?? false;
   }
 
+  /** Ver Rol.PuedeDevolverCualquierDocumento en el backend — gatilla la pantalla de "Buscar documento". */
+  puedeDevolverCualquierDocumento(): boolean {
+    return this.sesion()?.puedeDevolverCualquierDocumento ?? false;
+  }
+
+  /** Puede editar cantidades disponibles en cualquier Hoja de Alistamiento — ver Rol.PuedeGestionarAlistamiento. */
+  puedeGestionarAlistamiento(): boolean {
+    return this.sesion()?.puedeGestionarAlistamiento ?? false;
+  }
+
+  /** Puede ver el dashboard de alistamiento (gestionar también lo implica). */
+  puedeVerAlistamiento(): boolean {
+    const sesion = this.sesion();
+    return (sesion?.puedeVerAlistamiento || sesion?.puedeGestionarAlistamiento) ?? false;
+  }
+
   private leerSesionValida(): LoginResponse | null {
     const crudo = localStorage.getItem(CLAVE_STORAGE);
     if (!crudo) return null;

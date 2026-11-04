@@ -1,6 +1,8 @@
 <mat-sidenav-container class="layout">
   <mat-sidenav #sidenav [mode]="esMovil() ? 'over' : 'side'" [opened]="!esMovil()" class="layout__sidenav">
-    <div class="layout__logo">Jimaco Aprobaciones</div>
+    <div class="layout__logo">
+      <img src="logo-mark.png" alt="Jimaco" />
+    </div>
 
     <mat-nav-list>
       <a mat-list-item routerLink="/pendientes" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
@@ -15,6 +17,20 @@
         <mat-icon matListItemIcon>add_circle</mat-icon>
         <span matListItemTitle>Nuevo documento</span>
       </a>
+
+      @if (puedeDevolverCualquierDocumento) {
+        <a mat-list-item routerLink="/documentos/buscar" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>search</mat-icon>
+          <span matListItemTitle>Buscar documento</span>
+        </a>
+      }
+
+      @if (puedeVerAlistamiento) {
+        <a mat-list-item routerLink="/alistamiento" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>inventory_2</mat-icon>
+          <span matListItemTitle>Alistamiento</span>
+        </a>
+      }
 
       @if (esAdmin) {
         <mat-divider class="layout__divisor" />

@@ -36,6 +36,8 @@ export class LayoutComponent {
 
   readonly usuario = this.authService.usuario;
   readonly esAdmin = this.authService.esAdmin();
+  readonly puedeDevolverCualquierDocumento = this.authService.puedeDevolverCualquierDocumento();
+  readonly puedeVerAlistamiento = this.authService.puedeVerAlistamiento();
   readonly version = environment.version;
 
   readonly esMovil = toSignal(

@@ -5,6 +5,7 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
+  background: linear-gradient(160deg, #eafaf0 0%, #f6fef8 55%, #ffffff 100%);
 
   &__tarjeta {
     width: 22rem;
@@ -12,8 +13,15 @@
     text-align: center;
   }
 
-  &__titulo {
-    margin: 0.5rem 0 0;
+  &__logo {
+    display: flex;
+    justify-content: center;
+
+    img {
+      width: 150px;
+      max-width: 100%;
+      height: auto;
+    }
   }
 
   &__subtitulo {

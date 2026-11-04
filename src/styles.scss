@@ -4,14 +4,19 @@
 // Learn more about theming and how to use it for your application's
 // custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
+// Tema real de la marca (verde Jimaco) — mismo archivo generado con
+// `ng generate @angular/material:theme-color` que ya usa Jimaco.Cotizaciones.Web, copiado tal
+// cual acá para que los dos sistemas se vean consistentes (2026-10-07). Reemplaza el azul
+// genérico de Material que tenía Aprobaciones desde el inicio.
+@use './theme-colors' as jimaco-theme;
 
 html {
   height: 100%;
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: jimaco-theme.$primary-palette,
+        tertiary: jimaco-theme.$tertiary-palette,
       ),
       typography: Roboto,
       density: 0,
@@ -84,8 +89,55 @@ body {
   }
 }
 
+.restablecer-password {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &__acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}
+
 .tabla-responsiva {
   width: 100%;
+}
+
+// Tablas responsivas: por debajo de 768px, cada fila se apila como una tarjeta — mismo patrón ya
+// probado en Jimaco.Cotizaciones.Web, copiado tal cual (2026-10-07). Cada <td> ya trae
+// [attr.data-label] con el nombre de la columna en todas las tablas .tabla-responsiva de este repo.
+@media (max-width: 768px) {
+  table.tabla-responsiva {
+    display: block;
+
+    tr.mat-mdc-header-row {
+      display: none;
+    }
+
+    tr.mat-mdc-row {
+      display: flex;
+      flex-direction: column;
+      height: auto;
+      padding: 0.5rem 0;
+    }
+
+    td.mat-mdc-cell {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      border: none;
+      padding: 0.35rem 0.75rem;
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--mat-sys-on-surface-variant);
+      }
+    }
+  }
 }
 
 .form-dialogo__ayuda {

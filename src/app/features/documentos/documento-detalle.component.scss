@@ -93,4 +93,15 @@
     opacity: 0.8;
     font-style: italic;
   }
+
+  &__chip-alistamiento {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    vertical-align: middle;
+
+    &--completa {
+      background: #c8e6c9 !important;
+    }
+  }
+
 }

@@ -1,0 +1,205 @@
+<div class="alistamiento">
+  <div class="alistamiento__header">
+    <h2>Alistamiento</h2>
+    <div class="alistamiento__acciones-header">
+      <button
+        mat-stroked-button
+        [color]="sonidoActivo() ? 'primary' : undefined"
+        (click)="alternarSonido()"
+        matTooltip="Suena un beep cada 2 segundos mientras haya alguna hoja Atrasada y esta pestaña esté abierta"
+      >
+        <mat-icon>{{ sonidoActivo() ? 'notifications_active' : 'notifications_off' }}</mat-icon>
+        {{ sonidoActivo() ? 'Alertas sonoras activas' : 'Activar alertas sonoras' }}
+      </button>
+      <button mat-stroked-button (click)="alternarFiltro()">
+        <mat-icon>{{ soloIncompletas() ? 'visibility' : 'visibility_off' }}</mat-icon>
+        {{ soloIncompletas() ? 'Viendo solo incompletas' : 'Viendo todas' }}
+      </button>
+      <button
+        mat-stroked-button
+        [color]="soloCompletas() ? 'primary' : undefined"
+        (click)="alternarCompletas()"
+        matTooltip="Las hojas que Transporte ya completó (las que además ya se remisionaron no se muestran en ninguna vista)"
+      >
+        <mat-icon>done_all</mat-icon>
+        {{ soloCompletas() ? 'Viendo solo completas' : 'Ver completas' }}
+      </button>
+    </div>
+  </div>
+
+  <p class="alistamiento__ayuda">
+    Cada fila es una Hoja de Alistamiento (una Cotización de World Office) — si la misma Cotización
+    está ligada a más de una Orden de Compra, aparece una sola vez con todas sus OC. Entrá al
+    documento para registrar la cantidad disponible de cada ítem.
+  </p>
+
+  <div class="alistamiento__filtros">
+    <mat-form-field appearance="outline" class="alistamiento__campo-filtro">
+      <mat-label>Filtrar por Campo Entrega</mat-label>
+      <input
+        matInput
+        [ngModel]="filtroCampoEntrega()"
+        (ngModelChange)="actualizarFiltroCampoEntrega($event)"
+        [matAutocomplete]="autoCampoEntrega"
+      />
+      @if (filtroCampoEntrega()) {
+        <button matSuffix mat-icon-button aria-label="Limpiar" (click)="actualizarFiltroCampoEntrega('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+      <mat-autocomplete #autoCampoEntrega="matAutocomplete">
+        @for (opcion of opcionesCampoEntregaFiltradas(); track opcion) {
+          <mat-option [value]="opcion">{{ opcion }}</mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="alistamiento__campo-filtro">
+      <mat-label>Filtrar por Elaborado Por</mat-label>
+      <input
+        matInput
+        [ngModel]="filtroElaboradoPor()"
+        (ngModelChange)="actualizarFiltroElaboradoPor($event)"
+        [matAutocomplete]="autoElaboradoPor"
+      />
+      @if (filtroElaboradoPor()) {
+        <button matSuffix mat-icon-button aria-label="Limpiar" (click)="actualizarFiltroElaboradoPor('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+      <mat-autocomplete #autoElaboradoPor="matAutocomplete">
+        @for (opcion of opcionesElaboradoPorFiltradas(); track opcion) {
+          <mat-option [value]="opcion">{{ opcion }}</mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="alistamiento__campo-filtro">
+      <mat-label>Filtrar por número de hoja</mat-label>
+      <input matInput [ngModel]="filtroNumeroHoja()" (ngModelChange)="actualizarFiltroNumeroHoja($event)" placeholder="15864" />
+      @if (filtroNumeroHoja()) {
+        <button matSuffix mat-icon-button aria-label="Limpiar" (click)="actualizarFiltroNumeroHoja('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+  </div>
+
+  @if (cargando()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (!cargando()) {
+    <table mat-table [dataSource]="paginadas" class="tabla-responsiva">
+      <ng-container matColumnDef="hoja">
+        <th mat-header-cell *matHeaderCellDef>Hoja (Cotización)</th>
+        <td mat-cell *matCellDef="let h" data-label="Hoja">
+          <a [routerLink]="['/alistamiento', h.documentoVinculadoId]">{{ h.numeroReferenciaHoja }}</a>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cliente">
+        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+        <td mat-cell *matCellDef="let h" data-label="Cliente">{{ h.cliente || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="campoEntrega">
+        <th mat-header-cell *matHeaderCellDef>Campo Entrega</th>
+        <td mat-cell *matCellDef="let h" data-label="Campo Entrega">{{ h.campoEntrega || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="elaboradoPor">
+        <th mat-header-cell *matHeaderCellDef>Elaborado Por</th>
+        <td mat-cell *matCellDef="let h" data-label="Elaborado Por">{{ h.elaboradoPor || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="progreso">
+        <th mat-header-cell *matHeaderCellDef>Progreso</th>
+        <td mat-cell *matCellDef="let h" data-label="Progreso">{{ h.renglonesCompletos }} / {{ h.totalRenglones }} ítems</td>
+      </ng-container>
+
+      <ng-container matColumnDef="antiguedad">
+        <th mat-header-cell *matHeaderCellDef>Aprobada</th>
+        <td mat-cell *matCellDef="let h" data-label="Aprobada">
+          {{ h.fechaAprobacionComercial | date: 'd MMM y, HH:mm' }}
+          <span class="alistamiento__horas">({{ horasDesde(h.fechaAprobacionComercial) }} h)</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="total">
+        <th mat-header-cell *matHeaderCellDef>Total</th>
+        <td mat-cell *matCellDef="let h" data-label="Total">{{ h.total | number: '1.0-0' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let h" data-label="Estado">
+          <div class="alistamiento__chips-estado">
+            @switch (nivelEstado(h)) {
+              @case ('atrasada') {
+                <mat-chip class="alistamiento__chip alistamiento__chip--atrasada" matTooltip="Superó el umbral de horas sin completarse">Atrasada</mat-chip>
+              }
+              @case ('completa') {
+                <mat-chip class="alistamiento__chip alistamiento__chip--completa">Completa</mat-chip>
+              }
+              @case ('avanzada') {
+                <mat-chip class="alistamiento__chip alistamiento__chip--avanzada" matTooltip="80% o más de los ítems ya listos">Avanzada</mat-chip>
+              }
+              @default {
+                <mat-chip class="alistamiento__chip">Incompleta</mat-chip>
+              }
+            }
+            @if (h.remisionado) {
+              <mat-chip class="alistamiento__chip alistamiento__chip--remisionado" matTooltip="Todos los ítems ya se despacharon en World Office">
+                <mat-icon matChipAvatar>local_shipping</mat-icon>
+                Remisionado
+              </mat-chip>
+            } @else if (h.remisionadoParcial) {
+              <mat-chip class="alistamiento__chip alistamiento__chip--remisionado-parcial" matTooltip="Algunos ítems ya se despacharon en World Office, otros todavía no — ver el detalle">
+                <mat-icon matChipAvatar>local_shipping</mat-icon>
+                Remisión parcial
+              </mat-chip>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let h" data-label="">
+          <a mat-flat-button color="primary" [routerLink]="['/alistamiento', h.documentoVinculadoId]">Ver hoja</a>
+          @if (h.ocs.length === 1) {
+            <a mat-button [routerLink]="['/documentos', h.ocs[0].instanciaDocumentoId]">Ver OC</a>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr
+        mat-row
+        *matRowDef="let h; columns: columnas"
+        [class.alistamiento__fila--atrasada]="nivelEstado(h) === 'atrasada'"
+        [class.alistamiento__fila--completa]="nivelEstado(h) === 'completa'"
+        [class.alistamiento__fila--avanzada]="nivelEstado(h) === 'avanzada'"
+      ></tr>
+
+      <tr class="alistamiento__vacio-fila" *matNoDataRow>
+        <td [attr.colspan]="columnas.length" class="alistamiento__vacio">
+          @if (soloIncompletas()) {
+            No hay hojas de alistamiento incompletas.
+          } @else {
+            No hay hojas de alistamiento registradas.
+          }
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator
+      [length]="filtradas.length"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageIndex]="pageIndex()"
+      (page)="cambiarPagina($event)"
+      showFirstLastButtons
+    />
+  }
+</div>

@@ -17,4 +17,12 @@ export class FlujoService {
   crear(dto: DefinicionFlujoCrear): Observable<DefinicionFlujo> {
     return this.http.post<DefinicionFlujo>(this.baseUrl, dto);
   }
+
+  activar(id: number): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${id}/activar`, {});
+  }
+
+  desactivar(id: number): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${id}/desactivar`, {});
+  }
 }

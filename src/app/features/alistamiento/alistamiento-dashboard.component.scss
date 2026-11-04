@@ -1,0 +1,134 @@
+@keyframes alistamiento-pulso-rojo {
+  0%, 100% {
+    background-color: #ffcdd2;
+  }
+  50% {
+    background-color: #ef9a9a;
+  }
+}
+
+@keyframes alistamiento-pulso-verde {
+  0%, 100% {
+    background-color: #c8e6c9;
+  }
+  50% {
+    background-color: #81c784;
+  }
+}
+
+@keyframes alistamiento-pulso-amarillo {
+  0%, 100% {
+    background-color: #ffe082;
+  }
+  50% {
+    background-color: #ffca28;
+  }
+}
+
+// Versión sutil de cada color (fondo de fila, no del chip) — se mueve entre dos transparencias
+// en vez de dos colores sólidos, para que no compita visualmente con el chip de esa misma fila.
+@keyframes alistamiento-pulso-fila-rojo {
+  0%, 100% { background-color: rgba(255, 205, 210, 0.35); }
+  50% { background-color: rgba(255, 205, 210, 0.75); }
+}
+@keyframes alistamiento-pulso-fila-verde {
+  0%, 100% { background-color: rgba(200, 230, 201, 0.35); }
+  50% { background-color: rgba(200, 230, 201, 0.75); }
+}
+@keyframes alistamiento-pulso-fila-amarillo {
+  0%, 100% { background-color: rgba(255, 224, 130, 0.35); }
+  50% { background-color: rgba(255, 224, 130, 0.75); }
+}
+
+.alistamiento {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__acciones-header {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__ayuda {
+    opacity: 0.7;
+    margin-bottom: 1rem;
+    max-width: 48rem;
+  }
+
+  &__filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  &__campo-filtro {
+    width: 16rem;
+    max-width: 100%;
+  }
+
+  // Chip de estado + chip de "Remisionado" apilados en columna cuando hay dos — en línea se veían
+  // apretados en la columna angosta de Estado.
+  &__chips-estado {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  // Sin pulso (a diferencia de los 3 estados de arriba) — es informativo, no urgente: combinarlo
+  // con "Atrasada" titilando ya es bastante para una sola fila.
+  &__chip--remisionado {
+    background-color: #cfe8ff !important;
+  }
+
+  &__chip--remisionado-parcial {
+    background-color: #ffe0b2 !important;
+  }
+
+  &__horas {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+
+  &__vacio {
+    padding: 1.5rem;
+    text-align: center;
+    opacity: 0.6;
+  }
+
+  // Los 3 estados con color titilan (pedido explícito) — una animación siempre le gana al fondo
+  // fijo de mat-chip (MDC) sin necesitar !important, a diferencia de un color estático (por eso el
+  // "Completa"/"Avanzada" sin animación necesitaban !important antes de este cambio).
+  &__chip {
+    &--completa {
+      animation: alistamiento-pulso-verde 2s ease-in-out infinite;
+    }
+    &--avanzada {
+      animation: alistamiento-pulso-amarillo 1.8s ease-in-out infinite;
+    }
+    &--atrasada {
+      animation: alistamiento-pulso-rojo 1.6s ease-in-out infinite;
+    }
+  }
+
+  // Solo el fondo de la fila pulsa (más sutil que el chip, entre transparencias no entre colores
+  // sólidos) — timing un poco más lento para que no se vea exactamente sincronizado con el chip.
+  &__fila--completa {
+    animation: alistamiento-pulso-fila-verde 3s ease-in-out infinite;
+  }
+  &__fila--avanzada {
+    animation: alistamiento-pulso-fila-amarillo 2.7s ease-in-out infinite;
+  }
+  &__fila--atrasada {
+    animation: alistamiento-pulso-fila-rojo 2.4s ease-in-out infinite;
+  }
+}

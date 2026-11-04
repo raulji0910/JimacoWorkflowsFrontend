@@ -8,4 +8,10 @@ export interface LoginResponse {
   nombre: string;
   email: string;
   roles: string[];
+  // Si alguno de los roles del usuario tiene el permiso administrativo de buscar y devolver
+  // cualquier documento — ver Rol.PuedeDevolverCualquierDocumento en el backend.
+  puedeDevolverCualquierDocumento: boolean;
+  // Control de alistamiento — ver Rol.PuedeGestionarAlistamiento/PuedeVerAlistamiento en el backend.
+  puedeGestionarAlistamiento: boolean;
+  puedeVerAlistamiento: boolean;
 }

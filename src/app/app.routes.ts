@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -32,8 +32,25 @@ export const routes: Routes = [
           import('./features/documentos/mis-documentos-list.component').then((m) => m.MisDocumentosListComponent)
       },
       {
+        path: 'documentos/buscar',
+        loadComponent: () => import('./features/documentos/buscar-documento.component').then((m) => m.BuscarDocumentoComponent),
+        canActivate: [puedeDevolverCualquierDocumentoGuard]
+      },
+      {
         path: 'documentos/:id',
         loadComponent: () => import('./features/documentos/documento-detalle.component').then((m) => m.DocumentoDetalleComponent)
+      },
+      {
+        path: 'alistamiento',
+        loadComponent: () =>
+          import('./features/alistamiento/alistamiento-dashboard.component').then((m) => m.AlistamientoDashboardComponent),
+        canActivate: [puedeVerAlistamientoGuard]
+      },
+      {
+        path: 'alistamiento/:id',
+        loadComponent: () =>
+          import('./features/alistamiento/hoja-alistamiento-detalle.component').then((m) => m.HojaAlistamientoDetalleComponent),
+        canActivate: [puedeVerAlistamientoGuard]
       },
       {
         path: 'admin/roles',

@@ -21,3 +21,23 @@ export const adminGuard: CanActivateFn = () => {
   router.navigate(['/pendientes']);
   return false;
 };
+
+export const puedeDevolverCualquierDocumentoGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeDevolverCualquierDocumento()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};
+
+export const puedeVerAlistamientoGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerAlistamiento()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};

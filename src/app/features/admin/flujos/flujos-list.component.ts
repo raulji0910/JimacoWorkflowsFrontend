@@ -47,11 +47,8 @@ export class FlujosListComponent implements OnInit {
   readonly roles = signal<Rol[]>([]);
   readonly flujos = signal<DefinicionFlujo[]>([]);
   readonly cargando = signal(false);
+  readonly procesandoId = signal<number | null>(null);
   tipoDocumentoId: number | null = null;
-
-  get flujoActivo(): DefinicionFlujo | null {
-    return this.flujos().find((f) => f.activo) ?? null;
-  }
 
   ngOnInit(): void {
     this.rolService.listar().subscribe((roles) => this.roles.set(roles));
@@ -72,7 +69,8 @@ export class FlujosListComponent implements OnInit {
     this.cargando.set(true);
     this.flujoService.listarPorTipoDocumento(this.tipoDocumentoId).subscribe({
       next: (flujos) => {
-        this.flujos.set(flujos);
+        // Activos primero, y entre ellos los más recientes arriba — para que lo importante se vea de una.
+        this.flujos.set(flujos.slice().sort((a, b) => (a.activo === b.activo ? b.id - a.id : a.activo ? -1 : 1)));
         this.cargando.set(false);
       },
       error: () => this.cargando.set(false)
@@ -83,13 +81,23 @@ export class FlujosListComponent implements OnInit {
     return this.roles().find((r) => r.id === rolId)?.nombre ?? '?';
   }
 
-  abrirNuevoFlujo(): void {
+  /** Texto legible de "cuándo aplica" — ej. "Contado, hasta $300.000" o "Cualquier caso". */
+  condicion(flujo: DefinicionFlujo): string {
+    const partes: string[] = [];
+    if (flujo.formaDePagoRequerida) partes.push(flujo.formaDePagoRequerida === 'Contado' ? 'Contado' : 'Crédito');
+    if (flujo.valorMinimo != null && flujo.valorMaximo != null) partes.push(`entre $${flujo.valorMinimo.toLocaleString('es-CO')} y $${flujo.valorMaximo.toLocaleString('es-CO')}`);
+    else if (flujo.valorMinimo != null) partes.push(`desde $${flujo.valorMinimo.toLocaleString('es-CO')}`);
+    else if (flujo.valorMaximo != null) partes.push(`hasta $${flujo.valorMaximo.toLocaleString('es-CO')}`);
+
+    return partes.length > 0 ? partes.join(', ') : 'Cualquier caso (sin condición)';
+  }
+
+  abrirNuevoFlujo(basadoEn: DefinicionFlujo | null = null): void {
     if (!this.tipoDocumentoId) return;
 
-    const flujoActivo = this.flujoActivo;
     const dialogRef = this.dialog.open(FlujoFormDialogComponent, {
       width: '46rem',
-      data: { tipoDocumentoId: this.tipoDocumentoId, roles: this.roles(), flujoActivo }
+      data: { tipoDocumentoId: this.tipoDocumentoId, roles: this.roles(), basadoEn }
     });
 
     dialogRef.afterClosed().subscribe((resultado) => {
@@ -97,14 +105,48 @@ export class FlujosListComponent implements OnInit {
 
       this.flujoService.crear(resultado).subscribe({
         next: () => {
-          this.snackBar.open(flujoActivo ? 'Flujo actualizado' : 'Flujo creado y activado', 'Cerrar', { duration: 3000 });
+          this.snackBar.open('Flujo creado y activado', 'Cerrar', { duration: 3000 });
           this.cargar();
         },
         error: (error) => {
           const mensaje = error?.error?.mensaje ?? 'No se pudo crear el flujo.';
-          this.snackBar.open(mensaje, 'Cerrar', { duration: 4000 });
+          this.snackBar.open(mensaje, 'Cerrar', { duration: 5000 });
         }
       });
+    });
+  }
+
+  duplicar(flujo: DefinicionFlujo): void {
+    this.abrirNuevoFlujo(flujo);
+  }
+
+  activar(flujo: DefinicionFlujo): void {
+    this.procesandoId.set(flujo.id);
+    this.flujoService.activar(flujo.id).subscribe({
+      next: () => {
+        this.procesandoId.set(null);
+        this.cargar();
+      },
+      error: (error) => {
+        this.procesandoId.set(null);
+        const mensaje = error?.error?.mensaje ?? 'No se pudo activar el flujo.';
+        this.snackBar.open(mensaje, 'Cerrar', { duration: 5000 });
+      }
+    });
+  }
+
+  desactivar(flujo: DefinicionFlujo): void {
+    this.procesandoId.set(flujo.id);
+    this.flujoService.desactivar(flujo.id).subscribe({
+      next: () => {
+        this.procesandoId.set(null);
+        this.cargar();
+      },
+      error: (error) => {
+        this.procesandoId.set(null);
+        const mensaje = error?.error?.mensaje ?? 'No se pudo desactivar el flujo.';
+        this.snackBar.open(mensaje, 'Cerrar', { duration: 5000 });
+      }
     });
   }
 }

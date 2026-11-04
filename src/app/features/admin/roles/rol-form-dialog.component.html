@@ -13,6 +13,37 @@
   @if (editando) {
     <mat-slide-toggle [(ngModel)]="activo" name="activo">Activo</mat-slide-toggle>
   }
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeDevolverCualquierDocumento" name="puedeDevolverCualquierDocumento">
+      Puede buscar y devolver cualquier documento
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Permiso administrativo: quien tenga este rol puede buscar cualquier OC (sin importar el paso
+      en que esté ni si tiene el rol habilitado ahí) y devolverla al emisor — anula el paso en curso
+      y la deja "en espera de aprobación" en World Office, para que se pueda editar y relanzar.
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeGestionarAlistamiento" name="puedeGestionarAlistamiento">
+      Puede gestionar el alistamiento
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Puede registrar la cantidad disponible de cada ítem en cualquier Hoja de Alistamiento, y ver el
+      dashboard de alistamiento — sin importar el paso actual de la OC (pensado para Transporte).
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeVerAlistamiento" name="puedeVerAlistamiento">
+      Puede ver el dashboard de alistamiento
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Solo ver el estado de las Hojas de Alistamiento, sin poder editar cantidades — pensado para
+      supervisión (ej. Gerencia Comercial).
+    </p>
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>

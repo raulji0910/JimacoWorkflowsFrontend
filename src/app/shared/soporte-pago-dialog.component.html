@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>Soporte de pago requerido</h2>
+<mat-dialog-content>
+  <p>
+    Para aprobar este paso necesitás adjuntar el soporte de pago (PDF) — por ejemplo, el
+    comprobante de la transferencia que acabás de hacer.
+  </p>
+  <p>
+    Una vez elegido el archivo, la aprobación queda registrada y se le avisa por correo a
+    Contabilidad y al emisor de la OC, con el PDF adjunto.
+  </p>
+  <input #inputArchivo type="file" accept=".pdf,application/pdf" hidden (change)="onArchivoSeleccionado($event)" />
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button [mat-dialog-close]="undefined">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="elegirArchivo()">
+    <mat-icon>attach_file</mat-icon>
+    Elegir PDF
+  </button>
+</mat-dialog-actions>

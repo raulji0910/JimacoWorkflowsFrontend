@@ -1,0 +1,171 @@
+<div class="hoja">
+  <a mat-button routerLink="/alistamiento">
+    <mat-icon>arrow_back</mat-icon>
+    Volver al dashboard
+  </a>
+
+  @if (cargando()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (hoja(); as h) {
+    <mat-card class="hoja__card">
+      <mat-card-content>
+        <div class="hoja__header">
+          <h2>
+            Hoja de Alistamiento {{ h.numeroReferencia }}
+            @if (h.completa) {
+              <mat-chip class="hoja__chip hoja__chip--completa">Completa</mat-chip>
+            } @else {
+              <mat-chip class="hoja__chip">Incompleta</mat-chip>
+            }
+            @if (h.remisionado) {
+              <mat-chip class="hoja__chip hoja__chip--remisionado" matTooltip="Todos los ítems ya se despacharon en World Office">
+                <mat-icon matChipAvatar>local_shipping</mat-icon>
+                Remisionado
+              </mat-chip>
+            } @else if (h.remisionadoParcial) {
+              <mat-chip class="hoja__chip hoja__chip--remisionado-parcial" matTooltip="Algunos ítems ya se despacharon, otros todavía no — ver la columna Remisionado de cada ítem">
+                <mat-icon matChipAvatar>local_shipping</mat-icon>
+                Remisión parcial
+              </mat-chip>
+            }
+          </h2>
+          <div class="hoja__ocs">
+            @for (oc of h.ocs; track oc.instanciaDocumentoId) {
+              <a mat-stroked-button [routerLink]="['/documentos', oc.instanciaDocumentoId]">Ver OC {{ oc.numeroReferencia }}</a>
+            }
+          </div>
+        </div>
+
+        <button mat-stroked-button class="hoja__boton-filtro" (click)="alternarFiltro()">
+          <mat-icon>{{ soloIncompletos() ? 'visibility' : 'visibility_off' }}</mat-icon>
+          {{ soloIncompletos() ? 'Viendo solo incompletos' : 'Viendo todos los ítems' }}
+        </button>
+
+        <dl class="hoja__campos">
+          @if (h.cliente) {
+            <div><dt>Cliente</dt><dd>{{ h.cliente }}</dd></div>
+          }
+          @if (h.direccion) {
+            <div><dt>Dirección</dt><dd>{{ h.direccion }}</dd></div>
+          }
+          @if (h.ciudad) {
+            <div><dt>Ciudad</dt><dd>{{ h.ciudad }}</dd></div>
+          }
+          @if (h.telefono) {
+            <div><dt>Teléfono</dt><dd>{{ h.telefono }}</dd></div>
+          }
+          @if (h.campoEntrega) {
+            <div><dt>Entrega</dt><dd>{{ h.campoEntrega }}</dd></div>
+          }
+          <div><dt>Aprobada</dt><dd>{{ h.fechaAprobacionComercial | date: 'd MMM y, HH:mm' }}</dd></div>
+        </dl>
+
+        <div class="hoja__tabla">
+          <table mat-table [dataSource]="renglonesFiltrados" class="tabla-responsiva">
+            <ng-container matColumnDef="codigo">
+              <th mat-header-cell *matHeaderCellDef>Código</th>
+              <td mat-cell *matCellDef="let r" data-label="Código">{{ r.codigo || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="descripcion">
+              <th mat-header-cell *matHeaderCellDef>Descripción</th>
+              <td mat-cell *matCellDef="let r" data-label="Descripción">{{ r.descripcion }}</td>
+            </ng-container>
+            <ng-container matColumnDef="cantidad">
+              <th mat-header-cell *matHeaderCellDef>Pedida</th>
+              <td mat-cell *matCellDef="let r" data-label="Pedida">{{ r.cantidad }} {{ r.unidadMedida }}</td>
+            </ng-container>
+            <ng-container matColumnDef="cantidadDisponible">
+              <th mat-header-cell *matHeaderCellDef>Disponible</th>
+              <td mat-cell *matCellDef="let r" data-label="Disponible">
+                @if (puedeGestionar) {
+                  <div class="hoja__fila-cantidad">
+                    <mat-form-field appearance="outline" class="hoja__campo-cantidad">
+                      <input
+                        matInput
+                        type="number"
+                        min="0"
+                        [max]="r.cantidad"
+                        [(ngModel)]="r.cantidadDisponible"
+                        (blur)="corregirCantidad(r)"
+                        [name]="'cantidad' + r.id"
+                      />
+                    </mat-form-field>
+                    <button
+                      mat-icon-button
+                      color="primary"
+                      [disabled]="guardandoRenglonId() === r.id"
+                      (click)="guardarRenglon(r)"
+                      matTooltip="Guardar esta línea"
+                      aria-label="Guardar esta línea"
+                    >
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+                  </div>
+                } @else {
+                  {{ r.cantidadDisponible }}
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="remisionado">
+              <th mat-header-cell *matHeaderCellDef>Remisionado</th>
+              <td mat-cell *matCellDef="let r" data-label="Remisionado">
+                @switch (r.despachosRemision.length) {
+                  @case (0) {
+                    <span class="hoja__remision hoja__remision--ninguno">—</span>
+                  }
+                  @case (1) {
+                    <span class="hoja__remision" [class.hoja__remision--completo]="estadoRemision(r) === 'completo'" [class.hoja__remision--parcial]="estadoRemision(r) === 'parcial'">
+                      {{ r.despachosRemision[0].numeroRemision }} ({{ r.cantidadRemisionada | number: '1.0-2' }}/{{ r.cantidad | number: '1.0-2' }})
+                    </span>
+                  }
+                  @default {
+                    <button
+                      mat-stroked-button
+                      class="hoja__remision hoja__remision--boton"
+                      [class.hoja__remision--completo]="estadoRemision(r) === 'completo'"
+                      [class.hoja__remision--parcial]="estadoRemision(r) === 'parcial'"
+                      (click)="abrirDespachos(r)"
+                    >
+                      Ver detalle ({{ r.despachosRemision.length }}) — {{ r.cantidadRemisionada | number: '1.0-2' }}/{{ r.cantidad | number: '1.0-2' }}
+                    </button>
+                  }
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: columnas"
+              [class.hoja__fila--incompleto]="estadoRenglon(row) === 'sinIniciar'"
+              [class.hoja__fila--parcial]="estadoRenglon(row) === 'parcial'"
+              [class.hoja__fila--completo]="estadoRenglon(row) === 'completo'"
+            ></tr>
+
+            <tr class="hoja__vacio-fila" *matNoDataRow>
+              <td [attr.colspan]="columnas.length" class="hoja__vacio">
+                @if (soloIncompletos()) {
+                  Ya no quedan ítems incompletos en esta Hoja.
+                } @else {
+                  Esta Hoja no tiene ítems.
+                }
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <dl class="hoja__totales">
+          <div><dt>Subtotal</dt><dd>{{ h.subtotal | number: '1.0-0' }}</dd></div>
+          <div><dt>Descuento</dt><dd>0</dd></div>
+          <div><dt>IVA</dt><dd>{{ h.totalIva | number: '1.0-0' }}</dd></div>
+          <div class="hoja__totales-destacado"><dt>Total documento</dt><dd>{{ h.total | number: '1.0-0' }}</dd></div>
+        </dl>
+
+        @if (puedeGestionar) {
+          <p class="hoja__ayuda">Tocá el check de cada línea para guardar esa cantidad — no hace falta llenar todo antes de guardar.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

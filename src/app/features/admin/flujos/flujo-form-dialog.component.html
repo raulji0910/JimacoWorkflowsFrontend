@@ -1,18 +1,39 @@
-<h2 mat-dialog-title>{{ editando ? 'Editar flujo' : 'Nuevo flujo' }}</h2>
+<h2 mat-dialog-title>{{ clonando ? 'Nuevo flujo (basado en "' + data.basadoEn!.nombre + '")' : 'Nuevo flujo' }}</h2>
 <mat-dialog-content class="form-dialogo">
   <p class="form-dialogo__ayuda">
-    @if (editando) {
-      Estos son los pasos del flujo activo — modificalos, agregá o quitá pasos según necesites. Al
-      guardar se crea una nueva versión activa (la anterior queda inactiva, pero no se borra).
-    } @else {
-      Al guardar, este flujo queda Activo para este tipo de documento.
-    }
+    Este flujo queda Activo apenas lo guardés. Puede haber varios flujos activos a la vez para el
+    mismo tipo de documento — cada uno cubre un caso distinto según el valor y la forma de pago del
+    documento (dejá "Cualquiera"/sin límites si este flujo debe aplicar siempre).
   </p>
 
   <mat-form-field appearance="outline" class="form-dialogo__campo">
     <mat-label>Nombre del flujo</mat-label>
-    <input matInput [(ngModel)]="nombre" name="nombre" placeholder="Flujo OC" required />
+    <input matInput [(ngModel)]="nombre" name="nombre" placeholder="OC Contado hasta $300.000" required />
   </mat-form-field>
+
+  <mat-divider />
+  <h3>¿Cuándo aplica este flujo?</h3>
+
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Forma de pago</mat-label>
+    <mat-select [(ngModel)]="formaDePago" name="formaDePago">
+      <mat-option value="Cualquiera">Cualquiera</mat-option>
+      <mat-option value="Contado">Contado</mat-option>
+      <mat-option value="Credito">Crédito</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <div class="paso-fila__fila">
+    <mat-form-field appearance="outline" class="form-dialogo__campo">
+      <mat-label>Valor mínimo (opcional)</mat-label>
+      <input matInput type="number" [(ngModel)]="valorMinimo" name="valorMinimo" placeholder="Sin piso" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-dialogo__campo">
+      <mat-label>Valor máximo (opcional)</mat-label>
+      <input matInput type="number" [(ngModel)]="valorMaximo" name="valorMaximo" placeholder="Sin techo" />
+    </mat-form-field>
+  </div>
 
   <mat-divider />
   <h3>Pasos (en orden)</h3>
@@ -42,19 +63,91 @@
 
       <div class="paso-fila__fila">
         <mat-checkbox [(ngModel)]="paso.permiteDevolver" [name]="'pasoDevolver' + $index">Permite devolver</mat-checkbox>
-        <mat-checkbox [(ngModel)]="paso.permiteRechazar" [name]="'pasoRechazar' + $index">Permite rechazar</mat-checkbox>
+        @if ($index === 0) {
+          <mat-checkbox [(ngModel)]="paso.permiteRechazar" [name]="'pasoRechazar' + $index">Permite rechazar</mat-checkbox>
+        }
       </div>
+      @if ($index > 0) {
+        <p class="form-dialogo__ayuda">
+          Rechazar y "devolver al emisor" son exclusivos del primer paso (el único que escribe de
+          vuelta en World Office) — este paso solo puede devolver a un paso anterior puntual.
+        </p>
+      }
 
-      @if (paso.permiteDevolver) {
+      <mat-checkbox [(ngModel)]="paso.requiereComprobanteEgresoAlAprobar" [name]="'pasoComprobanteEgreso' + $index">
+        Al aprobar, exige el número del Comprobante de Egreso de World Office
+      </mat-checkbox>
+      @if (paso.requiereComprobanteEgresoAlAprobar) {
+        <p class="form-dialogo__ayuda">
+          Quien apruebe este paso va a tener que escribir el número del comprobante — el sistema lo
+          busca en World Office y lo adjunta; el aviso al paso siguiente queda pospuesto hasta que
+          eso pase.
+        </p>
+      }
+
+      <mat-checkbox [(ngModel)]="paso.requiereComentarioAlAprobar" [name]="'pasoComentarioAprobar' + $index">
+        Al aprobar, exige un comentario obligatorio
+      </mat-checkbox>
+      @if (paso.requiereComentarioAlAprobar) {
+        <p class="form-dialogo__ayuda">
+          Quien apruebe este paso va a tener que escribir una observación (ej. a quién le entregó el
+          dinero) — queda guardada en el historial y en el PDF, igual que un comentario de Devolver.
+        </p>
+      }
+
+      <mat-checkbox [(ngModel)]="paso.requiereSoportePagoAlAprobar" [name]="'pasoSoportePago' + $index">
+        Al aprobar, exige adjuntar el soporte de pago (PDF)
+      </mat-checkbox>
+      @if (paso.requiereSoportePagoAlAprobar) {
+        <p class="form-dialogo__ayuda">
+          Quien apruebe este paso va a tener que adjuntar un PDF antes de dejarlo aprobar (ej.
+          comprobante de la transferencia) — al aprobar se le avisa por correo a Contabilidad y al
+          emisor de la OC, con el PDF pegado.
+        </p>
+      }
+
+      @if (ordenesPosterioresDisponibles($index).length > 0) {
         <mat-form-field appearance="outline" class="form-dialogo__campo">
-          <mat-label>Al devolver, vuelve a</mat-label>
-          <mat-select [(ngModel)]="paso.pasoDestinoDevolucionOrden" [name]="'pasoDestino' + $index">
-            <mat-option [value]="0">El emisor (reingresa por el paso 1)</mat-option>
-            @for (orden of ordenesDisponibles($index); track orden) {
+          <mat-label>Al aprobar, también permite redirigir a (opcional)</mat-label>
+          <mat-select [(ngModel)]="paso.redirigirAPagoContadoOrden" [name]="'pasoRedirigir' + $index">
+            <mat-option [value]="null">Ninguno</mat-option>
+            @for (orden of ordenesPosterioresDisponibles($index); track orden) {
               <mat-option [value]="orden">Paso {{ orden }}</mat-option>
             }
           </mat-select>
+          <mat-hint>
+            Ej. "Gerencia General" decide a discreción pagar en efectivo en vez de por transferencia:
+            además de "Aprobar", queda disponible "Redirigir a pago en efectivo" hacia el paso elegido.
+          </mat-hint>
         </mat-form-field>
+      }
+
+      @if (paso.permiteDevolver) {
+        @if ($index === 0) {
+          <mat-checkbox [(ngModel)]="paso.permiteDevolverAlEmisor" [name]="'pasoAlEmisor' + $index">
+            Puede devolver al emisor
+          </mat-checkbox>
+        }
+
+        @if (ordenesDisponibles($index).length > 0) {
+          <mat-form-field appearance="outline" class="form-dialogo__campo">
+            <mat-label>También puede volver a (opcional)</mat-label>
+            <mat-select [(ngModel)]="paso.destinosDevolucionOrdenes" [name]="'pasoDestinos' + $index" multiple>
+              @for (orden of ordenesDisponibles($index); track orden) {
+                <mat-option [value]="orden">Paso {{ orden }}</mat-option>
+              }
+            </mat-select>
+            <mat-hint>
+              @if (!paso.permiteDevolverAlEmisor && paso.destinosDevolucionOrdenes.length === 0) {
+                Sin "vuelve al emisor" y sin pasos anteriores elegidos, este paso queda sin ningún destino — hay que marcar al menos uno.
+              } @else if ((paso.permiteDevolverAlEmisor ? 1 : 0) + paso.destinosDevolucionOrdenes.length > 1) {
+                Quien devuelva va a poder elegir entre todas las opciones marcadas.
+              }
+            </mat-hint>
+          </mat-form-field>
+        } @else if (!paso.permiteDevolverAlEmisor) {
+          <p class="form-dialogo__ayuda">Es el primer paso — sin "vuelve al emisor" marcado, no va a tener ningún destino. Marcalo.</p>
+        }
       }
     </div>
   }
@@ -66,5 +159,5 @@
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>
-  <button mat-flat-button color="primary" (click)="guardar()">{{ editando ? 'Guardar cambios' : 'Guardar y activar' }}</button>
+  <button mat-flat-button color="primary" (click)="guardar()">Guardar y activar</button>
 </mat-dialog-actions>

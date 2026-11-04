@@ -1,0 +1,184 @@
+// Mismo pulso sutil (fondo de fila, no sólido) que el dashboard de Alistamiento — duplicado acá
+// porque los estilos de componente de Angular están scoped, no se comparten entre componentes.
+@keyframes hoja-pulso-fila-rojo {
+  0%, 100% { background-color: rgba(255, 205, 210, 0.35); }
+  50% { background-color: rgba(255, 205, 210, 0.75); }
+}
+
+.hoja {
+  &__card {
+    margin-top: 0.75rem;
+  }
+
+  &__boton-filtro {
+    margin-bottom: 1rem;
+  }
+
+  &__vacio {
+    padding: 1.5rem;
+    text-align: center;
+    opacity: 0.6;
+  }
+
+  // Tres estados (2026-10-21): sin iniciar titila en rojo (pedido explícito, igual que el
+  // dashboard); parcial (ya hay al menos 1 unidad guardada, pero no toda la pedida) se queda fijo
+  // en amarillo; completo se queda fijo en verde — ninguno de los dos últimos titila, a propósito,
+  // para no competir visualmente con el rojo titilante (el único que de verdad urge).
+  &__fila--incompleto {
+    animation: hoja-pulso-fila-rojo 2.4s ease-in-out infinite;
+  }
+  &__fila--parcial {
+    background-color: rgba(255, 224, 130, 0.5);
+  }
+  &__fila--completo {
+    background-color: rgba(200, 230, 201, 0.5);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  &__ocs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__chip {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    vertical-align: middle;
+
+    &--completa {
+      background: #c8e6c9 !important;
+    }
+
+    &--remisionado {
+      background: #cfe8ff !important;
+    }
+
+    &--remisionado-parcial {
+      background: #ffe0b2 !important;
+    }
+  }
+
+  // Remisionado por renglón (2026-10-26) — señal independiente de Disponible, con su propio color,
+  // sin tocar el fondo de la fila (ese ya lo usa el estado de Disponible) para no mezclar las dos
+  // señales.
+  &__remision {
+    font-size: 0.85rem;
+
+    &--ninguno {
+      opacity: 0.5;
+    }
+
+    &--parcial {
+      color: #e65100;
+      font-weight: 500;
+    }
+
+    &--completo {
+      color: #2e7d32;
+      font-weight: 500;
+    }
+
+    &--boton {
+      font-size: 0.78rem;
+      line-height: 1.6;
+      white-space: normal;
+      text-align: left;
+    }
+  }
+
+  &__campos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 0.75rem;
+    margin: 0 0 1.5rem;
+
+    dt {
+      font-size: 0.75rem;
+      opacity: 0.6;
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 500;
+    }
+  }
+
+  &__tabla {
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+
+    table {
+      width: 100%;
+    }
+  }
+
+  &__fila-cantidad {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  &__campo-cantidad {
+    width: 6rem;
+
+    ::ng-deep .mat-mdc-form-field-infix {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      min-height: unset;
+    }
+  }
+
+  &__ayuda {
+    opacity: 0.6;
+    font-size: 0.85rem;
+  }
+
+  // Informativo para Logística — misma caja que trae el PDF real (Subtotal/Descuento/IVA/Total
+  // documento), alineada a la derecha, con el total destacado.
+  &__totales {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    margin: 0 0 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+    div {
+      display: flex;
+      gap: 1rem;
+      width: 16rem;
+      max-width: 100%;
+      justify-content: space-between;
+    }
+
+    dt {
+      opacity: 0.6;
+    }
+
+    dd {
+      margin: 0;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  &__totales-destacado {
+    font-weight: 600;
+    font-size: 1.05rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+    padding-top: 0.35rem;
+  }
+}
