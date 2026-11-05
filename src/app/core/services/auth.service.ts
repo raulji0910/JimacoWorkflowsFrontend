@@ -76,6 +76,11 @@ export class AuthService {
     return (sesion?.puedeVerAlistamiento || sesion?.puedeGestionarAlistamiento) ?? false;
   }
 
+  /** Puede entrar al módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar. */
+  puedeVerCuentasPorPagar(): boolean {
+    return this.sesion()?.puedeVerCuentasPorPagar ?? false;
+  }
+
   private leerSesionValida(): LoginResponse | null {
     const crudo = localStorage.getItem(CLAVE_STORAGE);
     if (!crudo) return null;

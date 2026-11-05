@@ -32,6 +32,13 @@
         </a>
       }
 
+      @if (puedeVerCuentasPorPagar) {
+        <a mat-list-item routerLink="/cuentas-por-pagar" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>request_quote</mat-icon>
+          <span matListItemTitle>Cuentas por pagar</span>
+        </a>
+      }
+
       @if (esAdmin) {
         <mat-divider class="layout__divisor" />
         <a mat-list-item routerLink="/admin/roles" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">

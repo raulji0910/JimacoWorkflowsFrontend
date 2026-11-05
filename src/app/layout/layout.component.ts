@@ -38,6 +38,7 @@ export class LayoutComponent {
   readonly esAdmin = this.authService.esAdmin();
   readonly puedeDevolverCualquierDocumento = this.authService.puedeDevolverCualquierDocumento();
   readonly puedeVerAlistamiento = this.authService.puedeVerAlistamiento();
+  readonly puedeVerCuentasPorPagar = this.authService.puedeVerCuentasPorPagar();
   readonly version = environment.version;
 
   readonly esMovil = toSignal(

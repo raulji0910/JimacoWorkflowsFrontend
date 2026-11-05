@@ -1,0 +1,177 @@
+<div class="cxp">
+  <div class="cxp__header">
+    <div>
+      <h2>Cuentas por pagar</h2>
+      @if (resumen(); as r) {
+        <p class="cxp__corte" [matTooltip]="r.fechaCorte ? (r.fechaCorte | date: 'd MMM y, h:mm a') ?? '' : ''">
+          <mat-icon inline>sync</mat-icon>
+          Datos de World Office {{ haceCuanto(r.fechaCorte) }}
+        </p>
+      }
+    </div>
+    <button mat-stroked-button (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Actualizar
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="cxp__error">{{ error() }}</p>
+  }
+
+  @if (resumen(); as r) {
+    <div class="cxp__cifras">
+      <div class="cxp__cifra cxp__cifra--principal">
+        <span class="cxp__cifra-etiqueta">Total por pagar</span>
+        <span class="cxp__cifra-valor">$ {{ r.totalPendiente | number: '1.0-0' }}</span>
+      </div>
+      <div class="cxp__cifra cxp__cifra--vencido">
+        <span class="cxp__cifra-etiqueta">Vencido</span>
+        <span class="cxp__cifra-valor">$ {{ r.totalVencido | number: '1.0-0' }}</span>
+      </div>
+      <div class="cxp__cifra">
+        <span class="cxp__cifra-etiqueta">Vence en los próximos 7 días</span>
+        <span class="cxp__cifra-valor">$ {{ r.venceProximos7Dias | number: '1.0-0' }}</span>
+      </div>
+      <div class="cxp__cifra" matTooltip="Plata que ya se les adelantó a proveedores y que contabilidad todavía no cruzó contra ninguna factura">
+        <span class="cxp__cifra-etiqueta">Anticipos sin cruzar</span>
+        <span class="cxp__cifra-valor">$ {{ r.totalAnticipos | number: '1.0-0' }}</span>
+      </div>
+      <div class="cxp__cifra" matTooltip="Facturas que ya están en un pago en curso, o pagadas y pendientes de cruzar en World Office">
+        <span class="cxp__cifra-etiqueta">En trámite de pago</span>
+        <span class="cxp__cifra-valor">$ {{ r.totalEnTramite | number: '1.0-0' }}</span>
+      </div>
+    </div>
+
+    @if (tramos().length) {
+      <div class="cxp__antiguedad">
+        <div class="cxp__barra" role="img" aria-label="Antigüedad de lo que se debe">
+          @for (t of tramos(); track t.clase) {
+            @if (t.porcentaje > 0) {
+              <span class="cxp__tramo cxp__tramo--{{ t.clase }}" [style.width.%]="t.porcentaje"
+                [matTooltip]="t.etiqueta + ': $ ' + (t.valor | number: '1.0-0')"></span>
+            }
+          }
+        </div>
+        <div class="cxp__leyenda">
+          @for (t of tramos(); track t.clase) {
+            <span class="cxp__leyenda-item">
+              <span class="cxp__punto cxp__tramo--{{ t.clase }}"></span>
+              {{ t.etiqueta }}: <strong>$ {{ t.valor | number: '1.0-0' }}</strong>
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="cxp__filtros">
+      <mat-form-field appearance="outline" class="cxp__campo">
+        <mat-label>Buscar proveedor o NIT</mat-label>
+        <input matInput [ngModel]="busqueda()" (ngModelChange)="actualizarBusqueda($event)" />
+        @if (busqueda()) {
+          <button matSuffix mat-icon-button aria-label="Limpiar" (click)="actualizarBusqueda('')">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="cxp__campo">
+        <mat-label>Ordenar por</mat-label>
+        <mat-select [ngModel]="orden()" (ngModelChange)="cambiarOrden($event)">
+          <mat-option value="neto">Neto a pagar (mayor primero)</mat-option>
+          <mat-option value="vencido">Valor vencido</mat-option>
+          <mat-option value="dias">Días de mora</mat-option>
+          <mat-option value="nombre">Nombre</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-slide-toggle [ngModel]="incluirSoloAnticipos()" (ngModelChange)="alternarSoloAnticipos($event)">
+        Mostrar también terceros que solo tienen anticipos
+      </mat-slide-toggle>
+    </div>
+
+    <table mat-table [dataSource]="paginados()" class="tabla-responsiva cxp__tabla">
+      <ng-container matColumnDef="proveedor">
+        <th mat-header-cell *matHeaderCellDef>Proveedor</th>
+        <td mat-cell *matCellDef="let p" data-label="Proveedor">
+          <div class="cxp__proveedor">
+            <a [routerLink]="['/cuentas-por-pagar', p.identificacion]">{{ p.nombre }}</a>
+            <span class="cxp__nit">NIT {{ p.identificacion }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="facturas">
+        <th mat-header-cell *matHeaderCellDef class="cxp__num">Facturas</th>
+        <td mat-cell *matCellDef="let p" data-label="Facturas" class="cxp__num">{{ p.facturas }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="pendiente">
+        <th mat-header-cell *matHeaderCellDef class="cxp__num">Por pagar</th>
+        <td mat-cell *matCellDef="let p" data-label="Por pagar" class="cxp__num">$ {{ p.pendiente | number: '1.0-0' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="vencido">
+        <th mat-header-cell *matHeaderCellDef class="cxp__num">Vencido</th>
+        <td mat-cell *matCellDef="let p" data-label="Vencido" class="cxp__num">
+          @if (p.vencido > 0) {
+            <span class="cxp__vencido">$ {{ p.vencido | number: '1.0-0' }}</span>
+            <span class="cxp__sub">hasta {{ p.diasMaximoVencido }} días</span>
+          } @else {
+            <span class="cxp__sub">—</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="descuentos">
+        <th mat-header-cell *matHeaderCellDef class="cxp__num" matTooltip="Anticipos sin cruzar + pagos o notas crédito sin aplicar">Anticipos / a favor</th>
+        <td mat-cell *matCellDef="let p" data-label="Anticipos / a favor" class="cxp__num">
+          @if (p.anticipos + p.saldoAFavor !== 0) {
+            <span class="cxp__descuento">− $ {{ p.anticipos + p.saldoAFavor | number: '1.0-0' }}</span>
+          } @else {
+            <span class="cxp__sub">—</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="neto">
+        <th mat-header-cell *matHeaderCellDef class="cxp__num">Neto a pagar</th>
+        <td mat-cell *matCellDef="let p" data-label="Neto a pagar" class="cxp__num">
+          <strong [class.cxp__negativo]="p.neto < 0">$ {{ p.neto | number: '1.0-0' }}</strong>
+          @if (p.enTramite > 0) {
+            <span class="cxp__sub cxp__sub--tramite">$ {{ p.enTramite | number: '1.0-0' }} en trámite</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let p" data-label="">
+          <a mat-flat-button color="primary" [routerLink]="['/cuentas-por-pagar', p.identificacion]">Ver</a>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr mat-row *matRowDef="let p; columns: columnas" [class.cxp__fila--vencida]="p.diasMaximoVencido > 30"></tr>
+
+      <tr *matNoDataRow>
+        <td [attr.colspan]="columnas.length" class="cxp__vacio">
+          @if (busqueda()) {
+            Ningún proveedor coincide con "{{ busqueda() }}".
+          } @else if (!r.fechaCorte) {
+            Todavía no llegó la información de World Office — el Sincronizador la manda en su próxima corrida.
+          } @else {
+            No hay cuentas por pagar pendientes.
+          }
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator
+      [length]="filtrados().length"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageIndex]="pageIndex()"
+      (page)="cambiarPagina($event)"
+      showFirstLastButtons
+    />
+  }
+</div>

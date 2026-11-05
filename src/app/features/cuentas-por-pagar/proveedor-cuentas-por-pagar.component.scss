@@ -1,0 +1,235 @@
+// Mismos colores de antigüedad que el resumen (cuentas-por-pagar.component.scss).
+$v30: #e0a800;
+$v90: #c62828;
+
+.prov {
+  padding-bottom: 6rem; // espacio para la barra de pago fija abajo
+
+  &__volver {
+    margin: 0 0 0.5rem -0.75rem;
+  }
+
+  &__error {
+    color: var(--mat-sys-error);
+  }
+
+  &__header {
+    margin-bottom: 1rem;
+
+    h2 {
+      margin: 0;
+      text-wrap: balance;
+    }
+  }
+
+  &__meta {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+
+  // Estado de cuenta: lo que se debe, lo que ya está a favor y el neto — como un extracto, no como
+  // tarjetas sueltas, para que se lea como una resta.
+  &__cuentas {
+    max-width: 32rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 8px;
+    background: var(--mat-sys-surface-container-low);
+    padding: 0.5rem 1rem;
+  }
+
+  &__cuenta {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 0;
+
+    &--sub {
+      padding-left: 1rem;
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+
+    &--total {
+      margin-top: 0.25rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--mat-sys-outline-variant);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+  }
+
+  &__valor {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    &--vencido {
+      color: $v90;
+    }
+
+    &--descuento {
+      color: var(--mat-sys-primary);
+    }
+  }
+
+  &__aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    max-width: 48rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: rgba(224, 168, 0, 0.14);
+    border: 1px solid rgba(224, 168, 0, 0.5);
+
+    mat-icon {
+      color: #b07f00;
+      flex-shrink: 0;
+    }
+  }
+
+  &__acciones-tabla {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  &__tabla tr.mat-mdc-row {
+    cursor: pointer;
+  }
+
+  &__fila--marcada {
+    background: rgba(28, 101, 33, 0.08);
+  }
+
+  &__tabla tr.prov__fila--bloqueada {
+    cursor: default;
+    opacity: 0.8;
+  }
+
+  &__doc {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__sub {
+    font-size: 0.78rem;
+    opacity: 0.65;
+
+    &--vencida {
+      color: $v90;
+      opacity: 1;
+    }
+
+    &--pronto {
+      color: #9a6b00;
+      opacity: 1;
+    }
+  }
+
+  &__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &__chip {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    background: var(--mat-sys-surface-container-high);
+    text-decoration: none;
+    color: inherit;
+
+    &--tramite {
+      background: rgba(28, 101, 33, 0.14);
+      color: var(--mat-sys-primary);
+    }
+
+    &--pagada {
+      background: #cfe8ff;
+    }
+
+    &--favor {
+      background: rgba(224, 168, 0, 0.18);
+    }
+  }
+
+  &__vacio {
+    padding: 1.5rem;
+    text-align: center;
+    opacity: 0.6;
+  }
+
+  // Barra fija abajo con lo marcado — se ve mientras se recorre la tabla.
+  &__pago {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background: var(--mat-sys-surface);
+    border-top: 1px solid var(--mat-sys-outline-variant);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  &__pago-resumen {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+
+  &__pago-total {
+    font-size: 1.2rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__confirmar {
+    max-width: 44rem;
+    margin: 0 auto;
+
+    h3 {
+      margin: 0 0 0.5rem;
+    }
+
+    p {
+      margin: 0 0 0.75rem;
+    }
+  }
+
+  &__confirmar-aviso {
+    color: #9a6b00;
+  }
+
+  &__observaciones {
+    width: 100%;
+  }
+
+  &__confirmar-botones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .prov__num {
+    text-align: left;
+  }
+
+  .prov__doc {
+    align-items: flex-end;
+    text-align: right;
+  }
+}

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerCuentasPorPagarGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -51,6 +51,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/alistamiento/hoja-alistamiento-detalle.component').then((m) => m.HojaAlistamientoDetalleComponent),
         canActivate: [puedeVerAlistamientoGuard]
+      },
+      {
+        path: 'cuentas-por-pagar',
+        loadComponent: () =>
+          import('./features/cuentas-por-pagar/cuentas-por-pagar.component').then((m) => m.CuentasPorPagarComponent),
+        canActivate: [puedeVerCuentasPorPagarGuard]
+      },
+      {
+        path: 'cuentas-por-pagar/:identificacion',
+        loadComponent: () =>
+          import('./features/cuentas-por-pagar/proveedor-cuentas-por-pagar.component').then((m) => m.ProveedorCuentasPorPagarComponent),
+        canActivate: [puedeVerCuentasPorPagarGuard]
       },
       {
         path: 'admin/roles',

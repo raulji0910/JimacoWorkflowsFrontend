@@ -1,0 +1,183 @@
+// Colores de antigüedad compartidos con el detalle del proveedor (ver proveedor-cuentas-por-pagar).
+$al-dia: #3f863e;
+$v30: #e0a800;
+$v60: #ef6c00;
+$v90: #c62828;
+
+.cxp {
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  &__corte {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+
+  &__error {
+    color: var(--mat-sys-error);
+  }
+
+  &__cifras {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__cifra {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--mat-sys-outline-variant);
+    background: var(--mat-sys-surface-container-low);
+
+    &--principal {
+      border-color: var(--mat-sys-primary);
+    }
+
+    &--vencido .cxp__cifra-valor {
+      color: $v90;
+    }
+  }
+
+  &__cifra-etiqueta {
+    font-size: 0.8rem;
+    opacity: 0.75;
+  }
+
+  &__cifra-valor {
+    font-size: 1.3rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__antiguedad {
+    margin-bottom: 1.25rem;
+  }
+
+  &__barra {
+    display: flex;
+    height: 14px;
+    border-radius: 7px;
+    overflow: hidden;
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  &__tramo {
+    display: block;
+    height: 100%;
+
+    &--al-dia { background: $al-dia; }
+    &--v30 { background: $v30; }
+    &--v60 { background: $v60; }
+    &--v90 { background: $v90; }
+  }
+
+  &__leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  &__leyenda-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__punto {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  &__filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 1rem;
+  }
+
+  &__campo {
+    width: 18rem;
+    max-width: 100%;
+  }
+
+  &__proveedor {
+    display: flex;
+    flex-direction: column;
+    padding: 0.35rem 0;
+  }
+
+  &__nit,
+  &__sub {
+    display: block;
+    font-size: 0.78rem;
+    opacity: 0.65;
+  }
+
+  &__sub--tramite {
+    color: var(--mat-sys-primary);
+    opacity: 1;
+  }
+
+  &__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &__vencido {
+    color: $v90;
+    font-weight: 500;
+  }
+
+  &__descuento {
+    color: var(--mat-sys-primary);
+  }
+
+  &__negativo {
+    color: var(--mat-sys-primary);
+  }
+
+  &__fila--vencida {
+    background: rgba(198, 40, 40, 0.05);
+  }
+
+  &__vacio {
+    padding: 1.5rem;
+    text-align: center;
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 768px) {
+  .cxp__num {
+    text-align: left;
+  }
+
+  .cxp__proveedor {
+    align-items: flex-end;
+    text-align: right;
+  }
+}

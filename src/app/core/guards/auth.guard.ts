@@ -41,3 +41,13 @@ export const puedeVerAlistamientoGuard: CanActivateFn = () => {
   router.navigate(['/pendientes']);
   return false;
 };
+
+export const puedeVerCuentasPorPagarGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerCuentasPorPagar()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};

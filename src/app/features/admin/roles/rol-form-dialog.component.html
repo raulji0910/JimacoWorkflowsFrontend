@@ -44,6 +44,16 @@
       supervisión (ej. Gerencia Comercial).
     </p>
   </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeVerCuentasPorPagar" name="puedeVerCuentasPorPagar">
+      Puede ver las cuentas por pagar
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Ver lo que se les debe a los proveedores según World Office y decidir qué facturas se mandan a
+      pagar (pensado para Gerencia Comercial).
+    </p>
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>

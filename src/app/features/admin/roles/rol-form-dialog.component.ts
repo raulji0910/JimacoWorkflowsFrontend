@@ -30,6 +30,7 @@ export class RolFormDialogComponent {
   puedeDevolverCualquierDocumento = this.data.rol?.puedeDevolverCualquierDocumento ?? false;
   puedeGestionarAlistamiento = this.data.rol?.puedeGestionarAlistamiento ?? false;
   puedeVerAlistamiento = this.data.rol?.puedeVerAlistamiento ?? false;
+  puedeVerCuentasPorPagar = this.data.rol?.puedeVerCuentasPorPagar ?? false;
 
   guardar(): void {
     if (!this.nombre.trim()) return;
@@ -41,7 +42,8 @@ export class RolFormDialogComponent {
         activo: this.activo,
         puedeDevolverCualquierDocumento: this.puedeDevolverCualquierDocumento,
         puedeGestionarAlistamiento: this.puedeGestionarAlistamiento,
-        puedeVerAlistamiento: this.puedeVerAlistamiento
+        puedeVerAlistamiento: this.puedeVerAlistamiento,
+        puedeVerCuentasPorPagar: this.puedeVerCuentasPorPagar
       };
       this.dialogRef.close(dto);
     } else {
@@ -50,7 +52,8 @@ export class RolFormDialogComponent {
         descripcion: this.descripcion || null,
         puedeDevolverCualquierDocumento: this.puedeDevolverCualquierDocumento,
         puedeGestionarAlistamiento: this.puedeGestionarAlistamiento,
-        puedeVerAlistamiento: this.puedeVerAlistamiento
+        puedeVerAlistamiento: this.puedeVerAlistamiento,
+        puedeVerCuentasPorPagar: this.puedeVerCuentasPorPagar
       };
       this.dialogRef.close(dto);
     }

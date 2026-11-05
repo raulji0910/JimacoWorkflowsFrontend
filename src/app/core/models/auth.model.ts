@@ -14,4 +14,6 @@ export interface LoginResponse {
   // Control de alistamiento — ver Rol.PuedeGestionarAlistamiento/PuedeVerAlistamiento en el backend.
   puedeGestionarAlistamiento: boolean;
   puedeVerAlistamiento: boolean;
+  // Módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar en el backend.
+  puedeVerCuentasPorPagar: boolean;
 }

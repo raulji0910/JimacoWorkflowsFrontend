@@ -10,6 +10,8 @@ export interface Rol {
   // Control de alistamiento — ver Rol.PuedeGestionarAlistamiento/PuedeVerAlistamiento en el backend.
   puedeGestionarAlistamiento: boolean;
   puedeVerAlistamiento: boolean;
+  // Módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar en el backend.
+  puedeVerCuentasPorPagar: boolean;
 }
 
 export interface RolCrear {
@@ -18,6 +20,8 @@ export interface RolCrear {
   puedeDevolverCualquierDocumento: boolean;
   puedeGestionarAlistamiento: boolean;
   puedeVerAlistamiento: boolean;
+  // Módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar en el backend.
+  puedeVerCuentasPorPagar: boolean;
 }
 
 export interface RolActualizar {
@@ -27,4 +31,6 @@ export interface RolActualizar {
   puedeDevolverCualquierDocumento: boolean;
   puedeGestionarAlistamiento: boolean;
   puedeVerAlistamiento: boolean;
+  // Módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar en el backend.
+  puedeVerCuentasPorPagar: boolean;
 }
