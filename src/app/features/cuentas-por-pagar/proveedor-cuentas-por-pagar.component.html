@@ -36,7 +36,7 @@
       @if (d.proveedor.anticipos !== 0) {
         <div class="prov__cuenta">
           <span matTooltip="Cuenta 133005 en World Office — plata ya adelantada que contabilidad todavía no cruzó contra facturas">
-            Anticipos sin cruzar ({{ d.anticiposMovimientos }} movimientos)
+            Anticipos sin cruzar ({{ d.anticipos.length }})
           </span>
           <span class="prov__valor prov__valor--descuento">− $ {{ d.proveedor.anticipos | number: '1.0-0' }}</span>
         </div>
@@ -51,8 +51,9 @@
       <div class="prov__aviso">
         <mat-icon>warning</mat-icon>
         <span>
-          Este proveedor tiene <strong>$ {{ aFavor() | number: '1.0-0' }}</strong> en anticipos o pagos sin aplicar. Antes de
-          pagar, confirmá con contabilidad si alguna de estas facturas ya quedó cubierta con esa plata.
+          Este proveedor tiene <strong>$ {{ aFavor() | number: '1.0-0' }}</strong> en pagos o notas crédito sin aplicar a
+          ninguna factura. Esos no se descuentan solos: antes de pagar, confirmá con contabilidad si alguna de estas
+          facturas ya quedó cubierta con esa plata.
         </span>
       </div>
     }
@@ -141,7 +142,7 @@
             }
             @case ('PagadaPendienteCruce') {
               <a class="prov__chip prov__chip--pagada" [routerLink]="['/documentos', p.pagoInstanciaDocumentoId]"
-                matTooltip="El pago ya se completó; falta que contabilidad lo cruce en World Office">
+                matTooltip="El pago ya se completó; World Office lo va a reflejar en la próxima actualización">
                 Pagada · falta cruzar
               </a>
             }
@@ -169,6 +170,58 @@
       </tr>
     </table>
 
+    @if (d.anticipos.length) {
+      <section class="prov__anticipos">
+        <h3>Anticipos sin cruzar</h3>
+        <p class="prov__meta">
+          Plata ya adelantada al proveedor (cuenta 133005). Los marcados se descuentan en el mismo comprobante de egreso,
+          del más viejo al más nuevo, hasta cubrir las facturas marcadas. Desmarcá el que no corresponda a estas facturas.
+        </p>
+        <ul class="prov__lista-anticipos">
+          @for (a of d.anticipos; track a.idDocumentoDetalleWO ?? $index) {
+            <li class="prov__anticipo" [class.prov__fila--bloqueada]="a.estado !== 'Disponible'">
+              @if (a.estado === 'Disponible') {
+                <mat-checkbox [checked]="anticipoMarcado(a)" (change)="alternarAnticipo(a)" [attr.aria-label]="'Descontar ' + numeroAnticipo(a)" />
+              } @else {
+                <span class="prov__anticipo-hueco"></span>
+              }
+              <div class="prov__doc prov__anticipo-texto">
+                <span>{{ a.nota || 'Anticipo' }}</span>
+                <span class="prov__sub">{{ numeroAnticipo(a) }}{{ a.fecha ? ' · ' + (a.fecha | date: 'd MMM y') : '' }}</span>
+              </div>
+              <div class="prov__anticipo-valores">
+                <span class="prov__valor">$ {{ a.saldo | number: '1.0-0' }}</span>
+                @switch (a.estado) {
+                  @case ('Disponible') {
+                    @if (!partidasSeleccionadas().length) {
+                      <span class="prov__sub">marcá facturas para aplicarlo</span>
+                    } @else if (aplicadoDe(a) > 0) {
+                      <span class="prov__sub prov__valor--descuento">
+                        se descuenta $ {{ aplicadoDe(a) | number: '1.0-0' }}{{ aplicadoDe(a) < a.saldo ? ' (parcial)' : '' }}
+                      </span>
+                    } @else if (anticipoMarcado(a)) {
+                      <span class="prov__sub">no alcanza: las facturas ya quedan cubiertas</span>
+                    } @else {
+                      <span class="prov__sub">no se descuenta</span>
+                    }
+                  }
+                  @case ('EnTramite') {
+                    <a class="prov__chip prov__chip--tramite" [routerLink]="['/documentos', a.pagoInstanciaDocumentoId]">En el pago {{ a.pagoNumeroReferencia }}</a>
+                  }
+                  @case ('PagadaPendienteCruce') {
+                    <a class="prov__chip prov__chip--pagada" [routerLink]="['/documentos', a.pagoInstanciaDocumentoId]">Aplicado · falta reflejar en WO</a>
+                  }
+                  @default {
+                    <span class="prov__chip prov__chip--favor">No se puede aplicar</span>
+                  }
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     @if (partidasSeleccionadas().length) {
       <div class="prov__pago">
         @if (!confirmando()) {
@@ -177,7 +230,12 @@
               <strong>{{ partidasSeleccionadas().length }}</strong>
               factura{{ partidasSeleccionadas().length === 1 ? '' : 's' }} marcada{{ partidasSeleccionadas().length === 1 ? '' : 's' }}
             </span>
-            <span class="prov__pago-total">$ {{ totalSeleccionado() | number: '1.0-0' }}</span>
+            @if (totalAnticiposAplicados() > 0) {
+              <span class="prov__pago-desglose">
+                $ {{ totalSeleccionado() | number: '1.0-0' }} − anticipos $ {{ totalAnticiposAplicados() | number: '1.0-0' }}
+              </span>
+            }
+            <span class="prov__pago-total">$ {{ netoAPagar() | number: '1.0-0' }}</span>
             <button mat-flat-button color="primary" (click)="pedirConfirmacion()">
               <mat-icon>send</mat-icon>
               Enviar a pago
@@ -187,19 +245,29 @@
           <div class="prov__confirmar">
             <h3>Confirmar pago a {{ d.proveedor.nombre }}</h3>
             <p>
-              Se crea un documento <strong>Pago a Proveedor</strong> por
-              <strong>$ {{ totalSeleccionado() | number: '1.0-0' }}</strong> con
-              {{ partidasSeleccionadas().length }} factura{{ partidasSeleccionadas().length === 1 ? '' : 's' }}, y le llega a
-              Contabilidad para que genere el comprobante de egreso. Después pasa a Gerencia General para el pago.
+              Se crea una <strong>orden de pago</strong> con
+              {{ partidasSeleccionadas().length }} factura{{ partidasSeleccionadas().length === 1 ? '' : 's' }}
+              por <strong>$ {{ totalSeleccionado() | number: '1.0-0' }}</strong>
+              @if (totalAnticiposAplicados() > 0) {
+                menos <strong>$ {{ totalAnticiposAplicados() | number: '1.0-0' }}</strong> de anticipos
+              }
+              — neto <strong>$ {{ netoAPagar() | number: '1.0-0' }}</strong>. Le llega a Gerencia General; cuando confirme el
+              pago, el sistema crea el comprobante de egreso en World Office.
             </p>
+            @if (netoAPagar() === 0) {
+              <p class="prov__confirmar-aviso">
+                <mat-icon inline>info</mat-icon>
+                Los anticipos cubren todo: no sale plata, el comprobante solo cruza los anticipos contra las facturas.
+              </p>
+            }
             @if (aFavor() > 0) {
               <p class="prov__confirmar-aviso">
                 <mat-icon inline>warning</mat-icon>
-                Ojo: el proveedor tiene $ {{ aFavor() | number: '1.0-0' }} en anticipos o pagos sin aplicar.
+                Ojo: el proveedor tiene $ {{ aFavor() | number: '1.0-0' }} en pagos o notas crédito sin aplicar.
               </p>
             }
             <mat-form-field appearance="outline" class="prov__observaciones">
-              <mat-label>Observaciones para Contabilidad (opcional)</mat-label>
+              <mat-label>Observaciones para Gerencia General (opcional)</mat-label>
               <textarea matInput rows="2" [(ngModel)]="observaciones" maxlength="500"></textarea>
             </mat-form-field>
             <div class="prov__confirmar-botones">

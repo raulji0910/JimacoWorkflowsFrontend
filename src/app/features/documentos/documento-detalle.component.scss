@@ -56,6 +56,63 @@
     font-size: 0.9rem;
   }
 
+  // Orden de pago a proveedor: facturas − anticipos = neto, como un extracto.
+  &__pago-proveedor {
+    max-width: 36rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 8px;
+
+    h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+    }
+  }
+
+  &__pago-cuentas {
+    margin: 0 0 0.5rem;
+
+    > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.2rem 0;
+    }
+
+    dt {
+      overflow-wrap: anywhere;
+    }
+
+    dd {
+      margin: 0;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  &__pago-descuento {
+    color: var(--mat-sys-primary);
+  }
+
+  &__pago-neto {
+    border-top: 1px solid var(--mat-sys-outline-variant);
+    margin-top: 0.25rem;
+    padding-top: 0.4rem !important;
+    font-weight: 600;
+  }
+
+  &__pago-ce {
+    margin: 0.25rem 0 0;
+    color: var(--mat-sys-primary);
+  }
+
+  &__pago-nota {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    opacity: 0.75;
+  }
+
   &__campos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));

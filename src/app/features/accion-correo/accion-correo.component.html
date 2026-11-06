@@ -74,7 +74,12 @@
       </mat-card-content>
 
       @if (!mensajeExito() && !enlaceYaNoAplica && d.estado === 'EnProceso') {
-        @if (d.pasoActualRequiereSoportePagoAlAprobar) {
+        @if (d.pasoActualConfirmaPagoProveedor) {
+          <p class="pagina__nota">
+            Para confirmar este pago entrá al sistema con tu usuario: hay que elegir el banco y la fecha del pago, y con
+            eso se crea el comprobante de egreso en World Office. Desde acá podés devolverlo o rechazarlo.
+          </p>
+        } @else if (d.pasoActualRequiereSoportePagoAlAprobar) {
           <p class="pagina__nota">Al aprobar te va a pedir adjuntar el soporte de pago (PDF).</p>
         } @else if (d.pasoActualRequiereComprobanteEgreso) {
           <p class="pagina__nota">Al aprobar te va a pedir el número del Comprobante de Egreso de World Office.</p>
@@ -82,7 +87,9 @@
           <p class="pagina__nota">Al aprobar te va a pedir un comentario obligatorio.</p>
         }
         <mat-card-actions>
-          <button mat-flat-button color="primary" [disabled]="procesando()" (click)="aprobar()">Aprobar</button>
+          @if (!d.pasoActualConfirmaPagoProveedor) {
+            <button mat-flat-button color="primary" [disabled]="procesando()" (click)="aprobar()">Aprobar</button>
+          }
           @if (d.pasoActualPermiteDevolver) {
             <button mat-stroked-button [disabled]="procesando()" (click)="devolver()">Devolver</button>
           }

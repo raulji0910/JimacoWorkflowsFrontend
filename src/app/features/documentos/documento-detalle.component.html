@@ -61,6 +61,46 @@
           </div>
         }
 
+        @if (d.pagoProveedor; as pago) {
+          <section class="detalle__pago-proveedor">
+            <h3>Orden de pago</h3>
+            <dl class="detalle__pago-cuentas">
+              <div><dt>Facturas</dt><dd>$ {{ pago.totalFacturas | number: '1.0-0' }}</dd></div>
+              @for (a of pago.anticipos; track a.idDocumentoDetalleWO) {
+                <div>
+                  <dt>Anticipo {{ a.prefijo }} {{ a.numeroDocumento }}{{ a.nota ? ' · ' + a.nota : '' }}</dt>
+                  <dd class="detalle__pago-descuento">− $ {{ a.valor | number: '1.0-0' }}</dd>
+                </div>
+              }
+              <div class="detalle__pago-neto"><dt>Neto a pagar</dt><dd>$ {{ pago.neto | number: '1.0-0' }}</dd></div>
+              @if (pago.fechaPago) {
+                <div>
+                  <dt>Pagado</dt>
+                  <dd>{{ pago.fechaPago | date: 'd MMM y' }}{{ pago.nombreBanco ? ' · ' + pago.nombreBanco : ' · sin salida de plata (cruce de anticipos)' }}</dd>
+                </div>
+              }
+            </dl>
+
+            @if (pago.numeroCE !== null) {
+              <p class="detalle__pago-ce">
+                <mat-icon inline>check_circle</mat-icon>
+                Comprobante de egreso <strong>{{ pago.prefijoCE }} {{ pago.numeroCE }}</strong> creado en World Office.
+              </p>
+            } @else if (pago.pendienteCreacionCE) {
+              <mat-chip class="detalle__chip-wo">Creando el comprobante de egreso en World Office…</mat-chip>
+            } @else if (!pago.conflictoCreacionCE && d.estado === 'EnProceso') {
+              <p class="detalle__pago-nota">El comprobante de egreso se crea en World Office cuando Gerencia General confirme el pago.</p>
+            }
+
+            @if (pago.conflictoCreacionCE) {
+              <div class="detalle__conflicto-wo">
+                <mat-icon>warning</mat-icon>
+                <span>No se creó el comprobante de egreso en World Office: {{ pago.conflictoCreacionCE }} Hay que hacerlo a mano o revisar qué cambió.</span>
+              </div>
+            }
+          </section>
+        }
+
         <dl class="detalle__campos">
           @if (d.proveedor) {
             <div><dt>Proveedor</dt><dd>{{ d.proveedor }}</dd></div>

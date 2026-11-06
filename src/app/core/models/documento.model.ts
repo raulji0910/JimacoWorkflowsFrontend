@@ -1,3 +1,5 @@
+import { PagoProveedor } from './cuentas-por-pagar.model';
+
 export type EstadoInstanciaDocumento = 'EnProceso' | 'Devuelto' | 'Completado' | 'Rechazado';
 
 export type TipoAccion = 'Creado' | 'Aprobado' | 'Devuelto' | 'Rechazado' | 'Reenviado' | 'RedirigidoAContado';
@@ -167,6 +169,10 @@ export interface DocumentoDetalle {
   documentosVinculados: DocumentoVinculado[];
   // El PDF que Gerencia General adjuntó al aprobar el pago — null si ese paso no lo exigía o no pasó todavía.
   soportePago: Adjunto | null;
+  // Solo documentos "Pago a Proveedor": banco, fecha y estado del CE que el sistema crea en WO.
+  pagoProveedor: PagoProveedor | null;
+  // true si aprobar el paso actual es confirmar el pago de una orden de pago (pide banco y fecha).
+  pasoActualConfirmaPagoProveedor: boolean;
 }
 
 export interface EjecutarAccion {
@@ -179,6 +185,9 @@ export interface EjecutarAccion {
   // Solo aplica a Aprobar cuando pasoActualRequiereSoportePagoAlAprobar es true — el Id del
   // Adjunto ya subido (vía subirAdjunto con esSoportePago=true) que es el soporte de esta aprobación.
   soportePagoAdjuntoId?: number | null;
+  // Solo al confirmar el pago de un "Pago a Proveedor": banco (IdCuentaContable de WO) y fecha.
+  idCuentaBancoWO?: number | null;
+  fechaPago?: string | null;
 }
 
 export interface ReenvioNotificacionResultado {

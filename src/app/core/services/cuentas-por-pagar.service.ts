@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CrearPagoProveedor, DetalleProveedorCuentaPorPagar, ResumenCuentasPorPagar } from '../models/cuentas-por-pagar.model';
+import { CrearPagoProveedor, CuentaBanco, DetalleProveedorCuentaPorPagar, ResumenCuentasPorPagar } from '../models/cuentas-por-pagar.model';
 
 @Injectable({ providedIn: 'root' })
 export class CuentasPorPagarService {
@@ -16,6 +16,10 @@ export class CuentasPorPagarService {
 
   proveedor(identificacion: string): Observable<DetalleProveedorCuentaPorPagar> {
     return this.http.get<DetalleProveedorCuentaPorPagar>(`${this.baseUrl}/proveedores/${encodeURIComponent(identificacion)}`);
+  }
+
+  bancos(): Observable<CuentaBanco[]> {
+    return this.http.get<CuentaBanco[]>(`${this.baseUrl}/bancos`);
   }
 
   crearPago(dto: CrearPagoProveedor): Observable<number> {

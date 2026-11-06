@@ -17,6 +17,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { DocumentoDetalle } from '../../core/models/documento.model';
 import { ComentarioDialogComponent, ComentarioDialogResultado } from '../../shared/comentario-dialog.component';
 import { SoportePagoDialogComponent } from '../../shared/soporte-pago-dialog.component';
+import {
+  ConfirmarPagoProveedorDialogComponent,
+  ConfirmarPagoProveedorResultado
+} from '../../shared/confirmar-pago-proveedor-dialog.component';
 import { EstadoLabelPipe } from '../../shared/estado.pipe';
 import { esDispositivoMovil } from '../../shared/dispositivo';
 
@@ -114,6 +118,31 @@ export class DocumentoDetalleComponent implements OnInit, OnDestroy {
 
   aprobar(): void {
     const d = this.documento();
+    // Orden de pago a proveedor: confirmar el pago pide banco, fecha y soporte juntos — con eso el
+    // sistema crea el comprobante de egreso en World Office.
+    if (d?.pasoActualConfirmaPagoProveedor && d.pagoProveedor) {
+      const dialogRef = this.dialog.open(ConfirmarPagoProveedorDialogComponent, {
+        width: '30rem',
+        data: { proveedor: d.proveedor, neto: d.pagoProveedor.neto }
+      });
+      dialogRef.afterClosed().subscribe((r: ConfirmarPagoProveedorResultado | undefined) => {
+        if (!r) return;
+        const extra = { idCuentaBancoWO: r.idCuentaBancoWO, fechaPago: r.fechaPago };
+        if (!r.archivo) {
+          this.ejecutar('Aprobado', null, null, null, null, extra);
+          return;
+        }
+        this.procesando.set(true);
+        this.documentoService.subirAdjunto(this.id, r.archivo, true).subscribe({
+          next: (adjunto) => {
+            this.procesando.set(false);
+            this.ejecutar('Aprobado', null, null, null, adjunto.id, extra);
+          },
+          error: (error) => this.manejarError(error)
+        });
+      });
+      return;
+    }
     if (d?.pasoActualRequiereSoportePagoAlAprobar) {
       const dialogRef = this.dialog.open(SoportePagoDialogComponent, { width: '28rem' });
       dialogRef.afterClosed().subscribe((archivo: File | undefined) => {
@@ -349,10 +378,21 @@ export class DocumentoDetalleComponent implements OnInit, OnDestroy {
     comentario: string | null,
     pasoDestinoId: number | null = null,
     numeroComprobanteEgreso: string | null = null,
-    soportePagoAdjuntoId: number | null = null
+    soportePagoAdjuntoId: number | null = null,
+    pago: { idCuentaBancoWO: number | null; fechaPago: string } | null = null
   ): void {
     this.procesando.set(true);
-    this.documentoService.ejecutarAccion(this.id, { accion, comentario, pasoDestinoId, numeroComprobanteEgreso, soportePagoAdjuntoId }).subscribe({
+    this.documentoService
+      .ejecutarAccion(this.id, {
+        accion,
+        comentario,
+        pasoDestinoId,
+        numeroComprobanteEgreso,
+        soportePagoAdjuntoId,
+        idCuentaBancoWO: pago?.idCuentaBancoWO ?? null,
+        fechaPago: pago?.fechaPago ?? null
+      })
+      .subscribe({
       next: (documento) => {
         this.documento.set(documento);
         this.procesando.set(false);

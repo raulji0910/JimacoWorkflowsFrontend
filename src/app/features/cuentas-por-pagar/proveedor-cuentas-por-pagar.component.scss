@@ -160,6 +160,61 @@ $v90: #c62828;
     }
   }
 
+  // Anticipos: lista corta (pocos por proveedor), no tabla — cada uno con su nota de origen, que es
+  // lo que le dice al gerente a qué OC corresponde.
+  &__anticipos {
+    margin-top: 1.5rem;
+    max-width: 48rem;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  &__lista-anticipos {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 8px;
+  }
+
+  &__anticipo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+
+    & + & {
+      border-top: 1px solid var(--mat-sys-outline-variant);
+    }
+  }
+
+  &__anticipo-hueco {
+    width: 40px;
+    flex: none;
+  }
+
+  &__anticipo-texto {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__anticipo-valores {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    text-align: right;
+  }
+
+  &__pago-desglose {
+    font-size: 0.9rem;
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+  }
+
   &__vacio {
     padding: 1.5rem;
     text-align: center;
@@ -231,5 +286,11 @@ $v90: #c62828;
   .prov__doc {
     align-items: flex-end;
     text-align: right;
+  }
+
+  // La lista de anticipos no es tabla-responsiva: su texto sigue alineado a la izquierda.
+  .prov__doc.prov__anticipo-texto {
+    align-items: flex-start;
+    text-align: left;
   }
 }
