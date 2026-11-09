@@ -81,7 +81,7 @@
               <td mat-cell *matCellDef="let r" data-label="Disponible">
                 @if (puedeGestionar) {
                   <div class="hoja__fila-cantidad">
-                    <mat-form-field appearance="outline" class="hoja__campo-cantidad">
+                    <mat-form-field appearance="outline" class="hoja__campo-cantidad" [class.hoja__campo-cantidad--sin-guardar]="sinGuardar(r)">
                       <input
                         matInput
                         type="number"
@@ -89,12 +89,15 @@
                         [max]="r.cantidad"
                         [(ngModel)]="r.cantidadDisponible"
                         (blur)="corregirCantidad(r)"
+                        (keydown.enter)="guardarRenglon(r)"
+                        enterkeyhint="done"
                         [name]="'cantidad' + r.id"
                       />
                     </mat-form-field>
                     <button
                       mat-icon-button
                       color="primary"
+                      [class.hoja__guardar--pendiente]="sinGuardar(r)"
                       [disabled]="guardandoRenglonId() === r.id"
                       (click)="guardarRenglon(r)"
                       matTooltip="Guardar esta línea"
@@ -103,6 +106,9 @@
                       <mat-icon>check_circle</mat-icon>
                     </button>
                   </div>
+                  @if (sinGuardar(r)) {
+                    <span class="hoja__sin-guardar">Sin guardar — tocá el check o Enter</span>
+                  }
                 } @else {
                   {{ r.cantidadDisponible }}
                 }
@@ -163,7 +169,7 @@
         </dl>
 
         @if (puedeGestionar) {
-          <p class="hoja__ayuda">Tocá el check de cada línea para guardar esa cantidad — no hace falta llenar todo antes de guardar.</p>
+          <p class="hoja__ayuda">Tocá el check (o Enter) en cada línea para guardar esa cantidad — no hace falta llenar todo antes de guardar. Lo que diga "Sin guardar" todavía no quedó registrado.</p>
         }
       </mat-card-content>
     </mat-card>
