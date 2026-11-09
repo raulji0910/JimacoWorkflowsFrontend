@@ -1,0 +1,226 @@
+<div class="pag">
+  <div class="pag__header">
+    <div>
+      <h2>Pagos</h2>
+      @if (pendientes(); as p) {
+        <p class="pag__meta">
+          {{ p.length }} {{ p.length === 1 ? 'orden' : 'órdenes' }} por pagar · $ {{ totalPendiente() | number: '1.0-0' }}
+        </p>
+      }
+    </div>
+    <button mat-stroked-button (click)="cargar()">
+      <mat-icon>refresh</mat-icon>
+      Actualizar
+    </button>
+  </div>
+
+  <mat-tab-group [selectedIndex]="pestana()" (selectedIndexChange)="pestana.set($event)" animationDuration="0ms">
+    <!-- ================= POR PAGAR ================= -->
+    <mat-tab label="Por pagar">
+      @if (pendientes(); as p) {
+        @if (!p.length) {
+          <p class="pag__vacio">No hay órdenes de pago pendientes.</p>
+        }
+
+        @for (g of grupos(); track g.clave) {
+          <section class="pag__grupo">
+            <header class="pag__grupo-cabeza">
+              <mat-checkbox
+                [checked]="grupoCompleto(g)"
+                [indeterminate]="grupoParcial(g)"
+                (change)="alternarGrupo(g)"
+                [disabled]="pagando()"
+                [attr.aria-label]="'Marcar todo ' + g.titulo"
+              />
+              <div class="pag__grupo-titulo">
+                <h3>{{ g.titulo }}</h3>
+                @if (g.subtitulo) { <span class="pag__sub">{{ g.subtitulo }}</span> }
+              </div>
+              <span class="pag__grupo-total">$ {{ totalGrupo(g) | number: '1.0-0' }}</span>
+            </header>
+            @if (g.observaciones) {
+              <p class="pag__obs"><mat-icon inline>chat</mat-icon> {{ g.observaciones }}</p>
+            }
+
+            <ul class="pag__ordenes">
+              @for (o of g.ordenes; track o.instanciaDocumentoId) {
+                <li class="pag__orden" [class.pag__orden--marcada]="estaSeleccionada(o)">
+                  <div class="pag__fila">
+                    <mat-checkbox [checked]="estaSeleccionada(o)" (change)="alternar(o)" [disabled]="pagando()"
+                      [attr.aria-label]="'Pagar ' + o.tercero" />
+                    <button class="pag__tercero" type="button" (click)="alternarDetalle(o)" [attr.aria-expanded]="expandida(o)">
+                      <span class="pag__nombre">{{ o.tercero }}</span>
+                      <span class="pag__sub">
+                        NIT {{ o.identificacion }} ·
+                        @if (o.esExtraordinario) {
+                          {{ o.lineas[0]?.etiqueta }}
+                        } @else {
+                          {{ o.lineas.length }} línea{{ o.lineas.length === 1 ? '' : 's' }}
+                        }
+                        <mat-icon inline>{{ expandida(o) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                      </span>
+                    </button>
+                    <span class="pag__valor">$ {{ o.neto | number: '1.0-0' }}</span>
+                    <button mat-icon-button (click)="pedirRechazo(o)" [disabled]="pagando()" matTooltip="Rechazar" aria-label="Rechazar">
+                      <mat-icon>block</mat-icon>
+                    </button>
+                  </div>
+
+                  @if (expandida(o)) {
+                    <dl class="pag__lineas">
+                      @for (l of o.lineas; track $index) {
+                        <div [class.pag__descuento]="l.valor < 0">
+                          <dt>{{ l.etiqueta }} @if (l.detalle) { <span class="pag__sub">&nbsp;· {{ l.detalle }}</span> }</dt>
+                          <dd>{{ l.valor < 0 ? '− ' : '' }}$ {{ (l.valor < 0 ? -l.valor : l.valor) | number: '1.0-0' }}</dd>
+                        </div>
+                      }
+                      <div class="pag__lineas-pie">
+                        <dt><a [routerLink]="['/documentos', o.instanciaDocumentoId]">Ver orden de pago {{ o.numeroReferencia }}</a></dt>
+                        <dd></dd>
+                      </div>
+                    </dl>
+                  }
+
+                  @if (rechazando() === o.instanciaDocumentoId) {
+                    <div class="pag__rechazo">
+                      <mat-form-field appearance="outline" class="pag__campo">
+                        <mat-label>Motivo del rechazo (le llega a quien la envió)</mat-label>
+                        <textarea matInput rows="2" [(ngModel)]="motivoRechazo"></textarea>
+                      </mat-form-field>
+                      <div class="pag__botones">
+                        <button mat-button (click)="rechazando.set(null)" [disabled]="enviando()">Cancelar</button>
+                        <button mat-flat-button color="warn" (click)="confirmarRechazo(o)" [disabled]="!motivoRechazo.trim() || enviando()">
+                          Rechazar
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+
+      @if (pagando()) {
+        <section class="pag__pago">
+          <h3>Pagar {{ seleccionadas().length }} {{ seleccionadas().length === 1 ? 'orden' : 'órdenes' }}</h3>
+          <dl class="pag__lineas pag__lineas--resumen">
+            @for (o of seleccionadas(); track o.instanciaDocumentoId) {
+              <div>
+                <dt>{{ o.tercero }} @if (o.esExtraordinario) { <span class="pag__chip">Extraordinario</span> }</dt>
+                <dd>$ {{ o.neto | number: '1.0-0' }}</dd>
+              </div>
+            }
+            <div class="pag__neto">
+              <dt>Total del lote</dt>
+              <dd>$ {{ totalSeleccionado() | number: '1.0-0' }}</dd>
+            </div>
+          </dl>
+
+          @if (totalSeleccionado() > 0) {
+            <div class="pag__campos">
+              <mat-form-field appearance="outline">
+                <mat-label>Banco desde donde se pagó</mat-label>
+                <mat-select [(ngModel)]="idBanco">
+                  @for (b of bancos(); track b.idCuentaContableWO) {
+                    <mat-option [value]="b.idCuentaContableWO">{{ b.nombre }} ({{ b.codigo }})</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha del pago</mat-label>
+                <input matInput type="date" [(ngModel)]="fecha" [max]="hoy" />
+              </mat-form-field>
+            </div>
+            <div class="pag__soporte">
+              <button mat-stroked-button type="button" (click)="elegirArchivo()">
+                <mat-icon>attach_file</mat-icon>
+                {{ archivo() ? 'Cambiar PDF' : 'Adjuntar soporte del pago (PDF)' }}
+              </button>
+              <span class="pag__sub">{{ archivo()?.name ?? 'Un solo soporte para todo el lote' }}</span>
+              <input #inputArchivo type="file" accept=".pdf,application/pdf" hidden (change)="onArchivo($event)" />
+            </div>
+          } @else {
+            <p class="pag__sub">Los anticipos cubren todo: no sale plata, no hace falta banco ni soporte.</p>
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha</mat-label>
+              <input matInput type="date" [(ngModel)]="fecha" [max]="hoy" />
+            </mat-form-field>
+          }
+
+          <p class="pag__sub">
+            Al confirmar, el sistema crea en World Office un comprobante de egreso por cada tercero, con este banco y esta fecha.
+          </p>
+          <div class="pag__botones">
+            <button mat-button (click)="pagando.set(false)" [disabled]="enviando()">Volver</button>
+            <button mat-flat-button color="primary" (click)="confirmarPago()" [disabled]="!listoParaPagar() || enviando()">
+              {{ enviando() ? 'Registrando…' : 'Confirmar pago' }}
+            </button>
+          </div>
+        </section>
+      } @else if (seleccionadas().length) {
+        <div class="pag__barra">
+          <span>{{ seleccionadas().length }} {{ seleccionadas().length === 1 ? 'orden' : 'órdenes' }} {{ seleccionadas().length === 1 ? 'marcada' : 'marcadas' }}</span>
+          <span class="pag__barra-total">$ {{ totalSeleccionado() | number: '1.0-0' }}</span>
+          <button mat-flat-button color="primary" (click)="empezarPago()">
+            <mat-icon>payments</mat-icon>
+            Pagar seleccionadas
+          </button>
+        </div>
+      }
+    </mat-tab>
+
+    <!-- ================= PAGADOS ================= -->
+    <mat-tab label="Pagados">
+      @if (lotes(); as ls) {
+        @if (!ls.length) {
+          <p class="pag__vacio">Todavía no hay lotes pagados.</p>
+        }
+        @for (l of ls; track l.id) {
+          <section class="pag__grupo">
+            <header class="pag__grupo-cabeza">
+              <div class="pag__grupo-titulo">
+                <h3>Lote {{ l.numero }}</h3>
+                <span class="pag__sub">
+                  {{ l.fechaPago | date: 'd MMM y' }} · {{ l.nombreBanco || 'sin salida de plata' }}{{ l.pagadoPor ? ' · ' + l.pagadoPor : '' }}
+                </span>
+              </div>
+              <span class="pag__grupo-total">$ {{ l.total | number: '1.0-0' }}</span>
+              @if (l.tieneSoporte) {
+                <button mat-stroked-button (click)="verSoporte(l)">
+                  <mat-icon>picture_as_pdf</mat-icon>
+                  Soporte
+                </button>
+              }
+            </header>
+            <ul class="pag__ordenes">
+              @for (o of l.ordenes; track o.instanciaDocumentoId) {
+                <li class="pag__orden">
+                  <div class="pag__fila pag__fila--pagada">
+                    <a class="pag__tercero" [routerLink]="['/documentos', o.instanciaDocumentoId]">
+                      <span class="pag__nombre">{{ o.tercero }}</span>
+                      @if (o.esExtraordinario) { <span class="pag__sub">Extraordinario</span> }
+                    </a>
+                    <span class="pag__valor">$ {{ o.neto | number: '1.0-0' }}</span>
+                    @switch (estadoCE(o)) {
+                      @case ('creado') {
+                        <span class="pag__chip pag__chip--ok">{{ o.prefijoCE }} {{ o.numeroCE }}</span>
+                      }
+                      @case ('conflicto') {
+                        <span class="pag__chip pag__chip--error" [matTooltip]="o.conflictoCreacionCE ?? ''">Sin CE · revisar</span>
+                      }
+                      @default {
+                        <span class="pag__chip" matTooltip="Se crea en la próxima sincronización con World Office">Creando CE…</span>
+                      }
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+    </mat-tab>
+  </mat-tab-group>
+</div>

@@ -222,61 +222,38 @@
       </section>
     }
 
-    @if (partidasSeleccionadas().length) {
+    @if (partidasSeleccionadas().length || enRelacion()) {
       <div class="prov__pago">
-        @if (!confirmando()) {
-          <div class="prov__pago-resumen">
-            <span>
-              <strong>{{ partidasSeleccionadas().length }}</strong>
-              factura{{ partidasSeleccionadas().length === 1 ? '' : 's' }} marcada{{ partidasSeleccionadas().length === 1 ? '' : 's' }}
+        <div class="prov__pago-resumen">
+          <span>
+            <strong>{{ partidasSeleccionadas().length }}</strong>
+            factura{{ partidasSeleccionadas().length === 1 ? '' : 's' }} marcada{{ partidasSeleccionadas().length === 1 ? '' : 's' }}
+          </span>
+          @if (totalAnticiposAplicados() > 0) {
+            <span class="prov__pago-desglose">
+              $ {{ totalSeleccionado() | number: '1.0-0' }} − anticipos $ {{ totalAnticiposAplicados() | number: '1.0-0' }}
             </span>
-            @if (totalAnticiposAplicados() > 0) {
-              <span class="prov__pago-desglose">
-                $ {{ totalSeleccionado() | number: '1.0-0' }} − anticipos $ {{ totalAnticiposAplicados() | number: '1.0-0' }}
-              </span>
-            }
-            <span class="prov__pago-total">$ {{ netoAPagar() | number: '1.0-0' }}</span>
-            <button mat-flat-button color="primary" (click)="pedirConfirmacion()">
-              <mat-icon>send</mat-icon>
-              Enviar a pago
+          }
+          <span class="prov__pago-total">$ {{ netoAPagar() | number: '1.0-0' }}</span>
+          @if (enRelacion() && !cambiosSinGuardar()) {
+            <span class="prov__en-relacion"><mat-icon inline>check_circle</mat-icon> En la relación</span>
+            <button mat-button (click)="quitarDeRelacion()" [disabled]="guardando()">Quitar</button>
+          } @else if (partidasSeleccionadas().length) {
+            <button mat-flat-button color="primary" (click)="guardarEnRelacion()" [disabled]="guardando()">
+              <mat-icon>playlist_add</mat-icon>
+              {{ guardando() ? 'Guardando…' : enRelacion() ? 'Actualizar en la relación' : 'Agregar a la relación' }}
             </button>
-          </div>
-        } @else {
-          <div class="prov__confirmar">
-            <h3>Confirmar pago a {{ d.proveedor.nombre }}</h3>
-            <p>
-              Se crea una <strong>orden de pago</strong> con
-              {{ partidasSeleccionadas().length }} factura{{ partidasSeleccionadas().length === 1 ? '' : 's' }}
-              por <strong>$ {{ totalSeleccionado() | number: '1.0-0' }}</strong>
-              @if (totalAnticiposAplicados() > 0) {
-                menos <strong>$ {{ totalAnticiposAplicados() | number: '1.0-0' }}</strong> de anticipos
-              }
-              — neto <strong>$ {{ netoAPagar() | number: '1.0-0' }}</strong>. Le llega a Gerencia General; cuando confirme el
-              pago, el sistema crea el comprobante de egreso en World Office.
-            </p>
-            @if (netoAPagar() === 0) {
-              <p class="prov__confirmar-aviso">
-                <mat-icon inline>info</mat-icon>
-                Los anticipos cubren todo: no sale plata, el comprobante solo cruza los anticipos contra las facturas.
-              </p>
-            }
-            @if (aFavor() > 0) {
-              <p class="prov__confirmar-aviso">
-                <mat-icon inline>warning</mat-icon>
-                Ojo: el proveedor tiene $ {{ aFavor() | number: '1.0-0' }} en pagos o notas crédito sin aplicar.
-              </p>
-            }
-            <mat-form-field appearance="outline" class="prov__observaciones">
-              <mat-label>Observaciones para Gerencia General (opcional)</mat-label>
-              <textarea matInput rows="2" [(ngModel)]="observaciones" maxlength="500"></textarea>
-            </mat-form-field>
-            <div class="prov__confirmar-botones">
-              <button mat-button (click)="confirmando.set(false)" [disabled]="enviando()">Volver</button>
-              <button mat-flat-button color="primary" (click)="enviarAPago()" [disabled]="enviando()">
-                {{ enviando() ? 'Enviando…' : 'Confirmar y enviar' }}
-              </button>
+          } @else {
+            <button mat-stroked-button (click)="quitarDeRelacion()" [disabled]="guardando()">Quitar de la relación</button>
+          }
+        </div>
+        @if (relacion(); as r) {
+          @if (r.proveedores.length) {
+            <div class="prov__pago-relacion">
+              <span>Relación de pagos: {{ r.proveedores.length }} proveedor{{ r.proveedores.length === 1 ? '' : 'es' }} · $ {{ r.total | number: '1.0-0' }}</span>
+              <a mat-button routerLink="/cuentas-por-pagar/relacion">Revisar y enviar <mat-icon iconPositionEnd>arrow_forward</mat-icon></a>
             </div>
-          </div>
+          }
         }
       </div>
     }

@@ -39,6 +39,13 @@
         </a>
       }
 
+      @if (puedePagarCuentas) {
+        <a mat-list-item routerLink="/pagos" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>payments</mat-icon>
+          <span matListItemTitle>Pagos</span>
+        </a>
+      }
+
       @if (esAdmin) {
         <mat-divider class="layout__divisor" />
         <a mat-list-item routerLink="/admin/roles" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">

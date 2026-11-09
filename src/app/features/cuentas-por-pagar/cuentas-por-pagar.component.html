@@ -9,11 +9,30 @@
         </p>
       }
     </div>
-    <button mat-stroked-button (click)="cargar()">
-      <mat-icon>refresh</mat-icon>
-      Actualizar
-    </button>
+    <div class="cxp__botones">
+      <button mat-stroked-button (click)="abrirExtraordinario()">
+        <mat-icon>add_card</mat-icon>
+        Pago extraordinario
+      </button>
+      <button mat-stroked-button (click)="cargar()">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+    </div>
   </div>
+
+  @if (relacion(); as rel) {
+    @if (rel.proveedores.length) {
+      <div class="cxp__relacion">
+        <mat-icon>playlist_add_check</mat-icon>
+        <span class="cxp__relacion-texto">
+          Relación de pagos en preparación: <strong>{{ rel.proveedores.length }}</strong>
+          proveedor{{ rel.proveedores.length === 1 ? '' : 'es' }} · <strong>$ {{ rel.total | number: '1.0-0' }}</strong>
+        </span>
+        <a mat-flat-button color="primary" routerLink="/cuentas-por-pagar/relacion">Revisar y enviar</a>
+      </div>
+    }
+  }
 
   @if (error()) {
     <p class="cxp__error">{{ error() }}</p>

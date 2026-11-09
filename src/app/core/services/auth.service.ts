@@ -81,6 +81,11 @@ export class AuthService {
     return this.sesion()?.puedeVerCuentasPorPagar ?? false;
   }
 
+  /** Puede entrar al menú "Pagos" (pagar relaciones y pagos extraordinarios) — ver Rol.PuedePagarCuentas. */
+  puedePagarCuentas(): boolean {
+    return this.sesion()?.puedePagarCuentas ?? false;
+  }
+
   private leerSesionValida(): LoginResponse | null {
     const crudo = localStorage.getItem(CLAVE_STORAGE);
     if (!crudo) return null;

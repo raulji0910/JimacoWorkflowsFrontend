@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerCuentasPorPagarGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerCuentasPorPagarGuard, puedePagarCuentasGuard } from './core/guards/auth.guard';
 import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 
 export const routes: Routes = [
@@ -59,6 +59,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/cuentas-por-pagar/cuentas-por-pagar.component').then((m) => m.CuentasPorPagarComponent),
         canActivate: [puedeVerCuentasPorPagarGuard]
+      },
+      {
+        // Antes que ':identificacion' — si no, "relacion" se tomaría como un NIT.
+        path: 'cuentas-por-pagar/relacion',
+        loadComponent: () =>
+          import('./features/cuentas-por-pagar/relacion-pagos.component').then((m) => m.RelacionPagosComponent),
+        canActivate: [puedeVerCuentasPorPagarGuard]
+      },
+      {
+        path: 'pagos',
+        loadComponent: () => import('./features/pagos/pagos.component').then((m) => m.PagosComponent),
+        canActivate: [puedePagarCuentasGuard]
       },
       {
         path: 'cuentas-por-pagar/:identificacion',

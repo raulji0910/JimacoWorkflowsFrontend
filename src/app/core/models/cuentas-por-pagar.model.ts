@@ -69,12 +69,6 @@ export interface DetalleProveedorCuentaPorPagar {
   anticipos: AnticipoPartida[];
 }
 
-export interface CrearPagoProveedor {
-  identificacion: string;
-  idsDocumentoDetalleWO: number[];
-  observaciones: string | null;
-  idsAnticiposWO: number[];
-}
 
 export interface CuentaBanco {
   idCuentaContableWO: number;
@@ -107,4 +101,119 @@ export interface PagoProveedor {
   prefijoCE: string | null;
   numeroCE: number | null;
   fechaCreacionCE: string | null;
+  esExtraordinario?: boolean;
+  nombreTercero?: string | null;
+  nombreTipoGiro?: string | null;
+  concepto?: string | null;
+  numeroRelacion?: number | null;
+  numeroLote?: number | null;
+}
+
+// ---- Relación de pagos (2026-11-09): borrador en el servidor → ratificar = un solo correo al pagador ----
+
+export interface BorradorFactura {
+  idDocumentoDetalleWO: number;
+  etiqueta: string;
+  numeroDocumentoExterno: string | null;
+  vencimiento: string | null;
+  valor: number;
+  disponible: boolean;
+}
+
+export interface BorradorAnticipo {
+  idDocumentoDetalleWO: number;
+  etiqueta: string;
+  nota: string | null;
+  valor: number;
+  disponible: boolean;
+}
+
+export interface BorradorProveedor {
+  identificacion: string;
+  nombre: string;
+  facturas: BorradorFactura[];
+  anticipos: BorradorAnticipo[];
+  totalFacturas: number;
+  totalAnticipos: number;
+  neto: number;
+  problema: string | null;
+}
+
+export interface RelacionBorrador {
+  proveedores: BorradorProveedor[];
+  facturas: number;
+  total: number;
+}
+
+export interface RelacionCreada {
+  numero: number;
+  ordenes: number;
+  total: number;
+}
+
+// ---- Pago extraordinario ----
+
+export interface TipoGiro {
+  id: number;
+  nombre: string;
+  esAnticipo: boolean;
+}
+
+export interface TerceroWO {
+  idTerceroWO: number;
+  identificacion: string;
+  nombre: string;
+}
+
+export interface CrearPagoExtraordinario {
+  idTerceroWO: number;
+  valor: number;
+  tipoGiroId: number;
+  concepto: string;
+}
+
+// ---- Menú "Pagos" del pagador ----
+
+export interface LineaOrdenPago {
+  etiqueta: string;
+  detalle: string | null;
+  valor: number;
+}
+
+export interface OrdenPagoPendiente {
+  instanciaDocumentoId: number;
+  numeroReferencia: string | null;
+  esExtraordinario: boolean;
+  identificacion: string;
+  tercero: string;
+  fechaCreacion: string;
+  creadoPor: string | null;
+  numeroRelacion: number | null;
+  observaciones: string | null;
+  lineas: LineaOrdenPago[];
+  neto: number;
+}
+
+export interface LoteOrden {
+  instanciaDocumentoId: number;
+  numeroReferencia: string | null;
+  tercero: string;
+  esExtraordinario: boolean;
+  neto: number;
+  prefijoCE: string | null;
+  numeroCE: number | null;
+  pendienteCreacionCE: boolean;
+  conflictoCreacionCE: string | null;
+}
+
+export interface LotePago {
+  id: number;
+  numero: number;
+  fecha: string;
+  fechaPago: string;
+  nombreBanco: string | null;
+  total: number;
+  pagadoPor: string | null;
+  tieneSoporte: boolean;
+  ordenes: LoteOrden[];
 }

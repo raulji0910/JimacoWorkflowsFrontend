@@ -16,4 +16,6 @@ export interface LoginResponse {
   puedeVerAlistamiento: boolean;
   // Módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar en el backend.
   puedeVerCuentasPorPagar: boolean;
+  // Menú "Pagos" (pagador de cuentas) — ver Rol.PuedePagarCuentas en el backend.
+  puedePagarCuentas?: boolean;
 }

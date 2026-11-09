@@ -54,6 +54,16 @@
       pagar (pensado para Gerencia Comercial).
     </p>
   </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedePagarCuentas" name="puedePagarCuentas">
+      Pagador de cuentas
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Menú "Pagos": recibe las relaciones de pago y los pagos extraordinarios, elige qué pagar como un
+      lote (un solo soporte) y rechaza lo que no. Pensado para Gerencia General.
+    </p>
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>

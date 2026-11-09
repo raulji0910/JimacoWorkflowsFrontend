@@ -294,3 +294,25 @@ $v90: #c62828;
     text-align: left;
   }
 }
+
+.prov {
+  // Relación de pagos (2026-11-09)
+  &__en-relacion {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--mat-sys-primary);
+    font-weight: 500;
+  }
+
+  &__pago-relacion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem 1rem;
+    font-size: 0.85rem;
+    opacity: 0.85;
+    margin-top: 0.25rem;
+  }
+}

@@ -11,8 +11,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { CuentasPorPagarService } from '../../core/services/cuentas-por-pagar.service';
-import { ProveedorCuentaPorPagar, ResumenCuentasPorPagar } from '../../core/models/cuentas-por-pagar.model';
+import { ProveedorCuentaPorPagar, RelacionBorrador, ResumenCuentasPorPagar } from '../../core/models/cuentas-por-pagar.model';
+import { PagoExtraordinarioDialogComponent } from './pago-extraordinario-dialog.component';
 import { haceCuanto } from './cuentas-por-pagar.util';
 
 const CLAVE_PAGE_SIZE = 'aprobaciones.cxp.pageSize';
@@ -48,6 +51,11 @@ type Orden = 'neto' | 'vencido' | 'dias' | 'nombre';
 })
 export class CuentasPorPagarComponent implements OnInit {
   private readonly servicio = inject(CuentasPorPagarService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+
+  /** Relación de pagos en preparación (borrador) — se muestra como aviso para ir a revisarla y enviarla. */
+  readonly relacion = signal<RelacionBorrador | null>(null);
 
   readonly columnas = ['proveedor', 'facturas', 'pendiente', 'vencido', 'descuentos', 'neto', 'acciones'];
   readonly resumen = signal<ResumenCuentasPorPagar | null>(null);
@@ -103,11 +111,21 @@ export class CuentasPorPagarComponent implements OnInit {
 
   cargar(): void {
     this.error.set(null);
+    this.servicio.relacion().subscribe({ next: (r) => this.relacion.set(r), error: () => this.relacion.set(null) });
     this.servicio.resumen().subscribe({
       next: (r) => this.resumen.set(r),
       error: (e: { error?: { mensaje?: string } }) =>
         this.error.set(e.error?.mensaje ?? 'No se pudieron cargar las cuentas por pagar.')
     });
+  }
+
+  abrirExtraordinario(): void {
+    this.dialog
+      .open(PagoExtraordinarioDialogComponent, { width: '32rem', maxWidth: '95vw' })
+      .afterClosed()
+      .subscribe((enviado) => {
+        if (enviado) this.snackBar.open('Pago extraordinario enviado al pagador', 'Cerrar', { duration: 5000 });
+      });
   }
 
   actualizarBusqueda(valor: string): void {

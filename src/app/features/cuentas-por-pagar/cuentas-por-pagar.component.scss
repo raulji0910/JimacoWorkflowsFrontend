@@ -181,3 +181,30 @@ $v90: #c62828;
     text-align: right;
   }
 }
+
+.cxp {
+  // Relación de pagos y pago extraordinario (2026-11-09)
+  &__botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__relacion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding: 0.6rem 1rem;
+    margin: 0 0 1rem;
+    border-radius: 8px;
+    background: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+
+
+  }
+}
+
+.cxp__relacion-texto {
+  flex: 1 1 14rem;
+}

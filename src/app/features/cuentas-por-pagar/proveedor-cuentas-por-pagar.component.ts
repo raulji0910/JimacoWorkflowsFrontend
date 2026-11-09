@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,15 +12,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CuentasPorPagarService } from '../../core/services/cuentas-por-pagar.service';
-import { AnticipoPartida, DetalleProveedorCuentaPorPagar, EstadoPartida, PartidaCuentaPorPagar } from '../../core/models/cuentas-por-pagar.model';
+import { AnticipoPartida, DetalleProveedorCuentaPorPagar, EstadoPartida, PartidaCuentaPorPagar, RelacionBorrador } from '../../core/models/cuentas-por-pagar.model';
 import { haceCuanto, textoVencimiento } from './cuentas-por-pagar.util';
 
 /**
  * Facturas pendientes de un proveedor — Gerencia Comercial marca cuáles se pagan (y qué anticipos se
- * descuentan) y las manda a pago: se crea una orden de pago ("Pago a Proveedor") que le llega a
- * Gerencia General; cuando confirma que pagó, el sistema crea el comprobante de egreso en World
- * Office (desde 2026-11-06, sin paso de Contabilidad). La confirmación es un paso dentro de la misma
- * pantalla, no un diálogo aparte.
+ * descuentan) y las agrega a la RELACIÓN de pagos (2026-11-09): un borrador guardado en el sistema
+ * donde se van juntando varios proveedores. Desde "Revisar relación" se ratifica todo junto y le
+ * llega UN solo correo al pagador (antes salía uno por proveedor).
  */
 @Component({
   selector: 'app-proveedor-cuentas-por-pagar',
@@ -45,7 +44,6 @@ import { haceCuanto, textoVencimiento } from './cuentas-por-pagar.util';
 export class ProveedorCuentasPorPagarComponent implements OnInit {
   private readonly servicio = inject(CuentasPorPagarService);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly columnas = ['seleccion', 'documento', 'facturaProveedor', 'fecha', 'vencimiento', 'saldo', 'estado'];
@@ -53,9 +51,11 @@ export class ProveedorCuentasPorPagarComponent implements OnInit {
   readonly detalle = signal<DetalleProveedorCuentaPorPagar | null>(null);
   readonly error = signal<string | null>(null);
   readonly seleccionadas = signal<ReadonlySet<number>>(new Set());
-  readonly confirmando = signal(false);
-  readonly enviando = signal(false);
-  observaciones = '';
+  readonly guardando = signal(false);
+  readonly relacion = signal<RelacionBorrador | null>(null);
+
+  /** Lo de este proveedor que ya está guardado en la relación (null si no está). */
+  readonly enRelacion = computed(() => this.relacion()?.proveedores.find((p) => p.identificacion === this.identificacion) ?? null);
 
   readonly haceCuanto = haceCuanto;
   readonly textoVencimiento = textoVencimiento;
@@ -102,6 +102,24 @@ export class ProveedorCuentasPorPagarComponent implements OnInit {
 
   readonly netoAPagar = computed(() => this.totalSeleccionado() - this.totalAnticiposAplicados());
 
+  /** Anticipos marcados (todos los disponibles menos los que el usuario desmarcó) — es lo que se guarda en la relación. */
+  readonly anticiposMarcados = computed(() =>
+    this.anticiposDisponibles().filter((a) => !this.anticiposDesmarcados().has(a.idDocumentoDetalleWO!)).map((a) => a.idDocumentoDetalleWO!)
+  );
+
+  /** true si lo marcado en pantalla no es lo mismo que está guardado en la relación. */
+  readonly cambiosSinGuardar = computed(() => {
+    const guardado = this.enRelacion();
+    const facturas = [...this.seleccionadas()].sort((a, b) => a - b).join(',');
+    if (!guardado) return facturas.length > 0;
+    const facturasGuardadas = guardado.facturas.map((f) => f.idDocumentoDetalleWO).sort((a, b) => a - b).join(',');
+    if (facturas !== facturasGuardadas) return true;
+    // Anticipos: solo cuenta lo que de verdad cambia el pago (los que se aplican).
+    const aplicados = [...this.anticiposAplicados().keys()].sort((a, b) => a - b).join(',');
+    const aplicadosGuardados = guardado.anticipos.filter((a) => a.valor > 0).map((a) => a.idDocumentoDetalleWO).sort((a, b) => a - b).join(',');
+    return aplicados !== aplicadosGuardados;
+  });
+
   readonly todasSeleccionadas = computed(
     () => this.disponibles().length > 0 && this.partidasSeleccionadas().length === this.disponibles().length
   );
@@ -122,9 +140,27 @@ export class ProveedorCuentasPorPagarComponent implements OnInit {
         // Si la foto cambió, se descartan las marcas de facturas que ya no se pueden pagar.
         const vigentes = new Set(this.disponibles().map((p) => p.idDocumentoDetalleWO!));
         this.seleccionadas.set(new Set([...this.seleccionadas()].filter((id) => vigentes.has(id))));
+        this.cargarRelacion(true);
       },
       error: (e: { error?: { mensaje?: string } }) =>
         this.error.set(e.error?.mensaje ?? 'No se pudo cargar el proveedor.')
+    });
+  }
+
+  /** Trae la relación; con restaurar=true, si este proveedor ya está en ella, vuelve a marcar lo guardado. */
+  private cargarRelacion(restaurar: boolean): void {
+    this.servicio.relacion().subscribe({
+      next: (r) => {
+        this.relacion.set(r);
+        const guardado = this.enRelacion();
+        if (!restaurar || !guardado || this.seleccionadas().size > 0) return;
+        const vigentes = new Set(this.disponibles().map((p) => p.idDocumentoDetalleWO!));
+        this.seleccionadas.set(new Set(guardado.facturas.map((f) => f.idDocumentoDetalleWO).filter((id) => vigentes.has(id))));
+        const marcados = new Set(guardado.anticipos.map((a) => a.idDocumentoDetalleWO));
+        this.anticiposDesmarcados.set(
+          new Set(this.anticiposDisponibles().map((a) => a.idDocumentoDetalleWO!).filter((id) => !marcados.has(id)))
+        );
+      }
     });
   }
 
@@ -142,56 +178,55 @@ export class ProveedorCuentasPorPagarComponent implements OnInit {
     if (nuevo.has(p.idDocumentoDetalleWO)) nuevo.delete(p.idDocumentoDetalleWO);
     else nuevo.add(p.idDocumentoDetalleWO);
     this.seleccionadas.set(nuevo);
-    this.confirmando.set(false);
   }
 
   alternarTodas(): void {
     this.seleccionadas.set(
       this.todasSeleccionadas() ? new Set() : new Set(this.disponibles().map((p) => p.idDocumentoDetalleWO!))
     );
-    this.confirmando.set(false);
   }
 
   seleccionarVencidas(): void {
     this.seleccionadas.set(
       new Set(this.disponibles().filter((p) => (p.diasVencido ?? 0) > 0).map((p) => p.idDocumentoDetalleWO!))
     );
-    this.confirmando.set(false);
   }
 
   limpiar(): void {
     this.seleccionadas.set(new Set());
-    this.confirmando.set(false);
   }
 
-  pedirConfirmacion(): void {
-    if (this.partidasSeleccionadas().length > 0) this.confirmando.set(true);
+  /** Agrega (o actualiza) este proveedor en la relación con lo marcado en pantalla. */
+  guardarEnRelacion(): void {
+    const facturas = this.partidasSeleccionadas().map((p) => p.idDocumentoDetalleWO!);
+    if (facturas.length === 0 || this.guardando()) return;
+    this.guardar(facturas, this.anticiposMarcados(), this.enRelacion() ? 'Relación actualizada' : 'Agregado a la relación de pagos');
   }
 
-  enviarAPago(): void {
-    const partidas = this.partidasSeleccionadas();
-    if (partidas.length === 0 || this.enviando()) return;
+  quitarDeRelacion(): void {
+    if (this.guardando()) return;
+    this.guardar([], [], 'Proveedor quitado de la relación');
+    this.seleccionadas.set(new Set());
+  }
 
-    this.enviando.set(true);
-    this.servicio
-      .crearPago({
-        identificacion: this.identificacion,
-        idsDocumentoDetalleWO: partidas.map((p) => p.idDocumentoDetalleWO!),
-        observaciones: this.observaciones.trim() || null,
-        idsAnticiposWO: [...this.anticiposAplicados().keys()]
-      })
-      .subscribe({
-        next: (id) => {
-          this.snackBar.open('Orden de pago enviada a Gerencia General', 'Cerrar', { duration: 4000 });
-          this.router.navigate(['/documentos', id]);
-        },
-        error: (e: { error?: { mensaje?: string } }) => {
-          this.enviando.set(false);
-          this.confirmando.set(false);
-          this.snackBar.open(e.error?.mensaje ?? 'No se pudo crear el pago.', 'Cerrar', { duration: 8000 });
-          this.cargar();
-        }
-      });
+  private guardar(facturas: number[], anticipos: number[], mensaje: string): void {
+    this.guardando.set(true);
+    this.servicio.guardarEnRelacion(this.identificacion, facturas, anticipos).subscribe({
+      next: (r) => {
+        this.relacion.set(r);
+        this.guardando.set(false);
+        this.snackBar.open(
+          mensaje + ' · ' + r.proveedores.length + ' proveedor(es) por $ ' + r.total.toLocaleString('es-CO'),
+          'Cerrar',
+          { duration: 4000 }
+        );
+      },
+      error: (e: { error?: { mensaje?: string } }) => {
+        this.guardando.set(false);
+        this.snackBar.open(e.error?.mensaje ?? 'No se pudo guardar en la relación.', 'Cerrar', { duration: 8000 });
+        this.cargar();
+      }
+    });
   }
 
   anticipoMarcado(a: AnticipoPartida): boolean {
@@ -204,7 +239,6 @@ export class ProveedorCuentasPorPagarComponent implements OnInit {
     if (nuevo.has(a.idDocumentoDetalleWO)) nuevo.delete(a.idDocumentoDetalleWO);
     else nuevo.add(a.idDocumentoDetalleWO);
     this.anticiposDesmarcados.set(nuevo);
-    this.confirmando.set(false);
   }
 
   aplicadoDe(a: AnticipoPartida): number {

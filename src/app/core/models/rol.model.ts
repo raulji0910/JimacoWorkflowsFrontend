@@ -12,6 +12,8 @@ export interface Rol {
   puedeVerAlistamiento: boolean;
   // Módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar en el backend.
   puedeVerCuentasPorPagar: boolean;
+  // Menú "Pagos" — ver Rol.PuedePagarCuentas en el backend.
+  puedePagarCuentas?: boolean;
 }
 
 export interface RolCrear {
@@ -22,6 +24,8 @@ export interface RolCrear {
   puedeVerAlistamiento: boolean;
   // Módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar en el backend.
   puedeVerCuentasPorPagar: boolean;
+  // Menú "Pagos" — ver Rol.PuedePagarCuentas en el backend.
+  puedePagarCuentas?: boolean;
 }
 
 export interface RolActualizar {
@@ -33,4 +37,6 @@ export interface RolActualizar {
   puedeVerAlistamiento: boolean;
   // Módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar en el backend.
   puedeVerCuentasPorPagar: boolean;
+  // Menú "Pagos" — ver Rol.PuedePagarCuentas en el backend.
+  puedePagarCuentas?: boolean;
 }
