@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerCuentasPorPagarGuard } from './core/guards/auth.guard';
+import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 
 export const routes: Routes = [
   {
@@ -50,7 +51,8 @@ export const routes: Routes = [
         path: 'alistamiento/:id',
         loadComponent: () =>
           import('./features/alistamiento/hoja-alistamiento-detalle.component').then((m) => m.HojaAlistamientoDetalleComponent),
-        canActivate: [puedeVerAlistamientoGuard]
+        canActivate: [puedeVerAlistamientoGuard],
+        canDeactivate: [cambiosSinGuardarGuard]
       },
       {
         path: 'cuentas-por-pagar',

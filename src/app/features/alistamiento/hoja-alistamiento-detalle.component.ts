@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -17,6 +17,7 @@ import { HojaAlistamientoService } from '../../core/services/hoja-alistamiento.s
 import { HojaAlistamientoDetalle, RenglonHojaAlistamiento } from '../../core/models/hoja-alistamiento.model';
 import { AuthService } from '../../core/services/auth.service';
 import { DespachosRemisionDialogComponent } from './despachos-remision-dialog.component';
+import { ConCambiosSinGuardar } from '../../core/guards/cambios-sin-guardar.guard';
 
 /**
  * La Hoja de Alistamiento como pantalla propia (2026-09-28) — a diferencia de la sección dentro del
@@ -47,7 +48,7 @@ import { DespachosRemisionDialogComponent } from './despachos-remision-dialog.co
   templateUrl: './hoja-alistamiento-detalle.component.html',
   styleUrl: './hoja-alistamiento-detalle.component.scss'
 })
-export class HojaAlistamientoDetalleComponent implements OnInit {
+export class HojaAlistamientoDetalleComponent implements OnInit, ConCambiosSinGuardar {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly hojaService = inject(HojaAlistamientoService);
@@ -74,6 +75,28 @@ export class HojaAlistamientoDetalleComponent implements OnInit {
 
   cantidadGuardada(r: RenglonHojaAlistamiento): number {
     return this.guardadoPorId()[r.id] ?? r.cantidadDisponible;
+  }
+
+  // Bug real reportado por Logística (2026-11-09, Hoja 16100 — "marco la cantidad y vuelve a 0"):
+  // en el registro del servidor no había NINGÚN guardado de esa Hoja. Lo escrito solo se guarda con
+  // el check de la línea; Enter no hacía nada, y salir de la página (o guardar OTRA línea, que
+  // recargaba la Hoja entera) descartaba sin aviso lo escrito y no guardado. Ahora: Enter guarda,
+  // la línea con un número sin guardar se marca, guardar una línea conserva lo tecleado en las
+  // demás, y salir con cambios pendientes pide confirmación.
+  sinGuardar(r: RenglonHojaAlistamiento): boolean {
+    return Number(r.cantidadDisponible ?? 0) !== this.cantidadGuardada(r);
+  }
+
+  // Incluye el guardado en curso: si el navegador se cierra o recarga en ese momento, la petición
+  // se corta (el backend ya no la cancela, pero puede no haber alcanzado a salir).
+  hayCambiosSinGuardar(): boolean {
+    if (this.guardandoRenglonId() !== null) return true;
+    return this.hoja()?.renglones.some((r) => this.sinGuardar(r)) ?? false;
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  avisarAntesDeCerrar(evento: BeforeUnloadEvent): void {
+    if (this.hayCambiosSinGuardar()) evento.preventDefault();
   }
 
   estaIncompleto(r: RenglonHojaAlistamiento): boolean {
@@ -132,10 +155,18 @@ export class HojaAlistamientoDetalleComponent implements OnInit {
     this.cargando.set(true);
     this.hojaService.obtener(this.id).subscribe({
       next: (hoja) => {
-        this.hoja.set(hoja);
+        // Lo tecleado y todavía no guardado en OTRAS líneas sobrevive a la recarga (ver sinGuardar).
+        const pendientes = new Map<number, number>();
+        for (const r of this.hoja()?.renglones ?? []) {
+          if (this.sinGuardar(r)) pendientes.set(r.id, r.cantidadDisponible);
+        }
         const mapa: Record<number, number> = {};
-        for (const r of hoja.renglones) mapa[r.id] = r.cantidadDisponible;
+        for (const r of hoja.renglones) {
+          mapa[r.id] = r.cantidadDisponible;
+          if (pendientes.has(r.id)) r.cantidadDisponible = pendientes.get(r.id)!;
+        }
         this.guardadoPorId.set(mapa);
+        this.hoja.set(hoja);
         this.cargando.set(false);
       },
       error: () => {
@@ -155,8 +186,9 @@ export class HojaAlistamientoDetalleComponent implements OnInit {
 
   guardarRenglon(renglon: RenglonHojaAlistamiento): void {
     const h = this.hoja();
-    if (!h) return;
+    if (!h || this.guardandoRenglonId() === renglon.id) return;
 
+    if (renglon.cantidadDisponible == null) renglon.cantidadDisponible = 0;
     this.corregirCantidad(renglon);
     this.guardandoRenglonId.set(renglon.id);
     const dto = { renglones: [{ renglonId: renglon.id, cantidadDisponible: renglon.cantidadDisponible }] };
@@ -164,6 +196,9 @@ export class HojaAlistamientoDetalleComponent implements OnInit {
       next: () => {
         this.guardandoRenglonId.set(null);
         this.snackBar.open(`${renglon.descripcion} guardado`, 'Cerrar', { duration: 2000 });
+        // Ya quedó guardado: se marca como tal antes de recargar, para que la recarga no lo trate
+        // como "pendiente" y pise el valor confirmado por el servidor.
+        this.guardadoPorId.update((m) => ({ ...m, [renglon.id]: renglon.cantidadDisponible }));
         this.cargar();
       },
       error: (error) => {

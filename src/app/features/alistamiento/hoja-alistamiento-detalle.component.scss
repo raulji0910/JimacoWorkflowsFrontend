@@ -134,6 +134,13 @@
   &__campo-cantidad {
     width: 6rem;
 
+    &--sin-guardar {
+      --mdc-outlined-text-field-outline-color: #e65100;
+      --mdc-outlined-text-field-hover-outline-color: #e65100;
+      --mat-form-field-outlined-outline-color: #e65100;
+      --mat-form-field-outlined-hover-outline-color: #e65100;
+    }
+
     ::ng-deep .mat-mdc-form-field-infix {
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
@@ -181,4 +188,21 @@
     border-top: 1px solid rgba(0, 0, 0, 0.15);
     padding-top: 0.35rem;
   }
+
+  &__guardar--pendiente {
+    color: #e65100 !important;
+    animation: hoja-pulso-guardar 1.2s ease-in-out infinite;
+  }
+
+  &__sin-guardar {
+    display: block;
+    font-size: 0.75rem;
+    color: #e65100;
+    font-weight: 500;
+  }
+}
+
+@keyframes hoja-pulso-guardar {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
 }
