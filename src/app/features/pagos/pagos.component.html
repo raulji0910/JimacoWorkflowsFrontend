@@ -84,7 +84,7 @@
                   @if (rechazando() === o.instanciaDocumentoId) {
                     <div class="pag__rechazo">
                       <mat-form-field appearance="outline" class="pag__campo">
-                        <mat-label>Motivo del rechazo (le llega a quien la envió)</mat-label>
+                        <mat-label>Motivo del rechazo (le llega por correo a Gerencia Comercial)</mat-label>
                         <textarea matInput rows="2" [(ngModel)]="motivoRechazo"></textarea>
                       </mat-form-field>
                       <div class="pag__botones">
@@ -105,18 +105,56 @@
       @if (pagando()) {
         <section class="pag__pago">
           <h3>Pagar {{ seleccionadas().length }} {{ seleccionadas().length === 1 ? 'orden' : 'órdenes' }}</h3>
-          <dl class="pag__lineas pag__lineas--resumen">
-            @for (o of seleccionadas(); track o.instanciaDocumentoId) {
-              <div>
-                <dt>{{ o.tercero }} @if (o.esExtraordinario) { <span class="pag__chip">Extraordinario</span> }</dt>
-                <dd>$ {{ o.neto | number: '1.0-0' }}</dd>
-              </div>
-            }
-            <div class="pag__neto">
-              <dt>Total del lote</dt>
-              <dd>$ {{ totalSeleccionado() | number: '1.0-0' }}</dd>
-            </div>
-          </dl>
+          <p class="pag__ayuda">
+            Datos para cargar el pago en el banco, uno por tercero. Tocá un dato para copiarlo, o copiá la tabla completa y pegala en Excel.
+          </p>
+          <div class="pag__tabla-caja">
+            <table class="pag__tabla">
+              <thead>
+                <tr>
+                  <th class="pag__num">#</th>
+                  <th>NIT / identificación</th>
+                  <th>Nombre</th>
+                  <th class="pag__num">Valor a pagar</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (t of transferencias(); track t.identificacion; let n = $index) {
+                  <tr>
+                    <td class="pag__num">{{ n + 1 }}</td>
+                    <td>
+                      <button type="button" class="pag__copiable" (click)="copiar(t.identificacion, 'NIT')" matTooltip="Copiar NIT">
+                        {{ t.identificacion }} <mat-icon inline>content_copy</mat-icon>
+                      </button>
+                    </td>
+                    <td>
+                      <button type="button" class="pag__copiable pag__copiable--nombre" (click)="copiar(t.tercero, 'Nombre')" matTooltip="Copiar nombre">
+                        {{ t.tercero }} <mat-icon inline>content_copy</mat-icon>
+                      </button>
+                      @if (t.ordenes > 1) { <span class="pag__sub">&nbsp;({{ t.ordenes }} órdenes juntas)</span> }
+                      @if (t.extraordinario) { <span class="pag__chip">Extraordinario</span> }
+                    </td>
+                    <td class="pag__num">
+                      <button type="button" class="pag__copiable" (click)="copiar(valorPlano(t.neto), 'Valor')" matTooltip="Copiar valor sin puntos">
+                        $ {{ t.neto | number: '1.0-0' }} <mat-icon inline>content_copy</mat-icon>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td></td>
+                  <td colspan="2">Total del lote · {{ transferencias().length }} {{ transferencias().length === 1 ? 'tercero' : 'terceros' }}</td>
+                  <td class="pag__num">$ {{ totalSeleccionado() | number: '1.0-0' }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <button mat-stroked-button type="button" (click)="copiarTabla()">
+            <mat-icon>content_copy</mat-icon>
+            Copiar tabla para Excel
+          </button>
 
           @if (totalSeleccionado() > 0) {
             <div class="pag__campos">
@@ -173,11 +211,12 @@
 
     <!-- ================= PAGADOS ================= -->
     <mat-tab label="Pagados">
-      @if (lotes(); as ls) {
-        @if (!ls.length) {
-          <p class="pag__vacio">Todavía no hay lotes pagados.</p>
+      <app-filtro-pagos [valor]="filtroLotes()" etiquetaFecha="Fecha del pago" (cambio)="filtrarLotes($event)" />
+      @if (lotes(); as pl) {
+        @if (!pl.items.length) {
+          <p class="pag__vacio">No hay lotes pagados {{ filtroLotes().buscar ? 'que coincidan con la búsqueda ' : '' }}en este período.</p>
         }
-        @for (l of ls; track l.id) {
+        @for (l of pl.items; track l.id) {
           <section class="pag__grupo">
             <header class="pag__grupo-cabeza">
               <div class="pag__grupo-titulo">
@@ -220,6 +259,44 @@
             </ul>
           </section>
         }
+        <app-paginador [total]="pl.total" [pagina]="pl.pagina" [tamano]="pl.tamanoPagina" [cargando]="cargandoLotes()"
+          [unidad]="pl.total === 1 ? 'lote' : 'lotes'" (irA)="cargarLotes($event)" />
+      }
+    </mat-tab>
+
+    <!-- ================= RECHAZADOS ================= -->
+    <mat-tab [label]="'Rechazados' + (rechazados()?.total ? ' (' + rechazados()!.total + ')' : '')">
+      <app-filtro-pagos [valor]="filtroRechazados()" etiquetaFecha="Rechazados" (cambio)="filtrarRechazados($event)" />
+      @if (rechazados(); as pr) {
+        @if (!pr.items.length) {
+          <p class="pag__vacio">No hay pagos rechazados {{ filtroRechazados().buscar ? 'que coincidan con la búsqueda ' : '' }}en este período.</p>
+        } @else {
+          <p class="pag__meta">A Gerencia Comercial le llegó un correo con el motivo de cada uno.</p>
+          <section class="pag__grupo">
+            <ul class="pag__ordenes">
+              @for (o of pr.items; track o.instanciaDocumentoId) {
+                <li class="pag__orden">
+                  <div class="pag__fila pag__fila--pagada">
+                    <a class="pag__tercero" [routerLink]="['/documentos', o.instanciaDocumentoId]">
+                      <span class="pag__nombre">{{ o.tercero }}</span>
+                      <span class="pag__sub">
+                        NIT {{ o.identificacion }} · {{ origen(o) }}{{ o.creadoPor ? ' · enviada por ' + o.creadoPor : '' }}
+                      </span>
+                    </a>
+                    <span class="pag__valor">$ {{ o.neto | number: '1.0-0' }}</span>
+                  </div>
+                  <p class="pag__motivo">
+                    <mat-icon inline>block</mat-icon>
+                    Rechazado {{ o.fechaRechazo | date: 'd MMM, h:mm a' }}{{ o.rechazadoPor ? ' por ' + o.rechazadoPor : '' }}:
+                    <strong>{{ o.motivoRechazo }}</strong>
+                  </p>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+        <app-paginador [total]="pr.total" [pagina]="pr.pagina" [tamano]="pr.tamanoPagina" [cargando]="cargandoRechazados()"
+          [unidad]="pr.total === 1 ? 'rechazado' : 'rechazados'" (irA)="cargarRechazados($event)" />
       }
     </mat-tab>
   </mat-tab-group>

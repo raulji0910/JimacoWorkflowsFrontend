@@ -34,6 +34,12 @@ export class LayoutComponent {
   private readonly router = inject(Router);
   private readonly breakpointObserver = inject(BreakpointObserver);
 
+  /** "Cuentas por pagar" se ilumina en todas sus pantallas menos Seguimiento, que tiene su propio ítem. */
+  enCuentasPorPagar(): boolean {
+    const url = this.router.url;
+    return url.startsWith('/cuentas-por-pagar') && !url.startsWith('/cuentas-por-pagar/seguimiento');
+  }
+
   readonly usuario = this.authService.usuario;
   readonly esAdmin = this.authService.esAdmin();
   readonly puedeDevolverCualquierDocumento = this.authService.puedeDevolverCualquierDocumento();

@@ -180,6 +180,85 @@ export interface LineaOrdenPago {
   valor: number;
 }
 
+export type EstadoSeguimientoPago = 'PorPagar' | 'Pagado' | 'Rechazado' | 'Otro';
+
+/** Filtros de las listas paginadas de pagos (fechas "yyyy-MM-dd", días de Colombia). */
+export interface FiltroPagos {
+  estado?: EstadoSeguimientoPago | null;
+  desde?: string | null;
+  hasta?: string | null;
+  buscar?: string | null;
+  pagina?: number;
+}
+
+export interface Pagina<T> {
+  items: T[];
+  total: number;
+  pagina: number;
+  tamanoPagina: number;
+}
+
+export interface ConteoEstado {
+  cantidad: number;
+  monto: number;
+}
+
+export interface GrupoSeguimiento {
+  clave: string;
+  numeroRelacion: number | null;
+  esExtraordinario: boolean;
+  creadoPor: string | null;
+  fecha: string;
+  ordenes: SeguimientoPago[];
+}
+
+/** Una página del seguimiento: relaciones completas; los conteos son de todo el período + búsqueda. */
+export interface SeguimientoPagina {
+  grupos: GrupoSeguimiento[];
+  total: number;
+  pagina: number;
+  tamanoPagina: number;
+  porPagar: ConteoEstado;
+  pagados: ConteoEstado;
+  rechazados: ConteoEstado;
+  todos: ConteoEstado;
+}
+
+export function paramsFiltroPagos(f: FiltroPagos): Record<string, string> {
+  const params: Record<string, string> = {};
+  if (f.estado) params['estado'] = f.estado;
+  if (f.desde) params['desde'] = f.desde;
+  if (f.hasta) params['hasta'] = f.hasta;
+  if (f.buscar) params['buscar'] = f.buscar;
+  params['pagina'] = String(f.pagina ?? 1);
+  return params;
+}
+
+/** "Seguimiento de pagos" de Gerencia Comercial — GET api/CuentasPorPagar/seguimiento. */
+export interface SeguimientoPago {
+  instanciaDocumentoId: number;
+  numeroReferencia: string | null;
+  numeroRelacion: number | null;
+  esExtraordinario: boolean;
+  identificacion: string;
+  tercero: string;
+  neto: number;
+  fechaCreacion: string;
+  creadoPor: string | null;
+  estado: EstadoSeguimientoPago;
+  numeroLote: number | null;
+  fechaPago: string | null;
+  banco: string | null;
+  prefijoCE: string | null;
+  numeroCE: number | null;
+  pendienteCreacionCE: boolean;
+  conflictoCreacionCE: string | null;
+  motivoRechazo: string | null;
+  rechazadoPor: string | null;
+  fechaRechazo: string | null;
+  lineas: LineaOrdenPago[];
+}
+
 export interface OrdenPagoPendiente {
   instanciaDocumentoId: number;
   numeroReferencia: string | null;

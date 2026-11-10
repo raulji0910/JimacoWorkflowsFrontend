@@ -199,6 +199,85 @@
     }
   }
 
+  &__ayuda {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+    opacity: 0.8;
+  }
+
+  &__tabla-caja {
+    overflow-x: auto;
+    margin-bottom: 0.5rem;
+  }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+
+    th,
+    td {
+      padding: 0.3rem 0.5rem;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      opacity: 0.7;
+    }
+
+    tfoot td {
+      border-bottom: none;
+      font-weight: 600;
+      padding-top: 0.5rem;
+    }
+  }
+
+  &__num {
+    text-align: right !important;
+    white-space: nowrap;
+  }
+
+  &__copiable {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.35rem;
+    margin: 0 -0.35rem;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+
+    mat-icon {
+      font-size: 0.95rem;
+      opacity: 0.45;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--mat-sys-surface-container-high);
+
+      mat-icon {
+        opacity: 0.9;
+      }
+    }
+
+    &--nombre {
+      white-space: normal;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+  }
+
   &__campos {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
@@ -228,6 +307,17 @@
 
     &--error {
       background: color-mix(in srgb, var(--mat-sys-error) 18%, transparent);
+    }
+  }
+
+  &__motivo {
+    margin: 0 0.75rem 0.5rem;
+    font-size: 0.875rem;
+    color: var(--mat-sys-error);
+
+    strong {
+      color: var(--mat-sys-on-surface);
+      font-weight: 500;
     }
   }
 

@@ -23,70 +23,163 @@ import { TerceroWO, TipoGiro } from '../../core/models/cuentas-por-pagar.model';
   standalone: true,
   imports: [DecimalPipe, FormsModule, MatDialogModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatAutocompleteModule],
   template: `
-    <h2 mat-dialog-title>Pago extraordinario</h2>
+    <header class="pe__cabeza">
+      <span class="pe__icono"><mat-icon>add_card</mat-icon></span>
+      <div>
+        <h2>Pago extraordinario</h2>
+        <p>Giro a un tercero que no sale de una factura. Le llega un correo solo para este pago a Gerencia General.</p>
+      </div>
+      <button mat-icon-button mat-dialog-close class="pe__cerrar" [disabled]="enviando()" aria-label="Cerrar">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
     <mat-dialog-content class="pe">
-      <p class="pe__ayuda">Un giro a un tercero que no sale de una factura. Le llega un correo solo para este pago al pagador.</p>
-
-      <mat-form-field appearance="outline" class="pe__campo">
-        <mat-label>Tercero (nombre o NIT)</mat-label>
-        <input
-          matInput
-          [matAutocomplete]="auto"
-          [ngModel]="textoTercero"
-          (ngModelChange)="buscar($event)"
-          autocomplete="off"
-        />
-        <mat-autocomplete #auto="matAutocomplete" [displayWith]="mostrar" (optionSelected)="elegir($event)">
-          @for (t of terceros(); track t.idTerceroWO) {
-            <mat-option [value]="t">{{ t.nombre }} · {{ t.identificacion }}</mat-option>
-          }
-        </mat-autocomplete>
+      <!-- 1. Tercero -->
+      <section class="pe__paso">
+        <span class="pe__etiqueta"><span class="pe__num">1</span> ¿A quién se le gira?</span>
         @if (tercero(); as t) {
-          <mat-hint>Elegido: {{ t.nombre }} (NIT {{ t.identificacion }})</mat-hint>
-        } @else if (buscando()) {
-          <mat-hint>Buscando…</mat-hint>
-        } @else if (sinResultados()) {
-          <mat-hint>No aparece en World Office. Si es nuevo, primero hay que crearlo en WO.</mat-hint>
+          <div class="pe__tercero">
+            <span class="pe__avatar">{{ iniciales(t.nombre) }}</span>
+            <div class="pe__tercero-datos">
+              <strong>{{ t.nombre }}</strong>
+              <span>NIT {{ t.identificacion }}</span>
+            </div>
+            <button mat-button type="button" (click)="cambiarTercero()" [disabled]="enviando()">Cambiar</button>
+          </div>
+        } @else {
+          <mat-form-field appearance="outline" class="pe__campo" subscriptSizing="dynamic">
+            <mat-label>Buscar tercero por nombre o NIT</mat-label>
+            <mat-icon matPrefix>person_search</mat-icon>
+            <input matInput [matAutocomplete]="auto" [ngModel]="textoTercero" (ngModelChange)="buscar($event)" autocomplete="off" />
+            <mat-autocomplete #auto="matAutocomplete" [displayWith]="mostrar" (optionSelected)="elegir($event)">
+              @for (t of terceros(); track t.idTerceroWO) {
+                <mat-option [value]="t">
+                  <span class="pe__opcion">{{ t.nombre }}</span>
+                  <span class="pe__opcion-nit">NIT {{ t.identificacion }}</span>
+                </mat-option>
+              }
+            </mat-autocomplete>
+            @if (buscando()) {
+              <mat-hint>Buscando en World Office…</mat-hint>
+            } @else if (sinResultados()) {
+              <mat-hint class="pe__aviso">No aparece en World Office. Si es nuevo, primero hay que crearlo en WO.</mat-hint>
+            } @else {
+              <mat-hint>Escribí al menos 2 letras o números.</mat-hint>
+            }
+          </mat-form-field>
         }
-      </mat-form-field>
+      </section>
 
-      <mat-form-field appearance="outline" class="pe__campo">
-        <mat-label>Monto</mat-label>
-        <span matTextPrefix>$&nbsp;</span>
-        <input matInput type="number" min="1" step="1" [(ngModel)]="valor" />
-        @if (valor && valor > 0) { <mat-hint>$ {{ valor | number: '1.0-0' }}</mat-hint> }
-      </mat-form-field>
+      <!-- 2. Monto y tipo -->
+      <section class="pe__paso">
+        <span class="pe__etiqueta"><span class="pe__num">2</span> ¿Cuánto y de qué tipo?</span>
+        <div class="pe__fila">
+          <mat-form-field appearance="outline" class="pe__monto" subscriptSizing="dynamic">
+            <mat-label>Monto</mat-label>
+            <span matTextPrefix class="pe__signo">$&nbsp;</span>
+            <input matInput inputmode="numeric" autocomplete="off" placeholder="0" [ngModel]="montoTexto" (ngModelChange)="escribirMonto($event)" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="pe__tipo" subscriptSizing="dynamic">
+            <mat-label>Tipo de giro</mat-label>
+            <mat-select [(ngModel)]="tipoGiroId">
+              @for (t of tiposGiro(); track t.id) {
+                <mat-option [value]="t.id">{{ t.nombre }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </section>
 
-      <mat-form-field appearance="outline" class="pe__campo">
-        <mat-label>Tipo de giro</mat-label>
-        <mat-select [(ngModel)]="tipoGiroId">
-          @for (t of tiposGiro(); track t.id) {
-            <mat-option [value]="t.id">{{ t.nombre }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <!-- 3. Concepto -->
+      <section class="pe__paso">
+        <span class="pe__etiqueta"><span class="pe__num">3</span> ¿Para qué es?</span>
+        <mat-form-field appearance="outline" class="pe__campo" subscriptSizing="dynamic">
+          <mat-label>Concepto</mat-label>
+          <textarea matInput rows="2" maxlength="300" [(ngModel)]="concepto"></textarea>
+          <mat-hint>Lo ve el pagador y queda en el comprobante.</mat-hint>
+          <mat-hint align="end">{{ concepto.length }}/300</mat-hint>
+        </mat-form-field>
+      </section>
 
-      <mat-form-field appearance="outline" class="pe__campo">
-        <mat-label>Concepto</mat-label>
-        <textarea matInput rows="2" maxlength="300" [(ngModel)]="concepto"></textarea>
-        <mat-hint align="end">{{ concepto.length }}/300</mat-hint>
-      </mat-form-field>
+      @if (listo()) {
+        <div class="pe__resumen">
+          <mat-icon>send</mat-icon>
+          <span>
+            Se le pide a Gerencia General girar <strong>$ {{ valor | number: '1.0-0' }}</strong>
+            a <strong>{{ tercero()?.nombre }}</strong> como <strong>{{ nombreTipo() }}</strong>.
+          </span>
+        </div>
+      }
+
+      @if (error()) {
+        <p class="pe__error"><mat-icon inline>error</mat-icon> {{ error() }}</p>
+      }
     </mat-dialog-content>
-    <mat-dialog-actions align="end">
+
+    <mat-dialog-actions class="pe__acciones">
       <button mat-button mat-dialog-close [disabled]="enviando()">Cancelar</button>
       <button mat-flat-button color="primary" [disabled]="!listo() || enviando()" (click)="enviar()">
+        <mat-icon>send</mat-icon>
         {{ enviando() ? 'Enviando…' : 'Enviar al pagador' }}
       </button>
     </mat-dialog-actions>
-    @if (error()) {
-      <p class="pe__error">{{ error() }}</p>
-    }
   `,
   styles: [`
-    .pe { display: flex; flex-direction: column; gap: 0.25rem; min-width: min(28rem, 80vw); }
+    :host { display: block; }
+    .pe__cabeza {
+      position: relative;
+      display: flex; gap: 0.9rem; align-items: flex-start;
+      padding: 1.25rem 3.25rem 1.1rem 1.5rem;
+      background: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+    }
+    .pe__cabeza h2 { margin: 0; font: var(--mat-sys-title-large); }
+    .pe__cabeza p { margin: 0.25rem 0 0; font-size: 0.875rem; opacity: 0.9; line-height: 1.35; }
+    .pe__icono {
+      flex: 0 0 auto; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%;
+      background: color-mix(in srgb, var(--mat-sys-on-primary) 18%, transparent);
+    }
+    .pe__cerrar { position: absolute; top: 0.5rem; right: 0.5rem; color: var(--mat-sys-on-primary); }
+
+    .pe { display: flex; flex-direction: column; gap: 1.1rem; padding-top: 1.25rem !important; }
+    .pe__paso { display: flex; flex-direction: column; gap: 0.5rem; }
+    .pe__etiqueta { display: flex; align-items: center; gap: 0.5rem; font-weight: 500; color: var(--mat-sys-on-surface); }
+    .pe__num {
+      display: grid; place-items: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; font-size: 0.75rem; font-weight: 600;
+      background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container);
+    }
     .pe__campo { width: 100%; }
-    .pe__ayuda { margin: 0 0 0.5rem; opacity: 0.8; }
-    .pe__error { color: var(--mat-sys-error); padding: 0 1.5rem 1rem; margin: 0; }
+    .pe__aviso { color: var(--mat-sys-error); }
+    .pe__opcion { display: block; }
+    .pe__opcion-nit { display: block; font-size: 0.8rem; opacity: 0.7; }
+
+    .pe__tercero {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.5rem 0.65rem 0.75rem; border-radius: 12px;
+      background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container);
+    }
+    .pe__avatar {
+      flex: 0 0 auto; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%;
+      background: var(--mat-sys-primary); color: var(--mat-sys-on-primary); font-weight: 600; letter-spacing: 0.03em;
+    }
+    .pe__tercero-datos { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+    .pe__tercero-datos strong { overflow-wrap: anywhere; }
+    .pe__tercero-datos span { font-size: 0.85rem; opacity: 0.8; }
+
+    .pe__fila { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .pe__monto { flex: 1 1 11rem; }
+    .pe__monto input { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .pe__signo { font-size: 1.35rem; font-weight: 600; color: var(--mat-sys-primary); }
+    .pe__tipo { flex: 1 1 12rem; }
+
+    .pe__resumen {
+      display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.75rem 0.9rem; border-radius: 12px; font-size: 0.9rem;
+      border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 40%, transparent);
+      background: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+    }
+    .pe__resumen mat-icon { color: var(--mat-sys-primary); flex: 0 0 auto; }
+    .pe__error { display: flex; gap: 0.35rem; align-items: center; color: var(--mat-sys-error); margin: 0; }
+    .pe__acciones { justify-content: flex-end; gap: 0.5rem; padding: 0.5rem 1.5rem 1.25rem !important; }
   `]
 })
 export class PagoExtraordinarioDialogComponent implements OnInit {
@@ -106,6 +199,7 @@ export class PagoExtraordinarioDialogComponent implements OnInit {
   textoTercero = '';
   readonly mostrar = (t: TerceroWO | string | null): string => (typeof t === 'string' ? t : (t?.nombre ?? ''));
   valor: number | null = null;
+  montoTexto = '';
   tipoGiroId: number | null = null;
   concepto = '';
 
@@ -148,6 +242,27 @@ export class PagoExtraordinarioDialogComponent implements OnInit {
     this.tercero.set(t);
     this.textoTercero = t.nombre;
     this.sinResultados.set(false);
+  }
+
+  /** Solo dígitos, mostrados con puntos de miles mientras se escribe ("1.500.000"). */
+  escribirMonto(texto: string): void {
+    const digitos = (texto ?? '').replace(/\D/g, '').replace(/^0+/, '').slice(0, 13);
+    this.valor = digitos ? Number(digitos) : null;
+    this.montoTexto = digitos ? Number(digitos).toLocaleString('es-CO') : '';
+  }
+
+  iniciales(nombre: string): string {
+    return nombre.split(/\s+/).filter((p) => /[A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/.test(p)).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+  }
+
+  cambiarTercero(): void {
+    this.tercero.set(null);
+    this.textoTercero = '';
+    this.terceros.set([]);
+  }
+
+  nombreTipo(): string {
+    return this.tiposGiro().find((t) => t.id === this.tipoGiroId)?.nombre ?? '';
   }
 
   listo(): boolean {

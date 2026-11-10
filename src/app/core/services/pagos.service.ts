@@ -2,7 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LotePago, OrdenPagoPendiente } from '../models/cuentas-por-pagar.model';
+import {
+  FiltroPagos,
+  LotePago,
+  OrdenPagoPendiente,
+  Pagina,
+  SeguimientoPago,
+  paramsFiltroPagos
+} from '../models/cuentas-por-pagar.model';
 
 /** Menú "Pagos" del pagador (2026-11-09) — ver PagosController en el backend. */
 @Injectable({ providedIn: 'root' })
@@ -29,8 +36,12 @@ export class PagosService {
     return this.http.post<void>(`${this.baseUrl}/ordenes/${id}/rechazar`, { comentario });
   }
 
-  lotes(): Observable<LotePago[]> {
-    return this.http.get<LotePago[]>(`${this.baseUrl}/lotes`);
+  rechazados(filtro: FiltroPagos): Observable<Pagina<SeguimientoPago>> {
+    return this.http.get<Pagina<SeguimientoPago>>(`${this.baseUrl}/rechazados`, { params: paramsFiltroPagos(filtro) });
+  }
+
+  lotes(filtro: FiltroPagos): Observable<Pagina<LotePago>> {
+    return this.http.get<Pagina<LotePago>>(`${this.baseUrl}/lotes`, { params: paramsFiltroPagos(filtro) });
   }
 
   soporte(loteId: number): Observable<Blob> {

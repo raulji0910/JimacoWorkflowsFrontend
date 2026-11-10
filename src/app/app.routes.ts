@@ -68,6 +68,12 @@ export const routes: Routes = [
         canActivate: [puedeVerCuentasPorPagarGuard]
       },
       {
+        path: 'cuentas-por-pagar/seguimiento',
+        loadComponent: () =>
+          import('./features/cuentas-por-pagar/seguimiento-pagos.component').then((m) => m.SeguimientoPagosComponent),
+        canActivate: [puedeVerCuentasPorPagarGuard]
+      },
+      {
         path: 'pagos',
         loadComponent: () => import('./features/pagos/pagos.component').then((m) => m.PagosComponent),
         canActivate: [puedePagarCuentasGuard]

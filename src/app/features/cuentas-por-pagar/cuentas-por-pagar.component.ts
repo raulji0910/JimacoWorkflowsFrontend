@@ -121,7 +121,7 @@ export class CuentasPorPagarComponent implements OnInit {
 
   abrirExtraordinario(): void {
     this.dialog
-      .open(PagoExtraordinarioDialogComponent, { width: '32rem', maxWidth: '95vw' })
+      .open(PagoExtraordinarioDialogComponent, { width: '34rem', maxWidth: '95vw', autoFocus: 'input' })
       .afterClosed()
       .subscribe((enviado) => {
         if (enviado) this.snackBar.open('Pago extraordinario enviado al pagador', 'Cerrar', { duration: 5000 });

@@ -13,7 +13,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PagosService } from '../../core/services/pagos.service';
 import { CuentasPorPagarService } from '../../core/services/cuentas-por-pagar.service';
-import { CuentaBanco, LoteOrden, LotePago, OrdenPagoPendiente } from '../../core/models/cuentas-por-pagar.model';
+import { CuentaBanco, LoteOrden, LotePago, OrdenPagoPendiente, Pagina, SeguimientoPago } from '../../core/models/cuentas-por-pagar.model';
+import { FiltroPagosComponent, ValorFiltroPagos, aFiltroApi, filtroInicial } from '../../shared/filtro-pagos.component';
+import { PaginadorComponent } from '../../shared/paginador.component';
 
 /** "yyyy-MM-dd" de hoy en Colombia (UTC−5, sin horario de verano) — mismo "hoy" que valida el backend. */
 function hoyColombia(): string {
@@ -49,7 +51,9 @@ interface GrupoOrdenes {
     MatInputModule,
     MatSelectModule,
     MatTabsModule,
-    MatTooltipModule
+    MatTooltipModule,
+    FiltroPagosComponent,
+    PaginadorComponent
   ],
   templateUrl: './pagos.component.html',
   styleUrl: './pagos.component.scss'
@@ -63,7 +67,13 @@ export class PagosComponent implements OnInit {
 
   readonly hoy = hoyColombia();
   readonly pendientes = signal<OrdenPagoPendiente[] | null>(null);
-  readonly lotes = signal<LotePago[] | null>(null);
+  // Pagados y Rechazados: filtrados y paginados en el servidor (2026-11-10).
+  readonly lotes = signal<Pagina<LotePago> | null>(null);
+  readonly filtroLotes = signal<ValorFiltroPagos>(filtroInicial());
+  readonly cargandoLotes = signal(false);
+  readonly rechazados = signal<Pagina<SeguimientoPago> | null>(null);
+  readonly filtroRechazados = signal<ValorFiltroPagos>(filtroInicial());
+  readonly cargandoRechazados = signal(false);
   readonly pestana = signal(0);
   readonly seleccion = signal<ReadonlySet<number>>(new Set());
   readonly expandidas = signal<ReadonlySet<number>>(new Set());
@@ -102,6 +112,22 @@ export class PagosComponent implements OnInit {
 
   readonly seleccionadas = computed(() => (this.pendientes() ?? []).filter((o) => this.seleccion().has(o.instanciaDocumentoId)));
   readonly totalSeleccionado = computed(() => this.seleccionadas().reduce((s, o) => s + o.neto, 0));
+  /** Lo marcado agrupado por tercero: una transferencia por NIT, que es como se carga en el banco. */
+  readonly transferencias = computed(() => {
+    const porNit = new Map<string, { identificacion: string; tercero: string; neto: number; ordenes: number; extraordinario: boolean }>();
+    for (const o of this.seleccionadas()) {
+      const t = porNit.get(o.identificacion);
+      if (t) {
+        t.neto += o.neto;
+        t.ordenes++;
+        t.extraordinario ||= o.esExtraordinario;
+      } else {
+        porNit.set(o.identificacion, { identificacion: o.identificacion, tercero: o.tercero, neto: o.neto, ordenes: 1, extraordinario: o.esExtraordinario });
+      }
+    }
+    return [...porNit.values()].sort((a, b) => a.tercero.localeCompare(b.tercero));
+  });
+
   readonly totalPendiente = computed(() => (this.pendientes() ?? []).reduce((s, o) => s + o.neto, 0));
 
   ngOnInit(): void {
@@ -121,7 +147,8 @@ export class PagosComponent implements OnInit {
       },
       error: (e: { error?: { mensaje?: string } }) => this.avisar(e.error?.mensaje ?? 'No se pudieron cargar los pagos pendientes.')
     });
-    this.pagos.lotes().subscribe({ next: (l) => this.lotes.set(l) });
+    this.cargarLotes(this.lotes()?.pagina ?? 1);
+    this.cargarRechazados(this.rechazados()?.pagina ?? 1);
   }
 
   estaSeleccionada(o: OrdenPagoPendiente): boolean {
@@ -251,7 +278,95 @@ export class PagosComponent implements OnInit {
       });
   }
 
-  // ---- Lotes pagados ----
+  valorPlano(valor: number): string {
+    return Math.round(valor).toString();
+  }
+
+  copiar(texto: string, que: string): void {
+    this.alPortapapeles(texto, `${que} copiado.`);
+  }
+
+  /** Tab entre columnas y un renglón por tercero: pega directo en Excel. Valores sin puntos. */
+  copiarTabla(): void {
+    const filas = this.transferencias().map((t) => [t.identificacion, t.tercero, this.valorPlano(t.neto)].join('\t'));
+    this.alPortapapeles(['NIT\tNombre\tValor', ...filas].join('\n'), `Tabla copiada (${filas.length} ${filas.length === 1 ? 'tercero' : 'terceros'}).`);
+  }
+
+  private alPortapapeles(texto: string, aviso: string): void {
+    const ok = () => this.snackBar.open(aviso, undefined, { duration: 1800 });
+    const fallo = () => this.snackBar.open('No se pudo copiar. Seleccioná el texto a mano.', 'Cerrar', { duration: 4000 });
+    // navigator.clipboard solo existe en HTTPS; en http (QA) se usa el método clásico.
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(texto).then(ok, () => (this.copiarClasico(texto) ? ok() : fallo()));
+    } else if (this.copiarClasico(texto)) {
+      ok();
+    } else {
+      fallo();
+    }
+  }
+
+  private copiarClasico(texto: string): boolean {
+    const area = document.createElement('textarea');
+    area.value = texto;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try {
+      return document.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      document.body.removeChild(area);
+    }
+  }
+
+  // ---- Lotes pagados y rechazados (paginados) ----
+
+  filtrarLotes(v: ValorFiltroPagos): void {
+    this.filtroLotes.set(v);
+    this.cargarLotes(1);
+  }
+
+  cargarLotes(pagina: number): void {
+    this.cargandoLotes.set(true);
+    this.pagos.lotes(aFiltroApi(this.filtroLotes(), pagina)).subscribe({
+      next: (l) => {
+        this.lotes.set(l);
+        this.cargandoLotes.set(false);
+      },
+      error: () => {
+        this.cargandoLotes.set(false);
+        this.avisar('No se pudieron cargar los lotes pagados.');
+      }
+    });
+  }
+
+  filtrarRechazados(v: ValorFiltroPagos): void {
+    this.filtroRechazados.set(v);
+    this.cargarRechazados(1);
+  }
+
+  cargarRechazados(pagina: number): void {
+    this.cargandoRechazados.set(true);
+    this.pagos.rechazados(aFiltroApi(this.filtroRechazados(), pagina)).subscribe({
+      next: (r) => {
+        this.rechazados.set(r);
+        this.cargandoRechazados.set(false);
+      },
+      error: () => {
+        this.cargandoRechazados.set(false);
+        this.avisar('No se pudieron cargar los rechazados.');
+      }
+    });
+  }
+
+  origen(o: SeguimientoPago): string {
+    if (o.numeroRelacion !== null) return `Relación de pagos ${o.numeroRelacion}`;
+    return o.esExtraordinario ? 'Pago extraordinario' : 'Orden de pago anterior';
+  }
+
 
   verSoporte(lote: LotePago): void {
     this.pagos.soporte(lote.id).subscribe({

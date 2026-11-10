@@ -8,6 +8,10 @@ import {
   DetalleProveedorCuentaPorPagar,
   RelacionBorrador,
   RelacionCreada,
+  FiltroPagos,
+  LineaOrdenPago,
+  SeguimientoPagina,
+  paramsFiltroPagos,
   ResumenCuentasPorPagar,
   TerceroWO,
   TipoGiro
@@ -47,6 +51,15 @@ export class CuentasPorPagarService {
 
   ratificar(observaciones: string | null): Observable<RelacionCreada> {
     return this.http.post<RelacionCreada>(`${this.baseUrl}/relacion/ratificar`, { observaciones });
+  }
+
+  seguimiento(filtro: FiltroPagos): Observable<SeguimientoPagina> {
+    return this.http.get<SeguimientoPagina>(`${this.baseUrl}/seguimiento`, { params: paramsFiltroPagos(filtro) });
+  }
+
+  /** Facturas / anticipos / giro de una orden — se pide al abrirla en el seguimiento. */
+  lineasSeguimiento(instanciaDocumentoId: number): Observable<LineaOrdenPago[]> {
+    return this.http.get<LineaOrdenPago[]>(`${this.baseUrl}/seguimiento/${instanciaDocumentoId}/lineas`);
   }
 
   // ---- Pago extraordinario ----
