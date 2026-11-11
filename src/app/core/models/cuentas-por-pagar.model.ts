@@ -155,8 +155,12 @@ export interface RelacionCreada {
 
 export interface TipoGiro {
   id: number;
+  /** "código NOMBRE" tal cual lo usa Contabilidad (ej. "513595 OTROS"), o "Anticipo a proveedores". */
   nombre: string;
   esAnticipo: boolean;
+  codigoCuenta: string;
+  /** Grupo del PUC (ej. "Administración · Servicios"). */
+  grupo: string | null;
 }
 
 export interface TerceroWO {

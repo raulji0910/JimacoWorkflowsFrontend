@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +18,11 @@ import { TerceroWO, TipoGiro } from '../../core/models/cuentas-por-pagar.model';
  * necesita: tercero (catálogo de World Office), monto, tipo de giro (decide la cuenta del CE) y
  * concepto. Genera un correo solo para este giro; el pagador lo ve en su menú "Pagos".
  */
+/** Minúsculas y sin tildes, para buscar "telefono" y encontrar "TELÉFONO". */
+function normalizar(texto: string): string {
+  return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
 @Component({
   selector: 'app-pago-extraordinario-dialog',
   standalone: true,
@@ -74,21 +79,34 @@ import { TerceroWO, TipoGiro } from '../../core/models/cuentas-por-pagar.model';
       <!-- 2. Monto y tipo -->
       <section class="pe__paso">
         <span class="pe__etiqueta"><span class="pe__num">2</span> ¿Cuánto y de qué tipo?</span>
-        <div class="pe__fila">
-          <mat-form-field appearance="outline" class="pe__monto" subscriptSizing="dynamic">
-            <mat-label>Monto</mat-label>
-            <span matTextPrefix class="pe__signo">$&nbsp;</span>
-            <input matInput inputmode="numeric" autocomplete="off" placeholder="0" [ngModel]="montoTexto" (ngModelChange)="escribirMonto($event)" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="pe__tipo" subscriptSizing="dynamic">
-            <mat-label>Tipo de giro</mat-label>
-            <mat-select [(ngModel)]="tipoGiroId">
-              @for (t of tiposGiro(); track t.id) {
-                <mat-option [value]="t.id">{{ t.nombre }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-        </div>
+        <mat-form-field appearance="outline" class="pe__monto" subscriptSizing="dynamic">
+          <mat-label>Monto</mat-label>
+          <span matTextPrefix class="pe__signo">$&nbsp;</span>
+          <input matInput inputmode="numeric" autocomplete="off" placeholder="0" [ngModel]="montoTexto" (ngModelChange)="escribirMonto($event)" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="pe__campo" subscriptSizing="dynamic">
+          <mat-label>Tipo de giro (cuenta)</mat-label>
+          <mat-icon matPrefix>account_tree</mat-icon>
+          <input matInput [matAutocomplete]="autoGiro" [ngModel]="textoGiro()" (ngModelChange)="buscarGiro($event)"
+            placeholder="Código o concepto, ej. 5135 o peajes" autocomplete="off" />
+          <mat-autocomplete #autoGiro="matAutocomplete" [displayWith]="mostrarGiro" (optionSelected)="elegirGiro($event)" class="pe__panel-giros">
+            @for (g of girosAgrupados(); track g.grupo) {
+              <mat-optgroup [label]="g.grupo">
+                @for (t of g.tipos; track t.id) {
+                  <mat-option [value]="t">{{ t.nombre }}</mat-option>
+                }
+              </mat-optgroup>
+            } @empty {
+              <mat-option disabled>Ninguna cuenta coincide con "{{ textoGiro() }}"</mat-option>
+            }
+          </mat-autocomplete>
+          @if (tipoGiro(); as tg) {
+            <mat-hint>{{ tg.grupo }}</mat-hint>
+          } @else {
+            <mat-hint>{{ tiposGiro().length }} cuentas — escribí para filtrar o abrí la lista.</mat-hint>
+          }
+        </mat-form-field>
       </section>
 
       <!-- 3. Concepto -->
@@ -107,7 +125,7 @@ import { TerceroWO, TipoGiro } from '../../core/models/cuentas-por-pagar.model';
           <mat-icon>send</mat-icon>
           <span>
             Se le pide a Gerencia General girar <strong>$ {{ valor | number: '1.0-0' }}</strong>
-            a <strong>{{ tercero()?.nombre }}</strong> como <strong>{{ nombreTipo() }}</strong>.
+            a <strong>{{ tercero()?.nombre }}</strong> como <strong>{{ nombreTipo() }}</strong>{{ tipoGiro()?.grupo ? ' (' + tipoGiro()?.grupo + ')' : '' }}.
           </span>
         </div>
       }
@@ -166,11 +184,9 @@ import { TerceroWO, TipoGiro } from '../../core/models/cuentas-por-pagar.model';
     .pe__tercero-datos strong { overflow-wrap: anywhere; }
     .pe__tercero-datos span { font-size: 0.85rem; opacity: 0.8; }
 
-    .pe__fila { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-    .pe__monto { flex: 1 1 11rem; }
+    .pe__monto { width: min(100%, 16rem); }
     .pe__monto input { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
     .pe__signo { font-size: 1.35rem; font-weight: 600; color: var(--mat-sys-primary); }
-    .pe__tipo { flex: 1 1 12rem; }
 
     .pe__resumen {
       display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.75rem 0.9rem; border-radius: 12px; font-size: 0.9rem;
@@ -189,6 +205,24 @@ export class PagoExtraordinarioDialogComponent implements OnInit {
   private readonly busquedas = new Subject<string>();
 
   readonly tiposGiro = signal<TipoGiro[]>([]);
+  // Tipo de giro: buscador con la lista agrupada por grupo del PUC (son ~75 cuentas).
+  readonly textoGiro = signal('');
+  readonly tipoGiro = signal<TipoGiro | null>(null);
+  readonly girosAgrupados = computed(() => {
+    const filtro = normalizar(this.textoGiro());
+    const elegido = this.tipoGiro();
+    const lista = this.tiposGiro().filter(
+      (t) => !filtro || (elegido && t.id === elegido.id) || t.codigoCuenta.startsWith(filtro) || normalizar(t.nombre).includes(filtro) || normalizar(t.grupo ?? '').includes(filtro)
+    );
+    const grupos = new Map<string, TipoGiro[]>();
+    for (const t of lista) {
+      const g = t.grupo ?? 'Otros';
+      if (!grupos.has(g)) grupos.set(g, []);
+      grupos.get(g)!.push(t);
+    }
+    return [...grupos.entries()].map(([grupo, tipos]) => ({ grupo, tipos }));
+  });
+  readonly mostrarGiro = (t: TipoGiro | string | null): string => (typeof t === 'string' ? t : (t?.nombre ?? ''));
   readonly terceros = signal<TerceroWO[]>([]);
   readonly tercero = signal<TerceroWO | null>(null);
   readonly buscando = signal(false);
@@ -206,7 +240,7 @@ export class PagoExtraordinarioDialogComponent implements OnInit {
   ngOnInit(): void {
     this.servicio.tiposGiro().subscribe((tipos) => {
       this.tiposGiro.set(tipos);
-      if (tipos.length === 1) this.tipoGiroId = tipos[0].id;
+      if (tipos.length === 1) this.fijarGiro(tipos[0]);
     });
 
     this.busquedas
@@ -262,7 +296,24 @@ export class PagoExtraordinarioDialogComponent implements OnInit {
   }
 
   nombreTipo(): string {
-    return this.tiposGiro().find((t) => t.id === this.tipoGiroId)?.nombre ?? '';
+    return this.tipoGiro()?.nombre ?? '';
+  }
+
+  buscarGiro(texto: string | TipoGiro): void {
+    if (typeof texto !== 'string') return; // la opción elegida llega por elegirGiro()
+    this.textoGiro.set(texto);
+    this.tipoGiro.set(null);
+    this.tipoGiroId = null;
+  }
+
+  elegirGiro(evento: MatAutocompleteSelectedEvent): void {
+    this.fijarGiro(evento.option.value as TipoGiro);
+  }
+
+  private fijarGiro(t: TipoGiro): void {
+    this.tipoGiro.set(t);
+    this.tipoGiroId = t.id;
+    this.textoGiro.set(t.nombre);
   }
 
   listo(): boolean {
