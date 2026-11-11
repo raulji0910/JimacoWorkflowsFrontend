@@ -140,6 +140,12 @@
               }
               @case ('completa') {
                 <mat-chip class="alistamiento__chip alistamiento__chip--completa">Completa</mat-chip>
+                @if (haceCuantoSeCompleto(h); as hace) {
+                  <mat-chip class="alistamiento__chip alistamiento__chip--recien" matTooltip="Se completó en las últimas 24 horas">
+                    <mat-icon matChipAvatar>schedule</mat-icon>
+                    Completada {{ hace }}
+                  </mat-chip>
+                }
               }
               @case ('avanzada') {
                 <mat-chip class="alistamiento__chip alistamiento__chip--avanzada" matTooltip="80% o más de los ítems ya listos">Avanzada</mat-chip>

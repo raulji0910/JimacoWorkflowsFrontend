@@ -31,6 +31,9 @@ export interface HojaAlistamientoResumen {
   // Office al mismo tiempo.
   remisionado: boolean;
   remisionadoParcial: boolean;
+  // Cuándo pasó a completa (2026-11-11) — null si está incompleta o si se completó antes de existir
+  // este dato. Las de las últimas 24 h suben arriba en "Viendo todas" y en "Ver completas".
+  fechaCompletada?: string | null;
 }
 
 export interface ActualizarCantidadRenglon {
