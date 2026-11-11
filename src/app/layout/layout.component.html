@@ -68,6 +68,10 @@
           <mat-icon matListItemIcon>account_tree</mat-icon>
           <span matListItemTitle>Flujos</span>
         </a>
+        <a mat-list-item routerLink="/admin/cuentas-por-pagar" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>tune</mat-icon>
+          <span matListItemTitle>Config. de pagos</span>
+        </a>
       }
     </mat-nav-list>
 

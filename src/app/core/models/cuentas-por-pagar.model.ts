@@ -300,3 +300,17 @@ export interface LotePago {
   tieneSoporte: boolean;
   ordenes: LoteOrden[];
 }
+
+// ---- Configuración que maneja el administrador (2026-11-11) ----
+
+export interface ConfiguracionCuentasPorPagar {
+  prefijoCE: string;
+  crearCEEnWorldOffice: boolean;
+  fechaActualizacion: string | null;
+  actualizadoPor: string | null;
+}
+
+export interface ActualizarConfiguracionCuentasPorPagar {
+  prefijoCE: string;
+  crearCEEnWorldOffice: boolean;
+}

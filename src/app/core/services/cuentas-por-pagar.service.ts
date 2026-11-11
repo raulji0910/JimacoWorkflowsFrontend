@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
+  ActualizarConfiguracionCuentasPorPagar,
+  ConfiguracionCuentasPorPagar,
   CrearPagoExtraordinario,
   CuentaBanco,
   DetalleProveedorCuentaPorPagar,
@@ -33,6 +35,16 @@ export class CuentasPorPagarService {
 
   bancos(): Observable<CuentaBanco[]> {
     return this.http.get<CuentaBanco[]>(`${this.baseUrl}/bancos`);
+  }
+
+  // ---- Configuración (solo administradores) ----
+
+  configuracion(): Observable<ConfiguracionCuentasPorPagar> {
+    return this.http.get<ConfiguracionCuentasPorPagar>(`${this.baseUrl}/configuracion`);
+  }
+
+  actualizarConfiguracion(dto: ActualizarConfiguracionCuentasPorPagar): Observable<ConfiguracionCuentasPorPagar> {
+    return this.http.put<ConfiguracionCuentasPorPagar>(`${this.baseUrl}/configuracion`, dto);
   }
 
   // ---- Relación de pagos ----

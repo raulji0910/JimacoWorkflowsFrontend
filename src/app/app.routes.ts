@@ -101,6 +101,14 @@ export const routes: Routes = [
         canActivate: [adminGuard]
       },
       {
+        path: 'admin/cuentas-por-pagar',
+        loadComponent: () =>
+          import('./features/admin/configuracion-cuentas-por-pagar/configuracion-cuentas-por-pagar.component').then(
+            (m) => m.ConfiguracionCuentasPorPagarComponent
+          ),
+        canActivate: [adminGuard]
+      },
+      {
         path: 'admin/flujos',
         loadComponent: () => import('./features/admin/flujos/flujos-list.component').then((m) => m.FlujosListComponent),
         canActivate: [adminGuard]
