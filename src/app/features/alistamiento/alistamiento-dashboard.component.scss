@@ -85,6 +85,11 @@
 
   // Sin pulso (a diferencia de los 3 estados de arriba) — es informativo, no urgente: combinarlo
   // con "Atrasada" titilando ya es bastante para una sola fila.
+  &__chip--recien {
+    background-color: #fff3c4 !important;
+    font-weight: 500;
+  }
+
   &__chip--remisionado {
     background-color: #cfe8ff !important;
   }

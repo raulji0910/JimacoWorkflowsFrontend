@@ -19,6 +19,9 @@ import { AuthService } from '../../core/services/auth.service';
 const CLAVE_SONIDO = 'aprobaciones.alistamiento.sonido';
 const CLAVE_PAGE_SIZE = 'aprobaciones.alistamiento.pageSize';
 const MS_ENTRE_CHEQUEOS = 60_000;
+// Recién completadas (2026-11-11): las que pasaron a completas en esta ventana suben arriba de la
+// grilla y llevan la marca "Completada hace …" — para que Logística no las pierda.
+const MS_RECIEN_COMPLETADA = 24 * 60 * 60 * 1000;
 const MS_ENTRE_BEEPS = 2_000;
 const UMBRAL_AVANZADA = 0.8;
 
@@ -64,6 +67,9 @@ export class AlistamientoDashboardComponent implements OnInit, OnDestroy {
   // solo apretaba la tabla sin aportar nada; mejora el responsive.
   readonly columnas = ['hoja', 'cliente', 'campoEntrega', 'elaboradoPor', 'progreso', 'antiguedad', 'total', 'estado', 'acciones'];
   readonly hojas = signal<HojaAlistamientoResumen[]>([]);
+  // "Ahora" fijado en cada carga (cada minuto) — la marca "hace …" y el orden se recalculan con los
+  // datos que ya se traen, sin pedir nada extra al servidor.
+  private readonly ahoraCarga = signal(Date.now());
   readonly cargando = signal(false);
   readonly soloIncompletas = signal(true);
   // Reemplaza al viejo filtro "solo remisionadas" (2026-10-14) — "Ver completas" ya cubre ese caso
@@ -105,12 +111,36 @@ export class AlistamientoDashboardComponent implements OnInit, OnDestroy {
     const textoCampoEntrega = this.filtroCampoEntrega().trim().toLowerCase();
     const textoElaboradoPor = this.filtroElaboradoPor().trim().toLowerCase();
     const textoNumeroHoja = this.filtroNumeroHoja().trim().toLowerCase();
-    return porIncompleta.filter(
+    const filtradas = porIncompleta.filter(
       (h) =>
         (!textoCampoEntrega || (h.campoEntrega ?? '').toLowerCase().includes(textoCampoEntrega)) &&
         (!textoElaboradoPor || (h.elaboradoPor ?? '').toLowerCase().includes(textoElaboradoPor)) &&
         (!textoNumeroHoja || h.numeroReferenciaHoja.toLowerCase().includes(textoNumeroHoja))
     );
+
+    // La vista por defecto (solo incompletas) no cambia: ahí no hay completas.
+    if (this.soloIncompletas() && !this.soloCompletas()) return filtradas;
+
+    // "Viendo todas" y "Ver completas": las completadas en las últimas 24 h van primero (la más
+    // reciente arriba); el resto queda en el orden de siempre (sort estable).
+    return [...filtradas].sort((a, b) => this.msRecienCompletada(b) - this.msRecienCompletada(a));
+  }
+
+  /** Momento en que se completó si fue en las últimas 24 h; 0 si no (no sube). */
+  private msRecienCompletada(h: HojaAlistamientoResumen): number {
+    if (!h.completa || !h.fechaCompletada) return 0;
+    const ms = new Date(h.fechaCompletada).getTime();
+    return this.ahoraCarga() - ms <= MS_RECIEN_COMPLETADA ? ms : 0;
+  }
+
+  /** "hace 5 min" / "hace 3 h" para la marca — null si no es reciente. */
+  haceCuantoSeCompleto(h: HojaAlistamientoResumen): string | null {
+    const ms = this.msRecienCompletada(h);
+    if (!ms) return null;
+    const minutos = Math.max(0, Math.floor((this.ahoraCarga() - ms) / 60000));
+    if (minutos < 1) return 'hace un momento';
+    if (minutos < 60) return `hace ${minutos} min`;
+    return `hace ${Math.floor(minutos / 60)} h`;
   }
 
   opcionesCampoEntregaFiltradas(): string[] {
@@ -195,6 +225,7 @@ export class AlistamientoDashboardComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     this.hojaService.listar().subscribe({
       next: (hojas) => {
+        this.ahoraCarga.set(Date.now());
         this.hojas.set(hojas);
         this.cargando.set(false);
       },
