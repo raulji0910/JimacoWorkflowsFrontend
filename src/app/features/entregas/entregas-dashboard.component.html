@@ -1,40 +1,90 @@
-<div class="ent">
-  <div class="ent__header">
+<div class="alistamiento">
+  <div class="alistamiento__header">
     <h2>Entregas</h2>
-    @if (puedeGestionar()) {
-      <button mat-flat-button color="primary" (click)="imprimirSeleccion()" [disabled]="cantidadSeleccion() === 0">
-        <mat-icon>print</mat-icon>
-        Imprimir seleccionadas{{ cantidadSeleccion() ? ' (' + cantidadSeleccion() + ')' : '' }}
+    <div class="alistamiento__acciones-header">
+      <button
+        mat-stroked-button
+        [color]="sonidoActivo() ? 'primary' : undefined"
+        (click)="alternarSonido()"
+        matTooltip="Suena un beep cada 2 segundos mientras haya alguna remisión Atrasada y esta pestaña esté abierta"
+      >
+        <mat-icon>{{ sonidoActivo() ? 'notifications_active' : 'notifications_off' }}</mat-icon>
+        {{ sonidoActivo() ? 'Alertas sonoras activas' : 'Activar alertas sonoras' }}
       </button>
-    }
+      <button mat-stroked-button (click)="alternarFiltro()">
+        <mat-icon>{{ soloPorEntregar() ? 'visibility' : 'visibility_off' }}</mat-icon>
+        {{ soloPorEntregar() ? 'Viendo solo por entregar' : 'Viendo todas' }}
+      </button>
+      <button
+        mat-stroked-button
+        [color]="soloEntregadas() ? 'primary' : undefined"
+        (click)="alternarEntregadas()"
+        matTooltip="Las remisiones que ya se entregaron (últimos 60 días)"
+      >
+        <mat-icon>done_all</mat-icon>
+        {{ soloEntregadas() ? 'Viendo solo entregadas' : 'Ver entregadas' }}
+      </button>
+      <button mat-flat-button color="primary" (click)="imprimirSeleccion()" [disabled]="cantidadSeleccion === 0">
+        <mat-icon>print</mat-icon>
+        Imprimir{{ cantidadSeleccion ? ' (' + cantidadSeleccion + ')' : ' seleccionadas' }}
+      </button>
+    </div>
   </div>
 
-  <p class="ent__ayuda">
-    Remisiones de World Office ya contabilizadas. Imprimí la remisión desde aquí (lleva un código QR),
-    entregala y confirmá la entrega con la foto o el escaneo de la remisión firmada por el cliente.
+  <p class="alistamiento__ayuda">
+    Cada fila es una Remisión de World Office ya contabilizada. Imprimila desde acá (lleva un código QR),
+    entregala y entrá a la remisión para confirmar la entrega con la foto o el escaneo firmado por el cliente.
   </p>
 
-  <div class="ent__barra">
-    <mat-chip-listbox aria-label="Estado" class="ent__estados" [hideSingleSelectionIndicator]="true">
-      <mat-chip-option [selected]="estado() === 'PorEntregar'" (click)="cambiarEstado('PorEntregar')">
-        Por entregar <span class="ent__num">{{ datos()?.porEntregar ?? 0 }}</span>
-      </mat-chip-option>
-      <mat-chip-option [selected]="estado() === 'Entregada'" (click)="cambiarEstado('Entregada')">
-        Entregadas <span class="ent__num">{{ datos()?.entregadas ?? 0 }}</span>
-      </mat-chip-option>
-      <mat-chip-option [selected]="estado() === 'Revisar'" (click)="cambiarEstado('Revisar')"
-        matTooltip="Entregadas cuyo soporte no trae el QR de la remisión (o trae el de otra)">
-        <mat-icon class="ent__icono-chip">report</mat-icon>
-        Revisar <span class="ent__num">{{ datos()?.revisar ?? 0 }}</span>
-      </mat-chip-option>
-      <mat-chip-option [selected]="estado() === 'Todas'" (click)="cambiarEstado('Todas')">Todas</mat-chip-option>
-    </mat-chip-listbox>
+  <div class="alistamiento__filtros">
+    <mat-form-field appearance="outline" class="alistamiento__campo-filtro">
+      <mat-label>Filtrar por Campo Entrega</mat-label>
+      <input
+        matInput
+        [ngModel]="filtroCampoEntrega()"
+        (ngModelChange)="actualizarFiltroCampoEntrega($event)"
+        [matAutocomplete]="autoCampoEntrega"
+      />
+      @if (filtroCampoEntrega()) {
+        <button matSuffix mat-icon-button aria-label="Limpiar" (click)="actualizarFiltroCampoEntrega('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+      <mat-autocomplete #autoCampoEntrega="matAutocomplete">
+        @for (opcion of opcionesCampoEntregaFiltradas(); track opcion) {
+          <mat-option [value]="opcion">{{ opcion }}</mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
 
-    <mat-form-field appearance="outline" class="ent__buscar" subscriptSizing="dynamic">
-      <mat-label>Buscar</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [ngModel]="buscar()" (ngModelChange)="escribirBusqueda($event)"
-        placeholder="REM, cliente, NIT, ciudad, cotización, OC..." autocomplete="off" />
+    <mat-form-field appearance="outline" class="alistamiento__campo-filtro">
+      <mat-label>Filtrar por Elaborado Por</mat-label>
+      <input
+        matInput
+        [ngModel]="filtroElaboradoPor()"
+        (ngModelChange)="actualizarFiltroElaboradoPor($event)"
+        [matAutocomplete]="autoElaboradoPor"
+      />
+      @if (filtroElaboradoPor()) {
+        <button matSuffix mat-icon-button aria-label="Limpiar" (click)="actualizarFiltroElaboradoPor('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+      <mat-autocomplete #autoElaboradoPor="matAutocomplete">
+        @for (opcion of opcionesElaboradoPorFiltradas(); track opcion) {
+          <mat-option [value]="opcion">{{ opcion }}</mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="alistamiento__campo-filtro">
+      <mat-label>Filtrar por número de remisión</mat-label>
+      <input matInput [ngModel]="filtroNumero()" (ngModelChange)="actualizarFiltroNumero($event)" placeholder="29635" />
+      @if (filtroNumero()) {
+        <button matSuffix mat-icon-button aria-label="Limpiar" (click)="actualizarFiltroNumero('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
     </mat-form-field>
   </div>
 
@@ -42,80 +92,142 @@
     <mat-progress-bar mode="indeterminate" />
   }
 
-  @if (datos(); as d) {
-    @if (d.items.length === 0) {
-      <div class="ent__vacio">
-        <mat-icon>local_shipping</mat-icon>
-        @if (estado() === 'PorEntregar' && !buscar()) {
-          <p>No hay remisiones por entregar.</p>
-        } @else {
-          <p>No hay remisiones con ese filtro.</p>
-        }
-      </div>
-    } @else {
-      @if (puedeGestionar() && seleccionables().length > 0) {
-        <div class="ent__todas">
-          <mat-checkbox [checked]="todasSeleccionadas()" [indeterminate]="cantidadSeleccion() > 0 && !todasSeleccionadas()"
-            (change)="alternarTodas($event.checked)">
-            Seleccionar todas las de esta página para imprimir
-          </mat-checkbox>
-        </div>
-      }
+  @if (!cargando()) {
+    <table mat-table [dataSource]="paginadas" class="tabla-responsiva">
+      <ng-container matColumnDef="seleccion">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            [checked]="paginaSeleccionada"
+            [indeterminate]="paginaParcial"
+            (change)="alternarPagina($event.checked)"
+            matTooltip="Seleccionar las de esta página para imprimir"
+            aria-label="Seleccionar las de esta página"
+          />
+        </th>
+        <td mat-cell *matCellDef="let r" data-label="Imprimir">
+          <mat-checkbox [checked]="estaSeleccionada(r)" (change)="alternarSeleccion(r, $event.checked)" [aria-label]="'Seleccionar REM ' + r.numero" />
+        </td>
+      </ng-container>
 
-      <div class="ent__lista">
-        @for (r of d.items; track r.id) {
-          <article class="rem" [class.rem--atrasada]="atrasada(r)" [class.rem--revisar]="revisar(r)">
-            @if (puedeGestionar() && r.estado === 'PorEntregar') {
-              <mat-checkbox class="rem__check" [checked]="seleccion().has(r.id)" (change)="alternar(r, $event.checked)"
-                [aria-label]="'Seleccionar REM ' + r.numero" />
+      <ng-container matColumnDef="remision">
+        <th mat-header-cell *matHeaderCellDef>Remisión</th>
+        <td mat-cell *matCellDef="let r" data-label="Remisión">
+          <a [routerLink]="['/entregas', r.id]">{{ r.numero }}</a>
+          <span class="alistamiento__horas">{{ r.cantidadRenglones }} {{ r.cantidadRenglones === 1 ? 'ítem' : 'ítems' }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cliente">
+        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+        <td mat-cell *matCellDef="let r" data-label="Cliente">{{ r.cliente || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="campoEntrega">
+        <th mat-header-cell *matHeaderCellDef>Campo Entrega</th>
+        <td mat-cell *matCellDef="let r" data-label="Campo Entrega">
+          {{ r.campoEntrega || '—' }}
+          @if (r.direccionEntrega) {
+            <span class="alistamiento__horas">{{ r.direccionEntrega }}</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="elaboradoPor">
+        <th mat-header-cell *matHeaderCellDef>Elaborado Por</th>
+        <td mat-cell *matCellDef="let r" data-label="Elaborado Por">{{ r.elaboradoPor || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="contabilizada">
+        <th mat-header-cell *matHeaderCellDef>Contabilizada</th>
+        <td mat-cell *matCellDef="let r" data-label="Contabilizada">
+          {{ r.fechaContabilizada | date: 'd MMM y, HH:mm' }}
+          @if (r.estado === 'PorEntregar') {
+            <span class="alistamiento__horas">({{ horasDesde(r.fechaContabilizada) }} h)</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="cotizacion">
+        <th mat-header-cell *matHeaderCellDef>Cotización</th>
+        <td mat-cell *matCellDef="let r" data-label="Cotización">
+          {{ r.cotizacion || '—' }}
+          @if (r.ordenCompraCliente) {
+            <span class="alistamiento__horas">OC {{ r.ordenCompraCliente }}</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let r" data-label="Estado">
+          <div class="alistamiento__chips-estado">
+            @switch (nivelEstado(r)) {
+              @case ('atrasada') {
+                <mat-chip class="alistamiento__chip alistamiento__chip--atrasada" matTooltip="Lleva más tiempo del permitido sin entregarse">Atrasada</mat-chip>
+              }
+              @case ('entregada') {
+                <mat-chip class="alistamiento__chip alistamiento__chip--completa" [matTooltip]="'Entregó ' + (r.entregadaPor || '')">Entregada</mat-chip>
+              }
+              @case ('revisar') {
+                <mat-chip class="alistamiento__chip entregas__chip--revisar"
+                  [matTooltip]="r.verificacionQR === 'NoCoincide' ? 'El soporte trae el QR de otra remisión' : 'No se pudo leer el QR del soporte'">
+                  <mat-icon matChipAvatar>report</mat-icon>
+                  Revisar soporte
+                </mat-chip>
+              }
+              @default {
+                <mat-chip class="alistamiento__chip">Por entregar</mat-chip>
+              }
             }
-
-            <a class="rem__cuerpo" [routerLink]="['/entregas', r.id]">
-              <div class="rem__fila1">
-                <span class="rem__numero">REM {{ r.numero }}</span>
-                @switch (r.estado) {
-                  @case ('PorEntregar') {
-                    <span class="rem__estado rem__estado--pendiente">Por entregar · {{ antiguedad(r) }}</span>
-                  }
-                  @case ('Entregada') {
-                    @if (revisar(r)) {
-                      <span class="rem__estado rem__estado--revisar">
-                        <mat-icon>report</mat-icon>
-                        Revisar · {{ r.verificacionQR === 'NoCoincide' ? 'QR de otra remisión' : 'sin QR' }}
-                      </span>
-                    } @else {
-                      <span class="rem__estado rem__estado--entregada">
-                        <mat-icon>verified</mat-icon>
-                        Entregada {{ entregadaHace(r) }}
-                      </span>
-                    }
-                  }
-                }
-              </div>
-              <div class="rem__cliente">{{ r.cliente || '—' }} @if (r.nitCliente) { <span class="rem__nit">· NIT {{ r.nitCliente }}</span> }</div>
-              <div class="rem__datos">
-                <span><mat-icon>place</mat-icon>{{ r.direccionEntrega || r.ciudad || '—' }}@if (r.campoEntrega) { · {{ r.campoEntrega }} }</span>
-                <span><mat-icon>event</mat-icon>{{ r.fecha | date: 'dd/MM/yyyy' }}</span>
-                @if (r.cotizacion) { <span><mat-icon>description</mat-icon>COT {{ r.cotizacion }}</span> }
-                @if (r.ordenCompraCliente) { <span><mat-icon>receipt</mat-icon>OC cliente {{ r.ordenCompraCliente }}</span> }
-                @if (r.vendedor) { <span><mat-icon>person</mat-icon>{{ r.vendedor }}</span> }
-                <span><mat-icon>inventory_2</mat-icon>{{ r.cantidadRenglones }} ítem(s)</span>
-                @if (r.entregadaPor) { <span><mat-icon>how_to_reg</mat-icon>{{ r.entregadaPor }}</span> }
-              </div>
-            </a>
-
-            @if (puedeGestionar() && r.estado === 'PorEntregar') {
-              <button mat-icon-button class="rem__imprimir" (click)="imprimir([r.id])" matTooltip="Imprimir esta remisión"
-                [attr.aria-label]="'Imprimir REM ' + r.numero">
-                <mat-icon>print</mat-icon>
-              </button>
+            @if (haceCuantoSeEntrego(r); as hace) {
+              <mat-chip class="alistamiento__chip alistamiento__chip--recien" matTooltip="Se entregó en las últimas 24 horas">
+                <mat-icon matChipAvatar>schedule</mat-icon>
+                Entregada {{ hace }}
+              </mat-chip>
             }
-          </article>
-        }
-      </div>
+          </div>
+        </td>
+      </ng-container>
 
-      <app-paginador [total]="d.total" [pagina]="d.pagina" [tamano]="d.tamanoPagina" unidad="remisiones"
-        [cargando]="cargando()" (irA)="irA($event)" />
-    }
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let r" data-label="">
+          <div class="entregas__acciones">
+            <a mat-flat-button color="primary" [routerLink]="['/entregas', r.id]">Ver remisión</a>
+            <button mat-icon-button (click)="imprimir([r.id])" matTooltip="Imprimir esta remisión" [attr.aria-label]="'Imprimir REM ' + r.numero">
+              <mat-icon>print</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+      <tr
+        mat-row
+        *matRowDef="let r; columns: columnas"
+        [class.alistamiento__fila--atrasada]="nivelEstado(r) === 'atrasada'"
+        [class.alistamiento__fila--completa]="nivelEstado(r) === 'entregada'"
+        [class.entregas__fila--revisar]="nivelEstado(r) === 'revisar'"
+      ></tr>
+
+      <tr class="alistamiento__vacio-fila" *matNoDataRow>
+        <td [attr.colspan]="columnas.length" class="alistamiento__vacio">
+          @if (soloPorEntregar() && !soloEntregadas()) {
+            No hay remisiones por entregar.
+          } @else {
+            No hay remisiones para mostrar.
+          }
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator
+      [length]="filtradas.length"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageIndex]="pageIndex()"
+      (page)="cambiarPagina($event)"
+      showFirstLastButtons
+    />
   }
 </div>

@@ -1,4 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +11,7 @@ import { RemisionService } from '../../core/services/remision.service';
 import { RemisionDetalle, SoporteRemision } from '../../core/models/remision.model';
 import { ConfirmarEntregaDialogComponent } from './confirmar-entrega-dialog.component';
 import { abrirPdfEnPestana } from './entregas-utilidades';
+import { esDispositivoMovil } from '../../shared/dispositivo';
 
 @Component({
   selector: 'app-remision-detalle',
@@ -18,9 +20,16 @@ import { abrirPdfEnPestana } from './entregas-utilidades';
   templateUrl: './remision-detalle.component.html',
   styleUrl: './remision-detalle.component.scss'
 })
-export class RemisionDetalleComponent implements OnInit {
+export class RemisionDetalleComponent implements OnInit, OnDestroy {
+  private readonly sanitizer = inject(DomSanitizer);
   readonly remision = signal<RemisionDetalle | null>(null);
   readonly cargando = signal(false);
+  // Vista previa del PDF (2026-11-12, pedido del usuario) — igual que en la OC: en computador se
+  // incrusta; en celular se abre en otra pestaña (el visor incrustado no funciona bien ahí).
+  readonly esMovil = esDispositivoMovil();
+  readonly cargandoPdf = signal(false);
+  readonly pdfUrl = signal<SafeResourceUrl | null>(null);
+  private pdfObjectUrl: string | null = null;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -45,9 +54,45 @@ export class RemisionDetalleComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.cerrarVistaPrevia();
+  }
+
+  /** Abre el PDF en otra pestaña — desde ahí se imprime (Ctrl+P o el botón del visor). */
   imprimir(): void {
     const r = this.remision();
     if (r) abrirPdfEnPestana(this.servicio.pdf([r.id]), this.snackBar);
+  }
+
+  alternarVistaPrevia(): void {
+    const r = this.remision();
+    if (!r) return;
+    if (this.esMovil) {
+      this.imprimir();
+      return;
+    }
+    if (this.pdfUrl()) {
+      this.cerrarVistaPrevia();
+      return;
+    }
+    this.cargandoPdf.set(true);
+    this.servicio.pdf([r.id]).subscribe({
+      next: (blob) => {
+        this.pdfObjectUrl = URL.createObjectURL(blob);
+        this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfObjectUrl));
+        this.cargandoPdf.set(false);
+      },
+      error: () => {
+        this.cargandoPdf.set(false);
+        this.snackBar.open('No se pudo generar la vista previa.', 'Cerrar', { duration: 4000 });
+      }
+    });
+  }
+
+  cerrarVistaPrevia(): void {
+    if (this.pdfObjectUrl) URL.revokeObjectURL(this.pdfObjectUrl);
+    this.pdfObjectUrl = null;
+    this.pdfUrl.set(null);
   }
 
   confirmarEntrega(): void {

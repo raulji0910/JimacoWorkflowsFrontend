@@ -15,12 +15,14 @@
         <span class="det__fecha">Remisión del {{ r.fecha | date: 'dd/MM/yyyy' }}</span>
       </div>
       <div class="det__acciones">
-        @if (r.puedeGestionar) {
-          <button mat-stroked-button (click)="imprimir()">
-            <mat-icon>print</mat-icon>
-            Imprimir
-          </button>
-        }
+        <button mat-stroked-button [disabled]="cargandoPdf()" (click)="alternarVistaPrevia()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          {{ pdfUrl() ? 'Cerrar vista previa' : cargandoPdf() ? 'Generando...' : esMovil ? 'Abrir PDF' : 'Vista previa (PDF)' }}
+        </button>
+        <button mat-stroked-button (click)="imprimir()">
+          <mat-icon>print</mat-icon>
+          Imprimir
+        </button>
         @if (r.puedeGestionar && r.estado === 'PorEntregar') {
           <button mat-flat-button color="primary" (click)="confirmarEntrega()">
             <mat-icon>task_alt</mat-icon>
@@ -29,6 +31,10 @@
         }
       </div>
     </header>
+
+    @if (pdfUrl(); as url) {
+      <iframe [src]="url" class="det__pdf" title="Vista previa de la remisión"></iframe>
+    }
 
     @switch (r.estado) {
       @case ('PorEntregar') {

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { EstadoFiltroRemisiones, RemisionDetalle, RemisionesPagina } from '../models/remision.model';
+import { RemisionDetalle, RemisionTablero } from '../models/remision.model';
 
 /** Un archivo del soporte de entrega con el QR que se le leyó en el navegador (null = ninguno). */
 export interface ArchivoEntrega {
@@ -16,10 +16,8 @@ export class RemisionService {
 
   constructor(private readonly http: HttpClient) {}
 
-  listar(estado: EstadoFiltroRemisiones, buscar: string, pagina: number): Observable<RemisionesPagina> {
-    let params = new HttpParams().set('estado', estado).set('pagina', pagina);
-    if (buscar.trim()) params = params.set('buscar', buscar.trim());
-    return this.http.get<RemisionesPagina>(this.baseUrl, { params });
+  listar(): Observable<RemisionTablero[]> {
+    return this.http.get<RemisionTablero[]>(this.baseUrl);
   }
 
   obtener(id: number): Observable<RemisionDetalle> {

@@ -1,8 +1,7 @@
 /** Entregas (2026-11-12) — ver RemisionDtos.cs en el backend. */
 
-export type EstadoFiltroRemisiones = 'PorEntregar' | 'Entregada' | 'Revisar' | 'Todas';
-
-export interface RemisionResumen {
+/** Una fila del dashboard de Entregas — ver RemisionTableroDto en el backend. */
+export interface RemisionTablero {
   id: number;
   numero: string;
   fecha: string;
@@ -11,27 +10,19 @@ export interface RemisionResumen {
   ciudad: string | null;
   direccionEntrega: string | null;
   campoEntrega: string | null;
-  vendedor: string | null;
+  elaboradoPor: string | null;
   cotizacion: string | null;
   ordenCompraCliente: string | null;
+  cantidadRenglones: number;
+  /** Cuándo llegó al sistema (≈ contabilización en WO) — desde acá corre el atraso. */
+  fechaContabilizada: string;
   estado: 'PorEntregar' | 'Entregada' | 'Anulada';
+  /** Por entregar hace más del umbral de horas: Atrasada (pulso rojo y sonido, como en HA). */
+  enAlerta: boolean;
   fechaEntrega: string | null;
   entregadaPor: string | null;
   /** Coincide | NoCoincide | SinQR — null mientras no se entregue. */
   verificacionQR: string | null;
-  cantidadRenglones: number;
-  cantidadSoportes: number;
-}
-
-export interface RemisionesPagina {
-  items: RemisionResumen[];
-  total: number;
-  pagina: number;
-  tamanoPagina: number;
-  porEntregar: number;
-  entregadas: number;
-  revisar: number;
-  puedeGestionar: boolean;
 }
 
 export interface RenglonRemision {

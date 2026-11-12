@@ -1,152 +1,17 @@
-.ent {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 64rem;
-
-  &__header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-
-    h2 { margin: 0; }
-  }
-
-  &__ayuda {
-    margin: 0;
-    color: var(--mat-sys-on-surface-variant);
-    max-width: 60ch;
-  }
-
-  &__barra {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem 1rem;
-  }
-
-  &__buscar {
-    flex: 1 1 18rem;
-    min-width: 0;
-  }
-
-  &__num {
-    margin-left: 0.35rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__icono-chip {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    margin-right: 0.25rem;
-    color: var(--mat-sys-error);
-  }
-
-  &__todas { padding-left: 0.25rem; }
-
-  &__lista {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  &__vacio {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2.5rem 1rem;
-    color: var(--mat-sys-on-surface-variant);
-
-    mat-icon { font-size: 40px; width: 40px; height: 40px; opacity: 0.6; }
-  }
+// La base (tabla, pulsos, chips, filtros) viene de la hoja del dashboard de Alistamiento — acá solo
+// lo propio de Entregas: "Revisar soporte" (entregada con QR que no coincide o ilegible).
+.entregas__chip--revisar {
+  background-color: #ffcdd2 !important;
+  font-weight: 500;
 }
 
-.rem {
+.entregas__fila--revisar {
+  background-color: rgba(255, 205, 210, 0.35);
+}
+
+.entregas__acciones {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.25rem;
-  padding: 0.75rem 0.5rem 0.75rem 0.25rem;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-left: 4px solid var(--mat-sys-primary);
-  border-radius: 10px;
-  background: var(--mat-sys-surface);
-
-  &--atrasada { border-left-color: #c77700; }
-  &--revisar { border-left-color: var(--mat-sys-error); }
-
-  &__check { margin-top: 0.1rem; }
-
-  &__cuerpo {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    padding-left: 0.5rem;
-    color: inherit;
-    text-decoration: none;
-  }
-
-  &__fila1 {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem 0.75rem;
-  }
-
-  &__numero {
-    font: var(--mat-sys-title-medium);
-    font-weight: 600;
-  }
-
-  &__estado {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.1rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.8125rem;
-    font-weight: 500;
-
-    mat-icon { font-size: 16px; width: 16px; height: 16px; }
-
-    &--pendiente { background: var(--mat-sys-surface-container-high); color: var(--mat-sys-on-surface); }
-    &--entregada { background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); }
-    &--revisar { background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); }
-  }
-
-  &--atrasada &__estado--pendiente { background: #fff3c4; color: #5c4400; }
-
-  &__cliente {
-    font-weight: 500;
-    overflow-wrap: anywhere;
-  }
-
-  &__nit {
-    font-weight: 400;
-    color: var(--mat-sys-on-surface-variant);
-  }
-
-  &__datos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1rem;
-    font-size: 0.875rem;
-    color: var(--mat-sys-on-surface-variant);
-
-    span {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      overflow-wrap: anywhere;
-    }
-
-    mat-icon { font-size: 16px; width: 16px; height: 16px; flex: none; }
-  }
-
-  &__imprimir { flex: none; }
+  white-space: nowrap;
 }
