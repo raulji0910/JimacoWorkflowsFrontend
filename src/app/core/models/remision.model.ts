@@ -95,3 +95,13 @@ export interface RemisionDetalle {
   soportes: SoporteRemision[];
   puedeGestionar: boolean;
 }
+
+/** Administración → Config. de entregas — ver ConfiguracionEntregasDto en el backend. */
+export interface ConfiguracionEntregas {
+  verificacionIAActiva: boolean;
+  /** El servidor tiene la clave de Anthropic (sin ella, encender no revisa nada). */
+  iaConClave: boolean;
+  fechaInicio: string;
+  fechaActualizacion: string | null;
+  actualizadoPor: string | null;
+}

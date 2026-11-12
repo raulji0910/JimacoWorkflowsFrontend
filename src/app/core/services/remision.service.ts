@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { RemisionDetalle, RemisionTablero, VerificacionSoporte } from '../models/remision.model';
+import { ConfiguracionEntregas, RemisionDetalle, RemisionTablero, VerificacionSoporte } from '../models/remision.model';
 
 /** Un archivo del soporte de entrega con el QR que se le leyó en el navegador (null = ninguno). */
 export interface ArchivoEntrega {
@@ -45,6 +45,15 @@ export class RemisionService {
     }
     if (observacion.trim()) form.append('observacion', observacion.trim());
     return this.http.post<RemisionDetalle>(`${this.baseUrl}/${id}/confirmar-entrega`, form);
+  }
+
+  /** Solo administradores. */
+  configuracion(): Observable<ConfiguracionEntregas> {
+    return this.http.get<ConfiguracionEntregas>(`${this.baseUrl}/configuracion`);
+  }
+
+  actualizarConfiguracion(dto: { verificacionIAActiva: boolean }): Observable<ConfiguracionEntregas> {
+    return this.http.put<ConfiguracionEntregas>(`${this.baseUrl}/configuracion`, dto);
   }
 
   soporte(soporteId: number): Observable<Blob> {

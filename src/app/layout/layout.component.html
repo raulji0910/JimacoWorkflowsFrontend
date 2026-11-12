@@ -79,6 +79,10 @@
           <mat-icon matListItemIcon>tune</mat-icon>
           <span matListItemTitle>Config. de pagos</span>
         </a>
+        <a mat-list-item routerLink="/admin/entregas" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>local_shipping</mat-icon>
+          <span matListItemTitle>Config. de entregas</span>
+        </a>
       }
     </mat-nav-list>
 

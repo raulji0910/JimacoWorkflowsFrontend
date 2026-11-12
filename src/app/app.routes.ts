@@ -119,6 +119,14 @@ export const routes: Routes = [
         canActivate: [adminGuard]
       },
       {
+        path: 'admin/entregas',
+        loadComponent: () =>
+          import('./features/admin/configuracion-entregas/configuracion-entregas.component').then(
+            (m) => m.ConfiguracionEntregasComponent
+          ),
+        canActivate: [adminGuard]
+      },
+      {
         path: 'admin/flujos',
         loadComponent: () => import('./features/admin/flujos/flujos-list.component').then((m) => m.FlujosListComponent),
         canActivate: [adminGuard]
