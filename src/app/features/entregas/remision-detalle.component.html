@@ -40,7 +40,11 @@
       @case ('PorEntregar') {
         <div class="det__banda det__banda--pendiente">
           <mat-icon>local_shipping</mat-icon>
-          <span>Por entregar. Al entregar, tomá la foto de la remisión firmada con el código QR visible.</span>
+          @if (r.puedeGestionar) {
+            <span>Por entregar. Al entregar, tocá <strong>Confirmar entrega</strong> y tomá la foto de la remisión firmada con el código QR visible.</span>
+          } @else {
+            <span>Por entregar. Tu rol solo permite consultar e imprimir: la entrega la confirma quien tenga el rol de Logística (permiso "Puede gestionar entregas").</span>
+          }
         </div>
       }
       @case ('Entregada') {
