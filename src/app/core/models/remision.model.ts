@@ -42,11 +42,13 @@ export interface SoporteRemision {
   qrLeido: string | null;
   subidoPor: string;
   fechaCarga: string;
-  /** Cumplió la regla: es esta remisión y (con IA) tiene la firma del cliente. */
+  /** Cumplió la regla: es esta remisión y (con IA) tiene la firma o el sello del cliente. */
   valido: boolean;
   iaNumeroLeido: string | null;
   iaHayFirma: boolean | null;
   iaObservacion: string | null;
+  /** Sello del cliente: vale igual que la firma. */
+  iaHaySello: boolean | null;
 }
 
 /** Resultado de revisar un archivo antes de confirmar — ver VerificacionSoporteDto en el backend. */
@@ -61,6 +63,7 @@ export interface VerificacionSoporte {
   iaHayNombreOCedula: boolean;
   iaConfianza: string | null;
   iaObservacion: string | null;
+  iaHaySello: boolean;
 }
 
 export interface RemisionDetalle {

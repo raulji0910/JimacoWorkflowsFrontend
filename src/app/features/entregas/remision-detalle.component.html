@@ -41,7 +41,7 @@
         <div class="det__banda det__banda--pendiente">
           <mat-icon>local_shipping</mat-icon>
           @if (r.puedeGestionar) {
-            <span>Por entregar. Al entregar, tocá <strong>Confirmar entrega</strong> y tomá la foto de la remisión firmada con el código QR visible.</span>
+            <span>Por entregar. Al entregar, tocá <strong>Confirmar entrega</strong> y tomá la foto de la remisión firmada o sellada por el cliente, con el código QR visible.</span>
           } @else {
             <span>Por entregar. Tu rol solo permite consultar e imprimir: la entrega la confirma quien tenga el rol de Logística (permiso "Puede gestionar entregas").</span>
           }
@@ -133,8 +133,8 @@
                     <span class="det__qr">sin QR legible</span>
                   }
                   @if (s.iaHayFirma !== null) {
-                    · <span class="det__qr" [class.det__qr--ok]="s.iaHayFirma" [class.det__qr--mal]="!s.iaHayFirma">
-                      IA: {{ s.iaHayFirma ? 'firma del cliente' : 'sin firma' }}{{ s.iaNumeroLeido ? ', REM ' + s.iaNumeroLeido : '' }}
+                    · <span class="det__qr" [class.det__qr--ok]="s.iaHayFirma || s.iaHaySello" [class.det__qr--mal]="!s.iaHayFirma && !s.iaHaySello">
+                      IA: {{ s.iaHayFirma && s.iaHaySello ? 'firma y sello del cliente' : s.iaHaySello ? 'sello del cliente' : s.iaHayFirma ? 'firma del cliente' : 'sin firma ni sello' }}{{ s.iaNumeroLeido ? ', REM ' + s.iaNumeroLeido : '' }}
                     </span>
                   }
                 </span>

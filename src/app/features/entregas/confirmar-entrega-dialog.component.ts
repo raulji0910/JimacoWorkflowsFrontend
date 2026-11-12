@@ -46,8 +46,8 @@ interface ArchivoEnLista {
 
     <mat-dialog-content class="ce">
       <p class="ce__ayuda">
-        Adjuntá la remisión <strong>firmada por el cliente</strong>: la hoja completa, nítida y con el código QR visible.
-        Solo se confirma si el documento es esta remisión y tiene la firma.
+        Adjuntá la remisión <strong>firmada o sellada por el cliente</strong>: la hoja completa, nítida y con el código QR visible.
+        Solo se confirma si el documento es esta remisión y tiene la firma o el sello del cliente.
       </p>
 
       <div class="ce__botones">
@@ -79,13 +79,13 @@ interface ArchivoEnLista {
                     <span class="ce__estado"><mat-spinner diameter="14" /> Buscando el código QR…</span>
                   }
                   @case ('revisando') {
-                    <span class="ce__estado"><mat-spinner diameter="14" /> Revisando el documento y la firma…</span>
+                    <span class="ce__estado"><mat-spinner diameter="14" /> Revisando el documento, la firma y el sello…</span>
                   }
                   @default {
                     @if (a.resultado?.valido) {
                       <span class="ce__estado ce__estado--ok">
                         <mat-icon>verified</mat-icon>
-                        Es la REM {{ data.remision.numero }}{{ a.resultado?.iaActiva ? ' y tiene la firma del cliente' : '' }}
+                        Es la REM {{ data.remision.numero }}{{ a.resultado?.iaActiva ? ' y tiene ' + firmaYSello(a.resultado?.iaHayFirma, a.resultado?.iaHaySello) + ' del cliente' : '' }}
                       </span>
                     } @else {
                       <span class="ce__estado ce__estado--mal">
@@ -112,7 +112,7 @@ interface ArchivoEnLista {
           <mat-icon>info</mat-icon>
           <span>
             Todavía no hay un soporte válido, así que la remisión <strong>sigue por entregar</strong>.
-            Tomá otra foto de la hoja completa, con buena luz, el QR visible y la firma del cliente.
+            Tomá otra foto de la hoja completa, con buena luz, el QR visible y la firma o el sello del cliente.
           </span>
         </div>
       }
@@ -186,6 +186,11 @@ export class ConfirmarEntregaDialogComponent {
   readonly revisando = computed(() => this.archivos().some((a) => a.etapa !== 'listo'));
   readonly hayValido = computed(() => this.archivos().some((a) => a.resultado?.valido));
   readonly ningunoValido = computed(() => this.archivos().length > 0 && !this.revisando() && !this.hayValido());
+  /** Texto de lo que vio la IA: "la firma", "el sello" o "la firma y el sello". */
+  firmaYSello(firma?: boolean | null, sello?: boolean | null): string {
+    return firma && sello ? 'la firma y el sello' : sello ? 'el sello' : 'la firma';
+  }
+
   readonly puedeConfirmar = computed(() => this.hayValido() && !this.revisando() && !this.enviando());
 
   constructor(
