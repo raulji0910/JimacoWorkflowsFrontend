@@ -14,6 +14,9 @@ export interface Rol {
   puedeVerCuentasPorPagar: boolean;
   // Menú "Pagos" — ver Rol.PuedePagarCuentas en el backend.
   puedePagarCuentas?: boolean;
+  // Entregas (Remisiones) — ver Rol.PuedeGestionarEntregas/PuedeVerEntregas en el backend.
+  puedeGestionarEntregas?: boolean;
+  puedeVerEntregas?: boolean;
 }
 
 export interface RolCrear {
@@ -26,6 +29,9 @@ export interface RolCrear {
   puedeVerCuentasPorPagar: boolean;
   // Menú "Pagos" — ver Rol.PuedePagarCuentas en el backend.
   puedePagarCuentas?: boolean;
+  // Entregas (Remisiones) — ver Rol.PuedeGestionarEntregas/PuedeVerEntregas en el backend.
+  puedeGestionarEntregas?: boolean;
+  puedeVerEntregas?: boolean;
 }
 
 export interface RolActualizar {
@@ -39,4 +45,7 @@ export interface RolActualizar {
   puedeVerCuentasPorPagar: boolean;
   // Menú "Pagos" — ver Rol.PuedePagarCuentas en el backend.
   puedePagarCuentas?: boolean;
+  // Entregas (Remisiones) — ver Rol.PuedeGestionarEntregas/PuedeVerEntregas en el backend.
+  puedeGestionarEntregas?: boolean;
+  puedeVerEntregas?: boolean;
 }

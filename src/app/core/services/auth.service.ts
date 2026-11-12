@@ -86,6 +86,17 @@ export class AuthService {
     return this.sesion()?.puedePagarCuentas ?? false;
   }
 
+  /** Entregas: imprimir remisiones y confirmar entregas — ver Rol.PuedeGestionarEntregas. */
+  puedeGestionarEntregas(): boolean {
+    return this.sesion()?.puedeGestionarEntregas ?? false;
+  }
+
+  /** Ver el dashboard de entregas (gestionar también lo implica). */
+  puedeVerEntregas(): boolean {
+    const sesion = this.sesion();
+    return (sesion?.puedeVerEntregas || sesion?.puedeGestionarEntregas) ?? false;
+  }
+
   private leerSesionValida(): LoginResponse | null {
     const crudo = localStorage.getItem(CLAVE_STORAGE);
     if (!crudo) return null;

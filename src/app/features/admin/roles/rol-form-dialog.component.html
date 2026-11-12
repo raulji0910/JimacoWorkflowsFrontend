@@ -64,6 +64,25 @@
       lote (un solo soporte) y rechaza lo que no. Pensado para Gerencia General.
     </p>
   </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeGestionarEntregas" name="puedeGestionarEntregas">
+      Puede gestionar entregas
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Menú "Entregas": ve las remisiones contabilizadas, las imprime y confirma la entrega adjuntando
+      la remisión firmada por el cliente (foto o escaneo). Pensado para Logística.
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeVerEntregas" name="puedeVerEntregas">
+      Puede ver el estado de las entregas
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Solo consulta qué remisiones están por entregar o entregadas y sus soportes, sin confirmar entregas.
+    </p>
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerCuentasPorPagarGuard, puedePagarCuentasGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerCuentasPorPagarGuard, puedePagarCuentasGuard, puedeVerEntregasGuard } from './core/guards/auth.guard';
 import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 
 export const routes: Routes = [
@@ -83,6 +83,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/cuentas-por-pagar/proveedor-cuentas-por-pagar.component').then((m) => m.ProveedorCuentasPorPagarComponent),
         canActivate: [puedeVerCuentasPorPagarGuard]
+      },
+      {
+        path: 'entregas',
+        loadComponent: () => import('./features/entregas/entregas-dashboard.component').then((m) => m.EntregasDashboardComponent),
+        canActivate: [puedeVerEntregasGuard]
+      },
+      {
+        path: 'entregas/:id',
+        loadComponent: () => import('./features/entregas/remision-detalle.component').then((m) => m.RemisionDetalleComponent),
+        canActivate: [puedeVerEntregasGuard]
       },
       {
         path: 'admin/roles',

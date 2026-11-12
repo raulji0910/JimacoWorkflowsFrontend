@@ -1,0 +1,133 @@
+<div class="det">
+  <a mat-button routerLink="/entregas" class="det__volver">
+    <mat-icon>arrow_back</mat-icon>
+    Entregas
+  </a>
+
+  @if (cargando()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (remision(); as r) {
+    <header class="det__cabeza">
+      <div>
+        <h2>REM {{ r.numero }}</h2>
+        <span class="det__fecha">Remisión del {{ r.fecha | date: 'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="det__acciones">
+        @if (r.puedeGestionar) {
+          <button mat-stroked-button (click)="imprimir()">
+            <mat-icon>print</mat-icon>
+            Imprimir
+          </button>
+        }
+        @if (r.puedeGestionar && r.estado === 'PorEntregar') {
+          <button mat-flat-button color="primary" (click)="confirmarEntrega()">
+            <mat-icon>task_alt</mat-icon>
+            Confirmar entrega
+          </button>
+        }
+      </div>
+    </header>
+
+    @switch (r.estado) {
+      @case ('PorEntregar') {
+        <div class="det__banda det__banda--pendiente">
+          <mat-icon>local_shipping</mat-icon>
+          <span>Por entregar. Al entregar, tomá la foto de la remisión firmada con el código QR visible.</span>
+        </div>
+      }
+      @case ('Entregada') {
+        <div class="det__banda" [class.det__banda--ok]="r.verificacionQR === 'Coincide'" [class.det__banda--revisar]="r.verificacionQR !== 'Coincide'">
+          <mat-icon>{{ r.verificacionQR === 'Coincide' ? 'verified' : 'report' }}</mat-icon>
+          <div>
+            <strong>Entregada</strong> el {{ r.fechaEntrega | date: "dd/MM/yyyy 'a las' h:mm a" }} · confirmó {{ r.entregadaPor }}
+            <div class="det__verif">{{ textoVerificacion(r.verificacionQR) }}</div>
+            @if (r.observacionEntrega) {
+              <div class="det__obs">“{{ r.observacionEntrega }}”</div>
+            }
+          </div>
+        </div>
+      }
+      @case ('Anulada') {
+        <div class="det__banda det__banda--revisar">
+          <mat-icon>block</mat-icon>
+          <span>Esta remisión se anuló en World Office.</span>
+        </div>
+      }
+    }
+
+    <section class="det__grid">
+      <div class="det__bloque">
+        <h3>Cliente</h3>
+        <dl>
+          <dt>Cliente</dt><dd>{{ r.cliente || '—' }}</dd>
+          <dt>NIT</dt><dd>{{ r.nitCliente || '—' }}</dd>
+          <dt>Dirección</dt><dd>{{ r.direccion || '—' }}</dd>
+          <dt>Ciudad</dt><dd>{{ r.ciudad || '—' }}</dd>
+          <dt>Teléfono</dt><dd>{{ r.telefono || '—' }}</dd>
+          <dt>Vendedor</dt><dd>{{ r.vendedor || '—' }}</dd>
+        </dl>
+      </div>
+      <div class="det__bloque">
+        <h3>Entrega</h3>
+        <dl>
+          <dt>Dirección de entrega</dt><dd>{{ r.direccionEntrega || '—' }}</dd>
+          <dt>Campo entrega/rec.</dt><dd>{{ r.campoEntrega || '—' }}</dd>
+          <dt>OC del cliente</dt><dd>{{ r.ordenCompraCliente || '—' }}</dd>
+          <dt>Cotización</dt><dd>{{ r.cotizacion || '—' }}</dd>
+          <dt>Forma de pago</dt><dd>{{ r.formaDePago || '—' }}</dd>
+          <dt>Elaboró en WO</dt><dd>{{ r.elaboradoPorWO || '—' }}</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="det__bloque">
+      <h3>Ítems ({{ r.renglones.length }})</h3>
+      <div class="det__tabla-scroll">
+        <table class="det__tabla">
+          <thead>
+            <tr><th>#</th><th>Código</th><th>Descripción</th><th>Unidad</th><th class="num">Cantidad</th></tr>
+          </thead>
+          <tbody>
+            @for (x of r.renglones; track x.orden) {
+              <tr>
+                <td>{{ x.orden }}</td>
+                <td>{{ x.codigo }}</td>
+                <td>{{ x.descripcion }}</td>
+                <td>{{ x.unidadMedida }}</td>
+                <td class="num">{{ x.cantidad | number: '1.0-2' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    @if (r.soportes.length > 0) {
+      <section class="det__bloque">
+        <h3>Soportes de entrega</h3>
+        <ul class="det__soportes">
+          @for (s of r.soportes; track s.id) {
+            <li>
+              <mat-icon>{{ esImagen(s) ? 'image' : 'picture_as_pdf' }}</mat-icon>
+              <div class="det__soporte-texto">
+                <button mat-button class="det__soporte-nombre" (click)="verSoporte(s)">{{ s.nombreArchivo }}</button>
+                <span class="det__soporte-meta">
+                  {{ s.subidoPor }} · {{ s.fechaCarga | date: 'dd/MM/yyyy h:mm a' }} ·
+                  @if (s.qrLeido === r.codigoQR) {
+                    <span class="det__qr det__qr--ok">QR correcto</span>
+                  } @else if (s.qrLeido) {
+                    <span class="det__qr det__qr--mal">QR: {{ s.qrLeido }}</span>
+                  } @else {
+                    <span class="det__qr">sin QR legible</span>
+                  }
+                </span>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</div>
