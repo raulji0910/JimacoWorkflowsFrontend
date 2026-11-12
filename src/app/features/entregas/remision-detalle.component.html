@@ -44,8 +44,8 @@
         </div>
       }
       @case ('Entregada') {
-        <div class="det__banda" [class.det__banda--ok]="r.verificacionQR === 'Coincide'" [class.det__banda--revisar]="r.verificacionQR !== 'Coincide'">
-          <mat-icon>{{ r.verificacionQR === 'Coincide' ? 'verified' : 'report' }}</mat-icon>
+        <div class="det__banda det__banda--ok">
+          <mat-icon>verified</mat-icon>
           <div>
             <strong>Entregada</strong> el {{ r.fechaEntrega | date: "dd/MM/yyyy 'a las' h:mm a" }} · confirmó {{ r.entregadaPor }}
             <div class="det__verif">{{ textoVerificacion(r.verificacionQR) }}</div>
@@ -128,7 +128,15 @@
                   } @else {
                     <span class="det__qr">sin QR legible</span>
                   }
+                  @if (s.iaHayFirma !== null) {
+                    · <span class="det__qr" [class.det__qr--ok]="s.iaHayFirma" [class.det__qr--mal]="!s.iaHayFirma">
+                      IA: {{ s.iaHayFirma ? 'firma del cliente' : 'sin firma' }}{{ s.iaNumeroLeido ? ', REM ' + s.iaNumeroLeido : '' }}
+                    </span>
+                  }
                 </span>
+                @if (s.iaObservacion) {
+                  <span class="det__soporte-meta"><em>{{ s.iaObservacion }}</em></span>
+                }
               </div>
             </li>
           }

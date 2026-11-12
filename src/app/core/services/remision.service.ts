@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { RemisionDetalle, RemisionTablero } from '../models/remision.model';
+import { RemisionDetalle, RemisionTablero, VerificacionSoporte } from '../models/remision.model';
 
 /** Un archivo del soporte de entrega con el QR que se le leyó en el navegador (null = ninguno). */
 export interface ArchivoEntrega {
@@ -27,6 +27,14 @@ export class RemisionService {
   /** PDF (una o varias) como Blob — se abre en una pestaña nueva para imprimir. */
   pdf(ids: number[]): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/pdf`, { params: { ids: ids.join(',') }, responseType: 'blob' });
+  }
+
+  /** Revisa UN archivo (QR + IA) antes de confirmar — no guarda nada. */
+  verificarSoporte(id: number, archivo: File, qrLeido: string | null): Observable<VerificacionSoporte> {
+    const form = new FormData();
+    form.append('archivo', archivo, archivo.name);
+    if (qrLeido) form.append('qrLeido', qrLeido);
+    return this.http.post<VerificacionSoporte>(`${this.baseUrl}/${id}/verificar-soporte`, form);
   }
 
   confirmarEntrega(id: number, archivos: ArchivoEntrega[], observacion: string): Observable<RemisionDetalle> {

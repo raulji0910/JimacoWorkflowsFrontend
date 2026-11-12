@@ -110,11 +110,7 @@ export class RemisionDetalleComponent implements OnInit, OnDestroy {
       .subscribe((actualizada?: RemisionDetalle) => {
         if (!actualizada) return;
         this.remision.set(actualizada);
-        const msg =
-          actualizada.verificacionQR === 'Coincide'
-            ? `Entrega de la REM ${actualizada.numero} confirmada.`
-            : `Entrega confirmada. Quedó marcada para revisar: el soporte no trae el QR de esta remisión.`;
-        this.snackBar.open(msg, 'Cerrar', { duration: 6000 });
+        this.snackBar.open(`Entrega de la REM ${actualizada.numero} confirmada.`, 'Cerrar', { duration: 6000 });
       });
   }
 
@@ -129,11 +125,11 @@ export class RemisionDetalleComponent implements OnInit, OnDestroy {
   textoVerificacion(v: string | null): string {
     switch (v) {
       case 'Coincide':
-        return 'El soporte trae el QR de esta remisión.';
+        return 'El soporte trae el QR de esta remisión y fue validado.';
       case 'NoCoincide':
         return 'El soporte trae el QR de OTRA remisión: revisar que se haya adjuntado el documento correcto.';
       case 'SinQR':
-        return 'No se pudo leer el QR en el soporte (foto borrosa, recortada o remisión impresa desde World Office): revisar a mano.';
+        return 'El soporte se validó por el número de remisión que leyó la IA (no se leyó el QR).';
       default:
         return '';
     }

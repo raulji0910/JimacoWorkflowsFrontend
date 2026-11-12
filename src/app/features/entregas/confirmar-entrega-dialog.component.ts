@@ -6,25 +6,30 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { RemisionDetalle } from '../../core/models/remision.model';
+import { RemisionDetalle, VerificacionSoporte } from '../../core/models/remision.model';
 import { RemisionService } from '../../core/services/remision.service';
 import { leerQrDeArchivo } from '../../shared/lector-qr';
+import { reducirImagen } from '../../shared/reducir-imagen';
 
 const MAX_BYTES = 20 * 1024 * 1024;
 
 interface ArchivoEnLista {
   id: number;
+  /** El que se envía (las fotos ya reducidas: la IA acepta hasta ~5 MB y sube más rápido). */
   archivo: File;
-  leyendo: boolean;
+  etapa: 'qr' | 'revisando' | 'listo';
   qr: string | null;
   previa: string | null;
+  resultado: VerificacionSoporte | null;
+  error: string | null;
 }
 
 /**
- * Confirmar la entrega de una remisión (2026-11-12): foto con la cámara del celular o archivo
- * (foto / PDF escaneado). Cada archivo se pasa por el lector de QR en el navegador y se muestra si
- * es de esta remisión. Un QR que no coincide o ilegible NO bloquea: avisa y la entrega queda
- * marcada "Revisar".
+ * Confirmar la entrega de una remisión (2026-11-12). Pedido del usuario: la remisión solo pasa a
+ * Entregada si el soporte es el correcto — es ESTA remisión (QR, o el número que lee la IA) y tiene
+ * la firma del cliente (revisión con IA). Cada archivo se revisa apenas se adjunta y se muestra por
+ * qué no sirve; "Confirmar entrega" solo se habilita con al menos un archivo válido. El servidor
+ * vuelve a aplicar la misma regla al confirmar (con el resultado en memoria: no se paga dos veces).
  */
 @Component({
   selector: 'app-confirmar-entrega-dialog',
@@ -40,7 +45,10 @@ interface ArchivoEnLista {
     </div>
 
     <mat-dialog-content class="ce">
-      <p class="ce__ayuda">Adjuntá la remisión <strong>firmada por el cliente</strong>, con el código QR visible.</p>
+      <p class="ce__ayuda">
+        Adjuntá la remisión <strong>firmada por el cliente</strong>: la hoja completa, nítida y con el código QR visible.
+        Solo se confirma si el documento es esta remisión y tiene la firma.
+      </p>
 
       <div class="ce__botones">
         <button mat-flat-button color="primary" type="button" (click)="camara.click()" [disabled]="enviando()">
@@ -58,7 +66,7 @@ interface ArchivoEnLista {
       @if (archivos().length > 0) {
         <ul class="ce__lista">
           @for (a of archivos(); track a.id) {
-            <li class="ce__archivo">
+            <li class="ce__archivo" [class.ce__archivo--ok]="a.resultado?.valido" [class.ce__archivo--mal]="a.etapa === 'listo' && !a.resultado?.valido">
               @if (a.previa) {
                 <img [src]="a.previa" alt="" class="ce__previa" />
               } @else {
@@ -66,14 +74,29 @@ interface ArchivoEnLista {
               }
               <div class="ce__archivo-texto">
                 <span class="ce__nombre">{{ a.archivo.name }}</span>
-                @if (a.leyendo) {
-                  <span class="ce__estado"><mat-spinner diameter="14" /> Buscando el código QR…</span>
-                } @else if (a.qr && esEsta(a.qr)) {
-                  <span class="ce__estado ce__estado--ok"><mat-icon>check_circle</mat-icon> QR correcto: es la REM {{ data.remision.numero }}</span>
-                } @else if (a.qr) {
-                  <span class="ce__estado ce__estado--mal"><mat-icon>error</mat-icon> El QR es de otra remisión ({{ a.qr }})</span>
-                } @else {
-                  <span class="ce__estado ce__estado--aviso"><mat-icon>warning</mat-icon> No se pudo leer el QR</span>
+                @switch (a.etapa) {
+                  @case ('qr') {
+                    <span class="ce__estado"><mat-spinner diameter="14" /> Buscando el código QR…</span>
+                  }
+                  @case ('revisando') {
+                    <span class="ce__estado"><mat-spinner diameter="14" /> Revisando el documento y la firma…</span>
+                  }
+                  @default {
+                    @if (a.resultado?.valido) {
+                      <span class="ce__estado ce__estado--ok">
+                        <mat-icon>verified</mat-icon>
+                        Es la REM {{ data.remision.numero }}{{ a.resultado?.iaActiva ? ' y tiene la firma del cliente' : '' }}
+                      </span>
+                    } @else {
+                      <span class="ce__estado ce__estado--mal">
+                        <mat-icon>error</mat-icon>
+                        {{ a.error || a.resultado?.motivo || 'No sirve como soporte.' }}
+                      </span>
+                    }
+                    @if (a.resultado?.iaObservacion) {
+                      <span class="ce__ia"><mat-icon>auto_awesome</mat-icon> {{ a.resultado?.iaObservacion }}</span>
+                    }
+                  }
                 }
               </div>
               <button mat-icon-button type="button" (click)="quitar(a)" [disabled]="enviando()" aria-label="Quitar archivo">
@@ -84,12 +107,12 @@ interface ArchivoEnLista {
         </ul>
       }
 
-      @if (hayAviso()) {
+      @if (ningunoValido()) {
         <div class="ce__alerta">
           <mat-icon>info</mat-icon>
           <span>
-            Ningún archivo trae el QR de esta remisión. Podés tomar otra foto más nítida (con la hoja completa y el
-            QR visible) o confirmar igual: la entrega quedará marcada <strong>para revisar</strong>.
+            Todavía no hay un soporte válido, así que la remisión <strong>sigue por entregar</strong>.
+            Tomá otra foto de la hoja completa, con buena luz, el QR visible y la firma del cliente.
           </span>
         </div>
       }
@@ -132,20 +155,22 @@ interface ArchivoEnLista {
       display: flex; gap: 0.75rem; align-items: center; padding: 0.5rem;
       border: 1px solid var(--mat-sys-outline-variant); border-radius: 8px;
     }
+    .ce__archivo--ok { border-color: var(--mat-sys-primary); background: color-mix(in srgb, var(--mat-sys-primary-container) 40%, transparent); }
+    .ce__archivo--mal { border-color: var(--mat-sys-error); }
     .ce__previa { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; flex: none; }
     .ce__icono-pdf { width: 56px; height: 40px; font-size: 40px; color: var(--mat-sys-error); flex: none; text-align: center; }
     .ce__archivo-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
     .ce__nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-    .ce__estado { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8125rem; color: var(--mat-sys-on-surface-variant); }
-    .ce__estado mat-icon { font-size: 16px; width: 16px; height: 16px; flex: none; }
-    .ce__alerta mat-icon { flex: none; }
+    .ce__estado { display: inline-flex; align-items: flex-start; gap: 0.3rem; font-size: 0.8125rem; color: var(--mat-sys-on-surface-variant); }
+    .ce__estado mat-icon, .ce__ia mat-icon { font-size: 16px; width: 16px; height: 16px; flex: none; }
     .ce__estado--ok { color: var(--mat-sys-primary); font-weight: 500; }
     .ce__estado--mal { color: var(--mat-sys-error); font-weight: 500; }
-    .ce__estado--aviso { color: #8a5a00; }
+    .ce__ia { display: inline-flex; align-items: flex-start; gap: 0.3rem; font-size: 0.75rem; color: var(--mat-sys-on-surface-variant); font-style: italic; }
     .ce__alerta {
       display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.75rem 1rem; border-radius: 8px;
       background: #fff3c4; color: #5c4400; font-size: 0.875rem;
     }
+    .ce__alerta mat-icon { flex: none; }
     .ce__etiqueta { font-weight: 500; margin-bottom: -0.5rem; }
     .ce__obs { width: 100%; }
     .ce__error { margin: 0; color: var(--mat-sys-error); }
@@ -158,12 +183,10 @@ export class ConfirmarEntregaDialogComponent {
   observacion = '';
   private siguienteId = 1;
 
-  readonly leyendo = computed(() => this.archivos().some((a) => a.leyendo));
-  readonly hayAviso = computed(() => {
-    const lista = this.archivos();
-    return lista.length > 0 && !this.leyendo() && !lista.some((a) => a.qr && this.esEsta(a.qr));
-  });
-  readonly puedeConfirmar = computed(() => this.archivos().length > 0 && !this.leyendo() && !this.enviando());
+  readonly revisando = computed(() => this.archivos().some((a) => a.etapa !== 'listo'));
+  readonly hayValido = computed(() => this.archivos().some((a) => a.resultado?.valido));
+  readonly ningunoValido = computed(() => this.archivos().length > 0 && !this.revisando() && !this.hayValido());
+  readonly puedeConfirmar = computed(() => this.hayValido() && !this.revisando() && !this.enviando());
 
   constructor(
     @Inject(MAT_DIALOG_DATA) readonly data: { remision: RemisionDetalle },
@@ -171,31 +194,46 @@ export class ConfirmarEntregaDialogComponent {
     private readonly servicio: RemisionService
   ) {}
 
-  esEsta(qr: string): boolean {
-    return qr.trim().toUpperCase() === this.data.remision.codigoQR.trim().toUpperCase();
-  }
-
   agregar(input: HTMLInputElement): void {
     const nuevos = Array.from(input.files ?? []);
     input.value = '';
     this.error.set(null);
-    for (const archivo of nuevos) {
-      if (archivo.size > MAX_BYTES) {
-        this.error.set(`"${archivo.name}" pesa más de 20 MB.`);
+    for (const original of nuevos) {
+      if (original.size > MAX_BYTES) {
+        this.error.set(`"${original.name}" pesa más de 20 MB.`);
         continue;
       }
       const item: ArchivoEnLista = {
         id: this.siguienteId++,
-        archivo,
-        leyendo: true,
+        archivo: original,
+        etapa: 'qr',
         qr: null,
-        previa: archivo.type.startsWith('image/') ? URL.createObjectURL(archivo) : null
+        previa: original.type.startsWith('image/') ? URL.createObjectURL(original) : null,
+        resultado: null,
+        error: null
       };
       this.archivos.update((l) => [...l, item]);
-      leerQrDeArchivo(archivo).then((qr) =>
-        this.archivos.update((l) => l.map((a) => (a.id === item.id ? { ...a, leyendo: false, qr } : a)))
-      );
+      void this.procesar(item.id, original);
     }
+  }
+
+  /** QR sobre el original (más resolución) → foto reducida → revisión en el servidor (QR + IA). */
+  private async procesar(id: number, original: File): Promise<void> {
+    const qr = await leerQrDeArchivo(original);
+    const archivo = await reducirImagen(original);
+    this.actualizar(id, { qr, archivo, etapa: 'revisando' });
+    this.servicio.verificarSoporte(this.data.remision.id, archivo, qr).subscribe({
+      next: (resultado) => this.actualizar(id, { resultado, etapa: 'listo' }),
+      error: (e) =>
+        this.actualizar(id, {
+          etapa: 'listo',
+          error: e?.error?.mensaje ?? 'No se pudo revisar el archivo. Revisá la conexión y volvé a adjuntarlo.'
+        })
+    });
+  }
+
+  private actualizar(id: number, cambios: Partial<ArchivoEnLista>): void {
+    this.archivos.update((l) => l.map((a) => (a.id === id ? { ...a, ...cambios } : a)));
   }
 
   quitar(a: ArchivoEnLista): void {
