@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerCuentasPorPagarGuard, puedePagarCuentasGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerAlistamientoFerrealiadosGuard, puedeVerCuentasPorPagarGuard, puedePagarCuentasGuard } from './core/guards/auth.guard';
 import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 
 export const routes: Routes = [
@@ -53,6 +53,22 @@ export const routes: Routes = [
           import('./features/alistamiento/hoja-alistamiento-detalle.component').then((m) => m.HojaAlistamientoDetalleComponent),
         canActivate: [puedeVerAlistamientoGuard],
         canDeactivate: [cambiosSinGuardarGuard]
+      },
+      // FERREALIADOS (2026-11-13): los mismos componentes, con la empresa en data — mismas reglas y alertas.
+      {
+        path: 'alistamiento-ferrealiados',
+        loadComponent: () =>
+          import('./features/alistamiento/alistamiento-dashboard.component').then((m) => m.AlistamientoDashboardComponent),
+        canActivate: [puedeVerAlistamientoFerrealiadosGuard],
+        data: { empresa: 'Ferrealiados' }
+      },
+      {
+        path: 'alistamiento-ferrealiados/:id',
+        loadComponent: () =>
+          import('./features/alistamiento/hoja-alistamiento-detalle.component').then((m) => m.HojaAlistamientoDetalleComponent),
+        canActivate: [puedeVerAlistamientoFerrealiadosGuard],
+        canDeactivate: [cambiosSinGuardarGuard],
+        data: { empresa: 'Ferrealiados' }
       },
       {
         path: 'cuentas-por-pagar',

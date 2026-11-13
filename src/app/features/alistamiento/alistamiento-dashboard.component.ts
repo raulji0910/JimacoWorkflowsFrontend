@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
@@ -61,6 +61,9 @@ export type NivelEstadoHoja = 'completa' | 'atrasada' | 'avanzada' | 'normal';
 export class AlistamientoDashboardComponent implements OnInit, OnDestroy {
   private readonly hojaService = inject(HojaAlistamientoService);
   private readonly authService = inject(AuthService);
+  // Empresa del dashboard (2026-11-13): la ruta /alistamiento-ferrealiados trae data.empresa.
+  readonly empresa: 'Jimaco' | 'Ferrealiados' = inject(ActivatedRoute).snapshot.data['empresa'] === 'Ferrealiados' ? 'Ferrealiados' : 'Jimaco';
+  readonly rutaBase = this.empresa === 'Ferrealiados' ? '/alistamiento-ferrealiados' : '/alistamiento';
 
   // Columna "OC" quitada (2026-10-16, pedido explícito del usuario) — las OC ligadas ya se ven
   // completas al entrar a la Hoja (botones "Ver OC ..." en el detalle), así que repetirlas acá
@@ -94,7 +97,7 @@ export class AlistamientoDashboardComponent implements OnInit, OnDestroy {
   readonly opcionesCampoEntrega = computed(() => this.valoresUnicos((h) => h.campoEntrega));
   readonly opcionesElaboradoPor = computed(() => this.valoresUnicos((h) => h.elaboradoPor));
 
-  readonly puedeGestionar = this.authService.puedeGestionarAlistamiento();
+  readonly puedeGestionar = this.authService.puedeGestionarAlistamientoDe(this.empresa);
 
   private audioContext: AudioContext | null = null;
   private temporizadorCarga: ReturnType<typeof setInterval> | null = null;
@@ -223,7 +226,7 @@ export class AlistamientoDashboardComponent implements OnInit, OnDestroy {
 
   cargar(): void {
     this.cargando.set(true);
-    this.hojaService.listar().subscribe({
+    this.hojaService.listar(this.empresa).subscribe({
       next: (hojas) => {
         this.ahoraCarga.set(Date.now());
         this.hojas.set(hojas);

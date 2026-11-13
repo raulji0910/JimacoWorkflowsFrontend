@@ -11,7 +11,8 @@ export class TipoDocumentoService {
   constructor(private readonly http: HttpClient) {}
 
   listar(): Observable<TipoDocumento[]> {
-    return this.http.get<TipoDocumento[]>(this.baseUrl);
+    // ?empresa=todas: sin él la Api devuelve solo los de Jimaco (lo que espera el Sincronizador viejo).
+    return this.http.get<TipoDocumento[]>(this.baseUrl, { params: { empresa: 'todas' } });
   }
 
   obtener(id: number): Observable<TipoDocumento> {

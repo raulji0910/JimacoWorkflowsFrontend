@@ -1,6 +1,6 @@
 <div class="alistamiento">
   <div class="alistamiento__header">
-    <h2>Alistamiento</h2>
+    <h2>Alistamiento{{ empresa === 'Ferrealiados' ? ' Ferrealiados' : '' }}</h2>
     <div class="alistamiento__acciones-header">
       <button
         mat-stroked-button
@@ -93,7 +93,7 @@
       <ng-container matColumnDef="hoja">
         <th mat-header-cell *matHeaderCellDef>Hoja (Cotización)</th>
         <td mat-cell *matCellDef="let h" data-label="Hoja">
-          <a [routerLink]="['/alistamiento', h.documentoVinculadoId]">{{ h.numeroReferenciaHoja }}</a>
+          <a [routerLink]="[rutaBase, h.documentoVinculadoId]">{{ h.numeroReferenciaHoja }}</a>
         </td>
       </ng-container>
 
@@ -172,7 +172,7 @@
       <ng-container matColumnDef="acciones">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let h" data-label="">
-          <a mat-flat-button color="primary" [routerLink]="['/alistamiento', h.documentoVinculadoId]">Ver hoja</a>
+          <a mat-flat-button color="primary" [routerLink]="[rutaBase, h.documentoVinculadoId]">Ver hoja</a>
           @if (h.ocs.length === 1) {
             <a mat-button [routerLink]="['/documentos', h.ocs[0].instanciaDocumentoId]">Ver OC</a>
           }

@@ -18,4 +18,7 @@ export interface LoginResponse {
   puedeVerCuentasPorPagar: boolean;
   // Menú "Pagos" (pagador de cuentas) — ver Rol.PuedePagarCuentas en el backend.
   puedePagarCuentas?: boolean;
+  // Alistamiento de FERREALIADOS (2026-11-13) — dashboard aparte, permisos aparte.
+  puedeGestionarAlistamientoFerrealiados?: boolean;
+  puedeVerAlistamientoFerrealiados?: boolean;
 }

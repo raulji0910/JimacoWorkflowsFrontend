@@ -42,6 +42,16 @@ export const puedeVerAlistamientoGuard: CanActivateFn = () => {
   return false;
 };
 
+export const puedeVerAlistamientoFerrealiadosGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerAlistamientoFerrealiados()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};
+
 export const puedePagarCuentasGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);

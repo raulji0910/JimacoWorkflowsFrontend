@@ -76,6 +76,19 @@ export class AuthService {
     return (sesion?.puedeVerAlistamiento || sesion?.puedeGestionarAlistamiento) ?? false;
   }
 
+  /** Empresa del grupo: 'Jimaco' (de siempre) o 'Ferrealiados' (2026-11-13). */
+  puedeGestionarAlistamientoDe(empresa: 'Jimaco' | 'Ferrealiados'): boolean {
+    return empresa === 'Ferrealiados'
+      ? (this.sesion()?.puedeGestionarAlistamientoFerrealiados ?? false)
+      : this.puedeGestionarAlistamiento();
+  }
+
+  /** Dashboard "Alistamiento Ferrealiados" (gestionar también lo implica). */
+  puedeVerAlistamientoFerrealiados(): boolean {
+    const sesion = this.sesion();
+    return (sesion?.puedeVerAlistamientoFerrealiados || sesion?.puedeGestionarAlistamientoFerrealiados) ?? false;
+  }
+
   /** Puede entrar al módulo de Cuentas por Pagar — ver Rol.PuedeVerCuentasPorPagar. */
   puedeVerCuentasPorPagar(): boolean {
     return this.sesion()?.puedeVerCuentasPorPagar ?? false;

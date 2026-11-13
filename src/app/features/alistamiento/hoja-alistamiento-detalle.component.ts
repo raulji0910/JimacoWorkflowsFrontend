@@ -53,6 +53,8 @@ export class HojaAlistamientoDetalleComponent implements OnInit, ConCambiosSinGu
   private readonly router = inject(Router);
   private readonly hojaService = inject(HojaAlistamientoService);
   private readonly authService = inject(AuthService);
+  readonly empresa: 'Jimaco' | 'Ferrealiados' = this.route.snapshot.data['empresa'] === 'Ferrealiados' ? 'Ferrealiados' : 'Jimaco';
+  readonly rutaBase = this.empresa === 'Ferrealiados' ? '/alistamiento-ferrealiados' : '/alistamiento';
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
 
@@ -60,7 +62,7 @@ export class HojaAlistamientoDetalleComponent implements OnInit, ConCambiosSinGu
   readonly cargando = signal(false);
   readonly guardandoRenglonId = signal<number | null>(null);
   readonly columnas = ['codigo', 'descripcion', 'cantidad', 'cantidadDisponible', 'remisionado'];
-  readonly puedeGestionar = this.authService.puedeGestionarAlistamiento();
+  readonly puedeGestionar = this.authService.puedeGestionarAlistamientoDe(this.empresa);
   // Filtro predeterminado (2026-10-15, pedido explícito del usuario): al entrar, Transporte ve
   // solo lo que le falta reunir, no toda la lista completa de nuevo.
   readonly soloIncompletos = signal(true);
@@ -172,7 +174,7 @@ export class HojaAlistamientoDetalleComponent implements OnInit, ConCambiosSinGu
       error: () => {
         this.cargando.set(false);
         this.snackBar.open('No se pudo cargar la Hoja de Alistamiento.', 'Cerrar', { duration: 4000 });
-        this.router.navigate(['/alistamiento']);
+        this.router.navigate([this.rutaBase]);
       }
     });
   }
