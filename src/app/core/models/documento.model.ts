@@ -2,7 +2,7 @@ import { PagoProveedor } from './cuentas-por-pagar.model';
 
 export type EstadoInstanciaDocumento = 'EnProceso' | 'Devuelto' | 'Completado' | 'Rechazado';
 
-export type TipoAccion = 'Creado' | 'Aprobado' | 'Devuelto' | 'Rechazado' | 'Reenviado' | 'RedirigidoAContado';
+export type TipoAccion = 'Creado' | 'Aprobado' | 'Devuelto' | 'Rechazado' | 'Reenviado' | 'RedirigidoAContado' | 'AprobadoAutomatico';
 
 export interface RenglonInput {
   codigo: string | null;
