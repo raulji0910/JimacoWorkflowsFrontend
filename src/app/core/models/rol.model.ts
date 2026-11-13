@@ -17,6 +17,8 @@ export interface Rol {
   // Entregas (Remisiones) — ver Rol.PuedeGestionarEntregas/PuedeVerEntregas en el backend.
   puedeGestionarEntregas?: boolean;
   puedeVerEntregas?: boolean;
+  puedeDocumentarEntregas?: boolean;
+  puedeFacturarEntregas?: boolean;
 }
 
 export interface RolCrear {
@@ -32,6 +34,8 @@ export interface RolCrear {
   // Entregas (Remisiones) — ver Rol.PuedeGestionarEntregas/PuedeVerEntregas en el backend.
   puedeGestionarEntregas?: boolean;
   puedeVerEntregas?: boolean;
+  puedeDocumentarEntregas?: boolean;
+  puedeFacturarEntregas?: boolean;
 }
 
 export interface RolActualizar {
@@ -48,4 +52,6 @@ export interface RolActualizar {
   // Entregas (Remisiones) — ver Rol.PuedeGestionarEntregas/PuedeVerEntregas en el backend.
   puedeGestionarEntregas?: boolean;
   puedeVerEntregas?: boolean;
+  puedeDocumentarEntregas?: boolean;
+  puedeFacturarEntregas?: boolean;
 }

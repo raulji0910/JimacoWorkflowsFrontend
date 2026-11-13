@@ -114,11 +114,15 @@
       </div>
     </section>
 
-    @if (r.soportes.length > 0) {
+    @if (r.estado === 'Entregada' && r.estadoFacturacion) {
+      <app-documentos-facturacion [remision]="r" (actualizada)="remision.set($event)" />
+    }
+
+    @if (soportesEntrega(r).length > 0) {
       <section class="det__bloque">
         <h3>Soportes de entrega</h3>
         <ul class="det__soportes">
-          @for (s of r.soportes; track s.id) {
+          @for (s of soportesEntrega(r); track s.id) {
             <li>
               <mat-icon>{{ esImagen(s) ? 'image' : 'picture_as_pdf' }}</mat-icon>
               <div class="det__soporte-texto">

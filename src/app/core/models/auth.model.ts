@@ -21,4 +21,7 @@ export interface LoginResponse {
   // Entregas (Remisiones) — ver Rol.PuedeGestionarEntregas/PuedeVerEntregas en el backend.
   puedeGestionarEntregas?: boolean;
   puedeVerEntregas?: boolean;
+  // Entregas fase 2 (2026-11-13): emisor que adjunta los documentos para facturar / contable.
+  puedeDocumentarEntregas?: boolean;
+  puedeFacturarEntregas?: boolean;
 }

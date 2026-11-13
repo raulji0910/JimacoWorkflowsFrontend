@@ -91,10 +91,23 @@ export class AuthService {
     return this.sesion()?.puedeGestionarEntregas ?? false;
   }
 
-  /** Ver el dashboard de entregas (gestionar también lo implica). */
+  /** Ver el dashboard de entregas (gestionar, documentar o facturar también lo implican). */
   puedeVerEntregas(): boolean {
     const sesion = this.sesion();
-    return (sesion?.puedeVerEntregas || sesion?.puedeGestionarEntregas) ?? false;
+    return (
+      (sesion?.puedeVerEntregas || sesion?.puedeGestionarEntregas || sesion?.puedeDocumentarEntregas || sesion?.puedeFacturarEntregas) ??
+      false
+    );
+  }
+
+  /** Emisor de remisiones: adjunta los documentos para facturar de SUS remisiones. */
+  puedeDocumentarEntregas(): boolean {
+    return this.sesion()?.puedeDocumentarEntregas ?? false;
+  }
+
+  /** Contable: recibe las remisiones para facturar y puede devolverlas. */
+  puedeFacturarEntregas(): boolean {
+    return this.sesion()?.puedeFacturarEntregas ?? false;
   }
 
   private leerSesionValida(): LoginResponse | null {

@@ -8,6 +8,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RemisionService } from '../../../core/services/remision.service';
 import { ConfiguracionEntregas } from '../../../core/models/remision.model';
+import { TiposDocumentoFacturacionComponent } from './tipos-documento-facturacion.component';
 
 /**
  * Administración → Config. de entregas (2026-11-12): interruptor de la revisión con IA de la firma
@@ -17,7 +18,7 @@ import { ConfiguracionEntregas } from '../../../core/models/remision.model';
 @Component({
   selector: 'app-configuracion-entregas',
   standalone: true,
-  imports: [DatePipe, FormsModule, MatButtonModule, MatIconModule, MatProgressBarModule, MatSlideToggleModule],
+  imports: [DatePipe, FormsModule, MatButtonModule, MatIconModule, MatProgressBarModule, MatSlideToggleModule, TiposDocumentoFacturacionComponent],
   template: `
     <div class="cfg">
       <h2>Configuración de entregas</h2>
@@ -31,10 +32,11 @@ import { ConfiguracionEntregas } from '../../../core/models/remision.model';
           <div class="cfg__cabeza">
             <mat-icon>auto_awesome</mat-icon>
             <div>
-              <h3>Revisión con IA del soporte de entrega</h3>
+              <h3>Revisión con IA</h3>
               <p>
                 Con la IA encendida, además del código QR se revisa que la foto o el PDF sea esta remisión y que tenga
                 la <strong>firma o el sello del cliente</strong>. Apagada, la entrega se confirma solo con el QR.
+                También revisa los <strong>documentos para facturar</strong> (si parecen el documento pedido); ahí solo avisa, no bloquea.
               </p>
             </div>
           </div>
@@ -47,7 +49,7 @@ import { ConfiguracionEntregas } from '../../../core/models/remision.model';
             </span>
           </div>
 
-          <mat-slide-toggle [ngModel]="activa()" (ngModelChange)="activa.set($event)">Revisar firma o sello con IA</mat-slide-toggle>
+          <mat-slide-toggle [ngModel]="activa()" (ngModelChange)="activa.set($event)">Revisar con IA</mat-slide-toggle>
 
           @if (!g.iaConClave) {
             <div class="cfg__aviso">
@@ -72,6 +74,8 @@ import { ConfiguracionEntregas } from '../../../core/models/remision.model';
           </div>
         </section>
       }
+
+      <app-tipos-documento-facturacion />
     </div>
   `,
   styles: `

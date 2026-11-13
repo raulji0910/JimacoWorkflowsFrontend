@@ -12,8 +12,8 @@
         {{ sonidoActivo() ? 'Alertas sonoras activas' : 'Activar alertas sonoras' }}
       </button>
       <button mat-stroked-button (click)="alternarFiltro()">
-        <mat-icon>{{ soloPorEntregar() ? 'visibility' : 'visibility_off' }}</mat-icon>
-        {{ soloPorEntregar() ? 'Viendo solo por entregar' : 'Viendo todas' }}
+        <mat-icon>{{ soloPorEntregar() && vistaFacturacion() === 'ninguna' ? 'visibility' : 'visibility_off' }}</mat-icon>
+        {{ vistaFacturacion() !== 'ninguna' ? 'Ver todas' : soloPorEntregar() ? 'Viendo solo por entregar' : 'Viendo todas' }}
       </button>
       <button
         mat-stroked-button
@@ -23,6 +23,24 @@
       >
         <mat-icon>done_all</mat-icon>
         {{ soloEntregadas() ? 'Viendo solo entregadas' : 'Ver entregadas' }}
+      </button>
+      <button
+        mat-stroked-button
+        [color]="vistaFacturacion() === 'faltan' ? 'primary' : undefined"
+        (click)="alternarVistaFacturacion('faltan')"
+        matTooltip="Entregadas a las que les faltan documentos para facturar o que contabilidad devolvió"
+      >
+        <mat-icon>attach_file</mat-icon>
+        Faltan documentos ({{ cantidadFaltan() }})
+      </button>
+      <button
+        mat-stroked-button
+        [color]="vistaFacturacion() === 'contabilidad' ? 'primary' : undefined"
+        (click)="alternarVistaFacturacion('contabilidad')"
+        matTooltip="Enviadas a contabilidad para facturar"
+      >
+        <mat-icon>receipt_long</mat-icon>
+        En contabilidad ({{ cantidadContabilidad() }})
       </button>
       <button mat-flat-button color="primary" (click)="imprimirSeleccion()" [disabled]="cantidadSeleccion === 0">
         <mat-icon>print</mat-icon>
@@ -179,6 +197,17 @@
                 <mat-chip class="alistamiento__chip">Por entregar</mat-chip>
               }
             }
+            @if (facturacion(r); as f) {
+              <mat-chip class="alistamiento__chip" [class]="'alistamiento__chip ' + f.clase" [matTooltip]="f.ayuda">
+                {{ f.texto }}
+              </mat-chip>
+            }
+            @if (r.documentosConAviso > 0) {
+              <mat-chip class="alistamiento__chip entregas__chip--faltan" matTooltip="Hay documentos con aviso de la IA (no bloquea)">
+                <mat-icon matChipAvatar>warning</mat-icon>
+                {{ r.documentosConAviso }} con aviso
+              </mat-chip>
+            }
             @if (haceCuantoSeEntrego(r); as hace) {
               <mat-chip class="alistamiento__chip alistamiento__chip--recien" matTooltip="Se entregó en las últimas 24 horas">
                 <mat-icon matChipAvatar>schedule</mat-icon>
@@ -205,14 +234,19 @@
       <tr
         mat-row
         *matRowDef="let r; columns: columnas"
-        [class.alistamiento__fila--atrasada]="nivelEstado(r) === 'atrasada'"
-        [class.alistamiento__fila--completa]="nivelEstado(r) === 'entregada'"
+        [class.alistamiento__fila--atrasada]="nivelEstado(r) === 'atrasada' || (meToca(r) && r.estadoFacturacion === 'Devuelta')"
+        [class.alistamiento__fila--avanzada]="meToca(r) && r.estadoFacturacion !== 'Devuelta'"
+        [class.alistamiento__fila--completa]="nivelEstado(r) === 'entregada' && !meToca(r)"
         [class.entregas__fila--revisar]="nivelEstado(r) === 'revisar'"
       ></tr>
 
       <tr class="alistamiento__vacio-fila" *matNoDataRow>
         <td [attr.colspan]="columnas.length" class="alistamiento__vacio">
-          @if (soloPorEntregar() && !soloEntregadas()) {
+          @if (vistaFacturacion() === 'faltan') {
+            No hay remisiones entregadas pendientes de documentos.
+          } @else if (vistaFacturacion() === 'contabilidad') {
+            No hay remisiones en contabilidad.
+          } @else if (soloPorEntregar() && !soloEntregadas()) {
             No hay remisiones por entregar.
           } @else {
             No hay remisiones para mostrar.

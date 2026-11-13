@@ -2,7 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ConfiguracionEntregas, RemisionDetalle, RemisionTablero, VerificacionSoporte } from '../models/remision.model';
+import {
+  ConfiguracionEntregas,
+  GuardarTipoDocumentoFacturacion,
+  RemisionDetalle,
+  RemisionTablero,
+  TipoDocumentoFacturacion,
+  VerificacionSoporte
+} from '../models/remision.model';
 
 /** Un archivo del soporte de entrega con el QR que se le leyó en el navegador (null = ninguno). */
 export interface ArchivoEntrega {
@@ -45,6 +52,38 @@ export class RemisionService {
     }
     if (observacion.trim()) form.append('observacion', observacion.trim());
     return this.http.post<RemisionDetalle>(`${this.baseUrl}/${id}/confirmar-entrega`, form);
+  }
+
+  // ---- Facturación (fase 2, 2026-11-13) ----
+
+  adjuntarDocumento(id: number, tipoDocumentoId: number, archivo: File): Observable<RemisionDetalle> {
+    const form = new FormData();
+    form.append('tipoDocumentoId', String(tipoDocumentoId));
+    form.append('archivo', archivo, archivo.name);
+    return this.http.post<RemisionDetalle>(`${this.baseUrl}/${id}/documentos`, form);
+  }
+
+  eliminarDocumento(id: number, soporteId: number): Observable<RemisionDetalle> {
+    return this.http.delete<RemisionDetalle>(`${this.baseUrl}/${id}/documentos/${soporteId}`);
+  }
+
+  enviarAFacturacion(id: number, comentario: string | null): Observable<RemisionDetalle> {
+    return this.http.post<RemisionDetalle>(`${this.baseUrl}/${id}/enviar-a-facturacion`, { comentario });
+  }
+
+  devolver(id: number, comentario: string): Observable<RemisionDetalle> {
+    return this.http.post<RemisionDetalle>(`${this.baseUrl}/${id}/devolver`, { comentario });
+  }
+
+  /** Solo administradores. */
+  tiposDocumento(): Observable<TipoDocumentoFacturacion[]> {
+    return this.http.get<TipoDocumentoFacturacion[]>(`${this.baseUrl}/tipos-documento`);
+  }
+
+  guardarTipoDocumento(id: number | null, dto: GuardarTipoDocumentoFacturacion): Observable<TipoDocumentoFacturacion> {
+    return id === null
+      ? this.http.post<TipoDocumentoFacturacion>(`${this.baseUrl}/tipos-documento`, dto)
+      : this.http.put<TipoDocumentoFacturacion>(`${this.baseUrl}/tipos-documento/${id}`, dto);
   }
 
   /** Solo administradores. */

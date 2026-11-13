@@ -12,11 +12,12 @@ import { RemisionDetalle, SoporteRemision } from '../../core/models/remision.mod
 import { ConfirmarEntregaDialogComponent } from './confirmar-entrega-dialog.component';
 import { abrirPdfEnPestana } from './entregas-utilidades';
 import { esDispositivoMovil } from '../../shared/dispositivo';
+import { DocumentosFacturacionComponent } from './documentos-facturacion.component';
 
 @Component({
   selector: 'app-remision-detalle',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, RouterLink, MatButtonModule, MatIconModule, MatProgressBarModule],
+  imports: [DatePipe, DecimalPipe, RouterLink, MatButtonModule, MatIconModule, MatProgressBarModule, DocumentosFacturacionComponent],
   templateUrl: './remision-detalle.component.html',
   styleUrl: './remision-detalle.component.scss'
 })
@@ -116,6 +117,11 @@ export class RemisionDetalleComponent implements OnInit, OnDestroy {
 
   verSoporte(s: SoporteRemision): void {
     abrirPdfEnPestana(this.servicio.soporte(s.id), this.snackBar);
+  }
+
+  /** Solo la remisión firmada/sellada (los documentos para facturar van en su propia sección). */
+  soportesEntrega(r: RemisionDetalle): SoporteRemision[] {
+    return r.soportes.filter((s) => s.tipo === 'EntregaFirmada');
   }
 
   esImagen(s: SoporteRemision): boolean {

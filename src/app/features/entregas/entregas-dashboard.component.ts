@@ -15,6 +15,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RemisionService } from '../../core/services/remision.service';
+import { AuthService } from '../../core/services/auth.service';
 import { RemisionTablero } from '../../core/models/remision.model';
 import { abrirPdfEnPestana } from './entregas-utilidades';
 
@@ -25,6 +26,12 @@ const MS_RECIEN_ENTREGADA = 24 * 60 * 60 * 1000;
 const MS_ENTRE_BEEPS = 2_000;
 
 export type NivelEstadoRemision = 'atrasada' | 'entregada' | 'revisar' | 'normal';
+
+/**
+ * Vista de facturación (fase 2, 2026-11-13): "faltan" = entregadas a las que les faltan documentos o
+ * que contabilidad devolvió; "contabilidad" = enviadas a facturar. 'ninguna' = vistas de entrega.
+ */
+export type VistaFacturacion = 'ninguna' | 'faltan' | 'contabilidad';
 
 /**
  * Dashboard de Entregas (2026-11-12) — calcado del de Alistamiento a pedido del usuario ("que se
@@ -58,13 +65,17 @@ export type NivelEstadoRemision = 'atrasada' | 'entregada' | 'revisar' | 'normal
 export class EntregasDashboardComponent implements OnInit, OnDestroy {
   private readonly servicio = inject(RemisionService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly auth = inject(AuthService);
 
   readonly columnas = ['seleccion', 'remision', 'cliente', 'campoEntrega', 'elaboradoPor', 'contabilizada', 'cotizacion', 'estado', 'acciones'];
   readonly remisiones = signal<RemisionTablero[]>([]);
   private readonly ahoraCarga = signal(Date.now());
   readonly cargando = signal(false);
   private primeraCarga = true;
-  readonly soloPorEntregar = signal(true);
+  // Cada quien abre en lo suyo: Logística en "por entregar", el emisor (vendedora) en "faltan
+  // documentos" y el contable en "en contabilidad".
+  readonly vistaFacturacion = signal<VistaFacturacion>(this.vistaInicial());
+  readonly soloPorEntregar = signal(this.vistaFacturacion() === 'ninguna');
   readonly soloEntregadas = signal(false);
   readonly sonidoActivo = signal(this.leerPreferenciaSonido());
   readonly pageIndex = signal(0);
@@ -84,19 +95,14 @@ export class EntregasDashboardComponent implements OnInit, OnDestroy {
   private temporizadorBeep: ReturnType<typeof setInterval> | null = null;
 
   get filtradas(): RemisionTablero[] {
-    const todas = this.remisiones();
+    const vista = this.vistaFacturacion();
+    const todas =
+      vista === 'ninguna' ? this.remisiones() : this.remisiones().filter((r) => this.enVistaFacturacion(r, vista));
+    if (vista !== 'ninguna') return this.aplicarFiltrosTexto(todas);
     const porEntregadas = this.soloEntregadas() ? todas.filter((r) => r.estado === 'Entregada') : todas;
     const porPendiente =
       this.soloPorEntregar() && !this.soloEntregadas() ? porEntregadas.filter((r) => r.estado === 'PorEntregar') : porEntregadas;
-    const campo = this.filtroCampoEntrega().trim().toLowerCase();
-    const elaboro = this.filtroElaboradoPor().trim().toLowerCase();
-    const numero = this.filtroNumero().trim().toLowerCase();
-    const filtradas = porPendiente.filter(
-      (r) =>
-        (!campo || (r.campoEntrega ?? '').toLowerCase().includes(campo)) &&
-        (!elaboro || (r.elaboradoPor ?? '').toLowerCase().includes(elaboro)) &&
-        (!numero || r.numero.toLowerCase().includes(numero))
-    );
+    const filtradas = this.aplicarFiltrosTexto(porPendiente);
 
     // Vista por defecto (solo por entregar): la más vieja arriba, como llega del servidor.
     if (this.soloPorEntregar() && !this.soloEntregadas()) return filtradas;
@@ -104,6 +110,72 @@ export class EntregasDashboardComponent implements OnInit, OnDestroy {
     // "Viendo todas" y "Ver entregadas": las entregadas en las últimas 24 h van primero (la más
     // reciente arriba), igual que las HA recién completadas; el resto queda en su orden.
     return [...filtradas].sort((a, b) => this.msRecienEntregada(b) - this.msRecienEntregada(a));
+  }
+
+  private aplicarFiltrosTexto(lista: RemisionTablero[]): RemisionTablero[] {
+    const campo = this.filtroCampoEntrega().trim().toLowerCase();
+    const elaboro = this.filtroElaboradoPor().trim().toLowerCase();
+    const numero = this.filtroNumero().trim().toLowerCase();
+    return lista.filter(
+      (r) =>
+        (!campo || (r.campoEntrega ?? '').toLowerCase().includes(campo)) &&
+        (!elaboro || (r.elaboradoPor ?? '').toLowerCase().includes(elaboro)) &&
+        (!numero || r.numero.toLowerCase().includes(numero))
+    );
+  }
+
+  private enVistaFacturacion(r: RemisionTablero, vista: VistaFacturacion): boolean {
+    if (r.estado !== 'Entregada') return false;
+    if (vista === 'faltan') return r.estadoFacturacion === 'PendienteDocumentos' || r.estadoFacturacion === 'Devuelta';
+    return r.estadoFacturacion === 'EnFacturacion';
+  }
+
+  readonly cantidadFaltan = computed(() => this.remisiones().filter((r) => this.enVistaFacturacion(r, 'faltan')).length);
+  readonly cantidadContabilidad = computed(
+    () => this.remisiones().filter((r) => this.enVistaFacturacion(r, 'contabilidad')).length
+  );
+
+  private vistaInicial(): VistaFacturacion {
+    if (this.auth.puedeGestionarEntregas()) return 'ninguna';
+    if (this.auth.puedeFacturarEntregas()) return 'contabilidad';
+    if (this.auth.puedeDocumentarEntregas()) return 'faltan';
+    return 'ninguna';
+  }
+
+  alternarVistaFacturacion(vista: Exclude<VistaFacturacion, 'ninguna'>): void {
+    const nueva = this.vistaFacturacion() === vista ? 'ninguna' : vista;
+    this.vistaFacturacion.set(nueva);
+    if (nueva === 'ninguna') this.soloPorEntregar.set(true);
+    this.soloEntregadas.set(false);
+    this.pageIndex.set(0);
+  }
+
+  /** Chip de facturación de una entregada (null = no aplica). */
+  facturacion(r: RemisionTablero): { texto: string; clase: string; ayuda: string } | null {
+    if (r.estado !== 'Entregada' || !r.estadoFacturacion) return null;
+    switch (r.estadoFacturacion) {
+      case 'EnFacturacion':
+        return { texto: 'En contabilidad', clase: 'entregas__chip--contabilidad', ayuda: 'Enviada a contabilidad para facturar' };
+      case 'Devuelta':
+        return { texto: 'Devuelta', clase: 'entregas__chip--devuelta', ayuda: 'Contabilidad la devolvió: hay que corregir y volver a enviar' };
+      case 'Facturada':
+        return { texto: 'Facturada', clase: 'alistamiento__chip--completa', ayuda: 'Ya se facturó' };
+      default:
+        return r.documentosFaltantes > 0
+          ? {
+              texto: `Faltan ${r.documentosFaltantes} doc.`,
+              clase: 'entregas__chip--faltan',
+              ayuda: 'Faltan documentos obligatorios para facturar'
+            }
+          : { texto: 'Lista para enviar', clase: 'entregas__chip--faltan', ayuda: 'Tiene los documentos; falta enviarla a contabilidad' };
+    }
+  }
+
+  /** Lo que le toca al que consulta: el emisor ve resaltadas las suyas pendientes; el contable, las que le llegaron. */
+  meToca(r: RemisionTablero): boolean {
+    if (r.estado !== 'Entregada') return false;
+    if (r.esMia && (r.estadoFacturacion === 'PendienteDocumentos' || r.estadoFacturacion === 'Devuelta')) return true;
+    return this.auth.puedeFacturarEntregas() && r.estadoFacturacion === 'EnFacturacion';
   }
 
   get paginadas(): RemisionTablero[] {
@@ -264,11 +336,18 @@ export class EntregasDashboardComponent implements OnInit, OnDestroy {
   }
 
   alternarFiltro(): void {
-    this.soloPorEntregar.set(!this.soloPorEntregar());
+    // Saliendo de una vista de facturación se vuelve a "Viendo todas".
+    if (this.vistaFacturacion() !== 'ninguna') {
+      this.vistaFacturacion.set('ninguna');
+      this.soloPorEntregar.set(false);
+    } else {
+      this.soloPorEntregar.set(!this.soloPorEntregar());
+    }
     this.pageIndex.set(0);
   }
 
   alternarEntregadas(): void {
+    this.vistaFacturacion.set('ninguna');
     this.soloEntregadas.set(!this.soloEntregadas());
     this.pageIndex.set(0);
   }

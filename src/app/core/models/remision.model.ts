@@ -23,7 +23,18 @@ export interface RemisionTablero {
   entregadaPor: string | null;
   /** Coincide | NoCoincide | SinQR — null mientras no se entregue. */
   verificacionQR: string | null;
+  // ---- Facturación (fase 2, 2026-11-13) ----
+  estadoFacturacion: EstadoFacturacion | null;
+  /** Tipos documentales obligatorios sin archivo. */
+  documentosFaltantes: number;
+  /** Documentos con advertencia de la IA. */
+  documentosConAviso: number;
+  /** La elaboró en WO quien está consultando. */
+  esMia: boolean;
+  fechaEnvioFacturacion: string | null;
 }
+
+export type EstadoFacturacion = 'PendienteDocumentos' | 'EnFacturacion' | 'Devuelta' | 'Facturada';
 
 export interface RenglonRemision {
   orden: number;
@@ -49,6 +60,13 @@ export interface SoporteRemision {
   iaObservacion: string | null;
   /** Sello del cliente: vale igual que la firma. */
   iaHaySello: boolean | null;
+  // ---- Documentos para facturar (fase 2) ----
+  tipoDocumentoFacturacionId: number | null;
+  tipoDocumentoFacturacion: string | null;
+  iaTipoDetectado: string | null;
+  /** Advertencia de la IA (no bloquea). */
+  aviso: string | null;
+  puedeEliminar: boolean;
 }
 
 /** Resultado de revisar un archivo antes de confirmar — ver VerificacionSoporteDto en el backend. */
@@ -94,7 +112,45 @@ export interface RemisionDetalle {
   renglones: RenglonRemision[];
   soportes: SoporteRemision[];
   puedeGestionar: boolean;
+  // ---- Facturación (fase 2, 2026-11-13) ----
+  estadoFacturacion: EstadoFacturacion | null;
+  documentosRequeridos: DocumentoRequerido[] | null;
+  historial: EventoFacturacion[] | null;
+  /** Usuario(s) del sistema que la elaboraron en WO; null = nadie tiene ese Usuario WO. */
+  emisor: string | null;
+  puedeAdjuntarDocumentos: boolean;
+  puedeEnviarAFacturacion: boolean;
+  puedeDevolver: boolean;
+  fechaEnvioFacturacion: string | null;
 }
+
+export interface DocumentoRequerido {
+  tipoId: number;
+  nombre: string;
+  descripcion: string | null;
+  obligatorio: boolean;
+  completo: boolean;
+}
+
+export interface EventoFacturacion {
+  accion: 'EnviadaAFacturacion' | 'Devuelta' | 'Facturada';
+  comentario: string | null;
+  usuario: string;
+  fecha: string;
+}
+
+/** Administración → tipos documentales para facturar. nitsClientes vacío = todos los clientes. */
+export interface TipoDocumentoFacturacion {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  obligatorio: boolean;
+  nitsClientes: string | null;
+  orden: number;
+  activo: boolean;
+}
+
+export type GuardarTipoDocumentoFacturacion = Omit<TipoDocumentoFacturacion, 'id'>;
 
 /** Administración → Config. de entregas — ver ConfiguracionEntregasDto en el backend. */
 export interface ConfiguracionEntregas {

@@ -83,6 +83,26 @@
       Solo consulta qué remisiones están por entregar o entregadas y sus soportes, sin confirmar entregas.
     </p>
   </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeDocumentarEntregas" name="puedeDocumentarEntregas">
+      Puede adjuntar documentos para facturar
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Para quien elabora las remisiones (vendedoras): ve SUS remisiones (por su "Usuario WO"), le llega el correo
+      cuando se entregan, adjunta la OC, la entrada de almacén, etc. y las envía a contabilidad.
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeFacturarEntregas" name="puedeFacturarEntregas">
+      Puede facturar entregas (contabilidad)
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Le llega el correo cuando una remisión está lista para facturar, ve todas las remisiones con sus documentos y
+      puede devolverlas al emisor con un comentario.
+    </p>
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>

@@ -15,3 +15,21 @@
   gap: 0.25rem;
   white-space: nowrap;
 }
+
+// ---- Facturación (fase 2, 2026-11-13) ----
+.entregas__chip--faltan {
+  background-color: #ffe0b2 !important;
+  font-weight: 500;
+}
+
+.entregas__chip--contabilidad {
+  background-color: #bbdefb !important;
+  font-weight: 500;
+}
+
+.entregas__chip--devuelta {
+  background-color: #ffcdd2 !important;
+  font-weight: 500;
+}
+
+// Lo que le toca al que consulta usa los mismos pulsos de Alistamiento (ámbar = pendiente, rojo = devuelta).

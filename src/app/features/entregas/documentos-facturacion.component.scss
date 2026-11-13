@@ -1,0 +1,155 @@
+// Mismo lenguaje visual que los bloques del detalle de la remisión (borde, radio 10px, títulos en primary).
+.fac {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 10px;
+  background: var(--mat-sys-surface);
+  min-width: 0;
+
+  &__cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+
+    h3 { margin: 0; font: var(--mat-sys-title-small); color: var(--mat-sys-primary); }
+  }
+
+  &__estado {
+    padding: 0.2rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    background: #ffe0b2;
+    color: #6d3d00;
+
+    &--EnFacturacion { background: #bbdefb; color: #0d3c61; }
+    &--Devuelta { background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); }
+    &--Facturada { background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); }
+  }
+
+  &__ayuda { margin: 0; color: var(--mat-sys-on-surface-variant); }
+
+  &__banda {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+
+    mat-icon { flex: none; }
+
+    &--devuelta { background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); }
+    &--contabilidad { background: #e3f2fd; color: #0d3c61; }
+    &--aviso { background: #fff3c4; color: #5c4400; }
+  }
+
+  &__tipos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 0.75rem;
+  }
+
+  &__tipo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 10px;
+    min-width: 0;
+
+    &--completo { border-color: var(--mat-sys-primary); }
+  }
+
+  &__tipo-cabeza {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+
+    div { display: flex; flex-direction: column; }
+  }
+
+  &__tipo-icono { flex: none; color: var(--mat-sys-outline); }
+  &__tipo--completo &__tipo-icono { color: var(--mat-sys-primary); }
+  &__tipo-req { font-size: 0.75rem; color: var(--mat-sys-on-surface-variant); }
+
+  &__doc {
+    display: flex;
+    gap: 0.35rem;
+    align-items: flex-start;
+  }
+
+  &__doc-icono { flex: none; color: var(--mat-sys-primary); margin-top: 0.4rem; }
+  &__doc-texto { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  &__doc-nombre { align-self: flex-start; margin-left: -0.75rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  &__doc-meta { font-size: 0.8125rem; color: var(--mat-sys-on-surface-variant); overflow-wrap: anywhere; }
+
+  &__doc-aviso,
+  &__doc-ok {
+    display: flex;
+    gap: 0.25rem;
+    align-items: flex-start;
+    font-size: 0.8125rem;
+    font-weight: 500;
+
+    mat-icon { flex: none; font-size: 1.1rem; width: 1.1rem; height: 1.1rem; }
+  }
+
+  &__doc-aviso { color: #8a5300; }
+  &__doc-ok { color: var(--mat-sys-primary); }
+
+  // Caja de arrastrar y soltar.
+  &__zona {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem;
+    border: 2px dashed var(--mat-sys-outline-variant);
+    border-radius: 10px;
+    color: var(--mat-sys-on-surface-variant);
+    text-align: center;
+    transition: background-color 120ms, border-color 120ms;
+
+    mat-icon { color: var(--mat-sys-primary); }
+
+    &--encima {
+      border-color: var(--mat-sys-primary);
+      background: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+    }
+
+    &--subiendo { border-style: solid; }
+  }
+
+  &__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  &__faltan { color: #8a5300; font-size: 0.875rem; }
+
+  &__historial {
+    h4 { margin: 0 0 0.5rem; font: var(--mat-sys-title-small); }
+
+    ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+
+    li {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+      font-size: 0.875rem;
+
+      mat-icon { flex: none; font-size: 1.15rem; width: 1.15rem; height: 1.15rem; color: var(--mat-sys-on-surface-variant); }
+    }
+  }
+}
