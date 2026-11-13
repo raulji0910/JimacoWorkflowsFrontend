@@ -36,6 +36,8 @@ export class RolFormDialogComponent {
   puedeVerEntregas = this.data.rol?.puedeVerEntregas ?? false;
   puedeDocumentarEntregas = this.data.rol?.puedeDocumentarEntregas ?? false;
   puedeFacturarEntregas = this.data.rol?.puedeFacturarEntregas ?? false;
+  puedeGestionarAlistamientoFerrealiados = this.data.rol?.puedeGestionarAlistamientoFerrealiados ?? false;
+  puedeVerAlistamientoFerrealiados = this.data.rol?.puedeVerAlistamientoFerrealiados ?? false;
 
   guardar(): void {
     if (!this.nombre.trim()) return;
@@ -53,7 +55,9 @@ export class RolFormDialogComponent {
         puedeGestionarEntregas: this.puedeGestionarEntregas,
         puedeVerEntregas: this.puedeVerEntregas,
         puedeDocumentarEntregas: this.puedeDocumentarEntregas,
-        puedeFacturarEntregas: this.puedeFacturarEntregas
+        puedeFacturarEntregas: this.puedeFacturarEntregas,
+        puedeGestionarAlistamientoFerrealiados: this.puedeGestionarAlistamientoFerrealiados,
+        puedeVerAlistamientoFerrealiados: this.puedeVerAlistamientoFerrealiados
       };
       this.dialogRef.close(dto);
     } else {
@@ -68,7 +72,9 @@ export class RolFormDialogComponent {
         puedeGestionarEntregas: this.puedeGestionarEntregas,
         puedeVerEntregas: this.puedeVerEntregas,
         puedeDocumentarEntregas: this.puedeDocumentarEntregas,
-        puedeFacturarEntregas: this.puedeFacturarEntregas
+        puedeFacturarEntregas: this.puedeFacturarEntregas,
+        puedeGestionarAlistamientoFerrealiados: this.puedeGestionarAlistamientoFerrealiados,
+        puedeVerAlistamientoFerrealiados: this.puedeVerAlistamientoFerrealiados
       };
       this.dialogRef.close(dto);
     }

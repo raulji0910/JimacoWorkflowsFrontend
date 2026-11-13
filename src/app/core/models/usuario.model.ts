@@ -7,6 +7,8 @@ export interface Usuario {
   telefono: string | null;
   usuarioWO: string | null;
   nombresCompletosWO: string | null;
+  /** Su usuario en el World Office de FERREALIADOS (vacío = el mismo de Jimaco). */
+  usuarioWOFerrealiados?: string | null;
   activo: boolean;
   roles: Rol[];
 }
@@ -18,6 +20,8 @@ export interface UsuarioCrear {
   telefono: string | null;
   usuarioWO: string | null;
   nombresCompletosWO: string | null;
+  /** Su usuario en el World Office de FERREALIADOS (vacío = el mismo de Jimaco). */
+  usuarioWOFerrealiados?: string | null;
   rolesIds: number[];
 }
 
@@ -27,6 +31,8 @@ export interface UsuarioActualizar {
   telefono: string | null;
   usuarioWO: string | null;
   nombresCompletosWO: string | null;
+  /** Su usuario en el World Office de FERREALIADOS (vacío = el mismo de Jimaco). */
+  usuarioWOFerrealiados?: string | null;
   activo: boolean;
   rolesIds: number[];
 }

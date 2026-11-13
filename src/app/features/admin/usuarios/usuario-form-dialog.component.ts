@@ -44,6 +44,7 @@ export class UsuarioFormDialogComponent {
   email = this.data.usuario?.email ?? '';
   telefono = this.data.usuario?.telefono ?? '';
   usuarioWO = this.data.usuario?.usuarioWO ?? '';
+  usuarioWOFerrealiados = this.data.usuario?.usuarioWOFerrealiados ?? '';
   nombresCompletosWO = this.data.usuario?.nombresCompletosWO ?? '';
   activo = this.data.usuario?.activo ?? true;
   password = '';
@@ -83,6 +84,7 @@ export class UsuarioFormDialogComponent {
         email: this.email,
         telefono: this.telefono || null,
         usuarioWO: this.usuarioWO || null,
+        usuarioWOFerrealiados: this.usuarioWOFerrealiados.trim() || null,
         nombresCompletosWO: this.nombresCompletosWO || null,
         activo: this.activo,
         rolesIds: this.rolesIds
@@ -95,6 +97,7 @@ export class UsuarioFormDialogComponent {
         password: this.password,
         telefono: this.telefono || null,
         usuarioWO: this.usuarioWO || null,
+        usuarioWOFerrealiados: this.usuarioWOFerrealiados.trim() || null,
         nombresCompletosWO: this.nombresCompletosWO || null,
         rolesIds: this.rolesIds
       };

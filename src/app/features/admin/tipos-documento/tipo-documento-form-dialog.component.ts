@@ -53,6 +53,8 @@ export class TipoDocumentoFormDialogComponent {
   descripcion = this.data.tipo?.descripcion ?? '';
   prefijoWorldOffice = this.data.tipo?.prefijoWorldOffice ?? '';
   activo = this.data.tipo?.activo ?? true;
+  // 0 = Jimaco, 1 = Ferrealiados (así lo serializa la Api).
+  empresa: 0 | 1 = this.data.tipo?.empresa === 1 || this.data.tipo?.empresa === 'Ferrealiados' ? 1 : 0;
 
   campos: CampoEditable[] =
     this.data.tipo?.campos.map((c) => ({
@@ -97,6 +99,7 @@ export class TipoDocumentoFormDialogComponent {
         nombre: this.nombre,
         descripcion: this.descripcion || null,
         prefijoWorldOffice: prefijo,
+        empresa: this.empresa,
         activo: this.activo,
         campos: camposDto
       };
@@ -106,6 +109,7 @@ export class TipoDocumentoFormDialogComponent {
         nombre: this.nombre,
         descripcion: this.descripcion || null,
         prefijoWorldOffice: prefijo,
+        empresa: this.empresa,
         campos: camposDto
       };
       this.dialogRef.close(dto);

@@ -32,6 +32,13 @@
         </a>
       }
 
+      @if (puedeVerAlistamientoFerrealiados) {
+        <a mat-list-item routerLink="/alistamiento-ferrealiados" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>inventory</mat-icon>
+          <span matListItemTitle>Alistamiento Ferrealiados</span>
+        </a>
+      }
+
       @if (puedeVerEntregas) {
         <a mat-list-item routerLink="/entregas" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
           <mat-icon matListItemIcon>local_shipping</mat-icon>

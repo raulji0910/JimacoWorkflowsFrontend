@@ -16,6 +16,15 @@
     <mat-hint>El prefijo exacto que usa World Office para este documento (ej. "OC"). Dos tipos con prefijos distintos son documentos distintos aunque se llamen parecido — el Sincronizador lo usa para saber a cuál de tus tipos de documento corresponde cada uno.</mat-hint>
   </mat-form-field>
 
+  <mat-form-field appearance="outline" class="form-dialogo__campo">
+    <mat-label>Empresa</mat-label>
+    <mat-select [(ngModel)]="empresa" name="empresa">
+      <mat-option [value]="0">Jimaco</mat-option>
+      <mat-option [value]="1">Ferrealiados</mat-option>
+    </mat-select>
+    <mat-hint>De qué World Office viene. "OC" de Jimaco y "OC" de Ferrealiados son tipos distintos.</mat-hint>
+  </mat-form-field>
+
   @if (editando) {
     <mat-slide-toggle [(ngModel)]="activo" name="activo">Activo</mat-slide-toggle>
   }

@@ -24,4 +24,7 @@ export interface LoginResponse {
   // Entregas fase 2 (2026-11-13): emisor que adjunta los documentos para facturar / contable.
   puedeDocumentarEntregas?: boolean;
   puedeFacturarEntregas?: boolean;
+  // Alistamiento de FERREALIADOS (2026-11-13) — dashboard aparte, permisos aparte.
+  puedeGestionarAlistamientoFerrealiados?: boolean;
+  puedeVerAlistamientoFerrealiados?: boolean;
 }

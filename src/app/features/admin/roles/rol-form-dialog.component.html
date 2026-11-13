@@ -103,6 +103,25 @@
       puede devolverlas al emisor con un comentario.
     </p>
   </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeGestionarAlistamientoFerrealiados" name="puedeGestionarAlistamientoFerrealiados">
+      Puede gestionar el alistamiento de Ferrealiados
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Menú "Alistamiento Ferrealiados": marca las cantidades disponibles de las Hojas de Alistamiento de FERREALIADOS y
+      le llegan sus avisos. Igual que "gestionar alistamiento", pero para esa empresa.
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeVerAlistamientoFerrealiados" name="puedeVerAlistamientoFerrealiados">
+      Puede ver el alistamiento de Ferrealiados
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Solo consulta el dashboard "Alistamiento Ferrealiados", sin editar cantidades.
+    </p>
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>

@@ -19,6 +19,8 @@ export interface Rol {
   puedeVerEntregas?: boolean;
   puedeDocumentarEntregas?: boolean;
   puedeFacturarEntregas?: boolean;
+  puedeGestionarAlistamientoFerrealiados?: boolean;
+  puedeVerAlistamientoFerrealiados?: boolean;
 }
 
 export interface RolCrear {
@@ -36,6 +38,8 @@ export interface RolCrear {
   puedeVerEntregas?: boolean;
   puedeDocumentarEntregas?: boolean;
   puedeFacturarEntregas?: boolean;
+  puedeGestionarAlistamientoFerrealiados?: boolean;
+  puedeVerAlistamientoFerrealiados?: boolean;
 }
 
 export interface RolActualizar {
@@ -54,4 +58,6 @@ export interface RolActualizar {
   puedeVerEntregas?: boolean;
   puedeDocumentarEntregas?: boolean;
   puedeFacturarEntregas?: boolean;
+  puedeGestionarAlistamientoFerrealiados?: boolean;
+  puedeVerAlistamientoFerrealiados?: boolean;
 }

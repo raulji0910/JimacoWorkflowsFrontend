@@ -10,8 +10,11 @@ export class HojaAlistamientoService {
 
   constructor(private readonly http: HttpClient) {}
 
-  listar(): Observable<HojaAlistamientoResumen[]> {
-    return this.http.get<HojaAlistamientoResumen[]>(this.baseUrl);
+  /** empresa = 'Ferrealiados' → el dashboard aparte (2026-11-13); sin empresa = Jimaco. */
+  listar(empresa: 'Jimaco' | 'Ferrealiados' = 'Jimaco'): Observable<HojaAlistamientoResumen[]> {
+    return empresa === 'Ferrealiados'
+      ? this.http.get<HojaAlistamientoResumen[]>(this.baseUrl, { params: { empresa } })
+      : this.http.get<HojaAlistamientoResumen[]>(this.baseUrl);
   }
 
   obtener(id: number): Observable<HojaAlistamientoDetalle> {
