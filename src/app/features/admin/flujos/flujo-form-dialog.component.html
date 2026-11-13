@@ -37,6 +37,12 @@
 
   <mat-divider />
   <h3>Pasos (en orden)</h3>
+  @if (pasos.length === 0) {
+    <p class="form-dialogo__ayuda">
+      Sin pasos: los documentos que entren por este flujo quedan <strong>aprobados al llegar</strong>, sin que nadie
+      apruebe, y su Hoja de Alistamiento pasa directo a Logística.
+    </p>
+  }
 
   @for (paso of pasos; track $index) {
     <div class="paso-fila">

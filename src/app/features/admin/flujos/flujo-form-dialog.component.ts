@@ -123,7 +123,8 @@ export class FlujoFormDialogComponent {
   }
 
   guardar(): void {
-    if (!this.nombre.trim() || this.pasos.length === 0) return;
+    // Sin pasos es válido (2026-11-13): el documento queda aprobado al llegar (ej. crédito de Ferrealiados).
+    if (!this.nombre.trim()) return;
     if (this.pasos.some((p) => !p.nombre.trim() || p.rolesIds.length === 0)) return;
     if (this.valorMinimo != null && this.valorMaximo != null && this.valorMinimo > this.valorMaximo) return;
 
