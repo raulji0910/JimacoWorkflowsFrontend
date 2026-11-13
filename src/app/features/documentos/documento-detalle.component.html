@@ -239,7 +239,7 @@
         <mat-nav-list>
           @for (item of d.historial; track item.id) {
             <div class="detalle__historial-item">
-              <strong>{{ item.accion }}</strong>
+              <strong>{{ item.accion === 'AprobadoAutomatico' ? 'Aprobado automáticamente' : item.accion }}</strong>
               <span> — {{ item.usuarioNombre }}</span>
               @if (item.pasoNombre) {
                 <span> ({{ item.pasoNombre }})</span>
