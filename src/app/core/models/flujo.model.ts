@@ -50,6 +50,8 @@ export interface DefinicionFlujo {
   valorMaximo: number | null;
   formaDePagoRequerida: string | null;
   pasos: PasoFlujo[];
+  /** Aprobado al llegar (sin aprobación comercial) pero sigue a sus pasos — ej. crédito de Ferrealiados → Logística. */
+  aprobacionAutomaticaAlLlegar?: boolean;
 }
 
 export interface DefinicionFlujoCrear {
@@ -59,4 +61,5 @@ export interface DefinicionFlujoCrear {
   valorMaximo: number | null;
   formaDePagoRequerida: string | null;
   pasos: PasoFlujoInput[];
+  aprobacionAutomaticaAlLlegar: boolean;
 }

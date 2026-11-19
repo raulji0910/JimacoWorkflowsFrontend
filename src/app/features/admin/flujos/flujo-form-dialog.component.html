@@ -35,6 +35,15 @@
     </mat-form-field>
   </div>
 
+  <mat-checkbox [(ngModel)]="aprobacionAutomaticaAlLlegar" name="aprobacionAutomaticaAlLlegar">
+    Aprobado automáticamente al llegar (sin aprobación comercial)
+  </mat-checkbox>
+  <p class="form-dialogo__ayuda">
+    El documento queda aprobado apenas llega (también en World Office) y su Hoja de Alistamiento se libera, pero sigue
+    por los pasos de abajo — ej. crédito de Ferrealiados: pasa a "Recogida Transporte" y la Asistente de Gerencia lo
+    puede devolver. El primer paso ya no es la aprobación comercial.
+  </p>
+
   <mat-divider />
   <h3>Pasos (en orden)</h3>
   @if (pasos.length === 0) {
