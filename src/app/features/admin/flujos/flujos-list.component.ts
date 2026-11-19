@@ -89,7 +89,8 @@ export class FlujosListComponent implements OnInit {
     else if (flujo.valorMinimo != null) partes.push(`desde $${flujo.valorMinimo.toLocaleString('es-CO')}`);
     else if (flujo.valorMaximo != null) partes.push(`hasta $${flujo.valorMaximo.toLocaleString('es-CO')}`);
 
-    return partes.length > 0 ? partes.join(', ') : 'Cualquier caso (sin condición)';
+    const texto = partes.length > 0 ? partes.join(', ') : 'Cualquier caso (sin condición)';
+    return flujo.aprobacionAutomaticaAlLlegar && flujo.pasos.length > 0 ? `${texto} — aprobado al llegar` : texto;
   }
 
   abrirNuevoFlujo(basadoEn: DefinicionFlujo | null = null): void {

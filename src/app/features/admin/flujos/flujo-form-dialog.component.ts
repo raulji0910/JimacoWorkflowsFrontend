@@ -66,6 +66,7 @@ export class FlujoFormDialogComponent {
   valorMinimo: number | null = this.data.basadoEn?.valorMinimo ?? null;
   valorMaximo: number | null = this.data.basadoEn?.valorMaximo ?? null;
   formaDePago: FormaDePagoOpcion = this.mapearFormaDePagoAOpcion(this.data.basadoEn?.formaDePagoRequerida ?? null);
+  aprobacionAutomaticaAlLlegar = this.data.basadoEn?.aprobacionAutomaticaAlLlegar ?? false;
 
   pasos: PasoEditable[] = this.data.basadoEn
     ? this.mapearPasosExistentes(this.data.basadoEn)
@@ -134,6 +135,7 @@ export class FlujoFormDialogComponent {
       valorMinimo: this.valorMinimo,
       valorMaximo: this.valorMaximo,
       formaDePagoRequerida: this.formaDePago === 'Cualquiera' ? null : this.formaDePago,
+      aprobacionAutomaticaAlLlegar: this.aprobacionAutomaticaAlLlegar,
       // Rechazar y "devolver al emisor" son exclusivos del primer paso (ver validación equivalente
       // en DefinicionFlujoService.CrearAsync) — se sanea acá por si quedó un valor viejo (ej. al
       // clonar un flujo, o si el paso 1 original se convirtió en el paso 2 al reordenar).
