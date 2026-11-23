@@ -350,3 +350,44 @@
     padding-left: 1rem;
   }
 }
+
+// ---- Varios soportes por lote (2026-11-23) ----
+.pag__archivos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.125rem 0.25rem 0.125rem 0.75rem;
+    border-radius: 8px;
+    background: var(--mat-sys-surface-container);
+    min-width: 0;
+  }
+
+  mat-icon {
+    color: var(--mat-sys-error);
+    flex: none;
+  }
+}
+
+.pag__archivo-nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pag__soportes-lote {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  // Mismo margen interno que el encabezado del lote (sus textos arrancan en 0.75rem).
+  padding: 0.25rem 0.75rem 0.75rem;
+}

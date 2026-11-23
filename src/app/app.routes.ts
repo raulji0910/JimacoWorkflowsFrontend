@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerAlistamientoFerrealiadosGuard, puedeVerCuentasPorPagarGuard, puedePagarCuentasGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerAlistamientoFerrealiadosGuard, puedeVerCuentasPorPagarGuard, puedeVerPagosGuard, puedeVerSeguimientoPagosGuard } from './core/guards/auth.guard';
 import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 
 export const routes: Routes = [
@@ -87,12 +87,12 @@ export const routes: Routes = [
         path: 'cuentas-por-pagar/seguimiento',
         loadComponent: () =>
           import('./features/cuentas-por-pagar/seguimiento-pagos.component').then((m) => m.SeguimientoPagosComponent),
-        canActivate: [puedeVerCuentasPorPagarGuard]
+        canActivate: [puedeVerSeguimientoPagosGuard]
       },
       {
         path: 'pagos',
         loadComponent: () => import('./features/pagos/pagos.component').then((m) => m.PagosComponent),
-        canActivate: [puedePagarCuentasGuard]
+        canActivate: [puedeVerPagosGuard]
       },
       {
         path: 'cuentas-por-pagar/:identificacion',

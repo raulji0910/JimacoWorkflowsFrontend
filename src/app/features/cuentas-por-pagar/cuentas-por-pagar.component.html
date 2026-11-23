@@ -97,23 +97,15 @@
           </button>
         }
       </mat-form-field>
-      <mat-form-field appearance="outline" class="cxp__campo">
-        <mat-label>Ordenar por</mat-label>
-        <mat-select [ngModel]="orden()" (ngModelChange)="cambiarOrden($event)">
-          <mat-option value="neto">Neto a pagar (mayor primero)</mat-option>
-          <mat-option value="vencido">Valor vencido</mat-option>
-          <mat-option value="dias">Días de mora</mat-option>
-          <mat-option value="nombre">Nombre</mat-option>
-        </mat-select>
-      </mat-form-field>
       <mat-slide-toggle [ngModel]="incluirSoloAnticipos()" (ngModelChange)="alternarSoloAnticipos($event)">
         Mostrar también terceros que solo tienen anticipos
       </mat-slide-toggle>
     </div>
 
-    <table mat-table [dataSource]="paginados()" class="tabla-responsiva cxp__tabla">
+    <table mat-table [dataSource]="paginados()" class="tabla-responsiva cxp__tabla" matSort
+      [matSortActive]="orden().active" [matSortDirection]="orden().direction" (matSortChange)="cambiarOrden($event)">
       <ng-container matColumnDef="proveedor">
-        <th mat-header-cell *matHeaderCellDef>Proveedor</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Proveedor</th>
         <td mat-cell *matCellDef="let p" data-label="Proveedor">
           <div class="cxp__proveedor">
             <a [routerLink]="['/cuentas-por-pagar', p.identificacion]">{{ p.nombre }}</a>
@@ -123,17 +115,17 @@
       </ng-container>
 
       <ng-container matColumnDef="facturas">
-        <th mat-header-cell *matHeaderCellDef class="cxp__num">Facturas</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc" class="cxp__num">Facturas</th>
         <td mat-cell *matCellDef="let p" data-label="Facturas" class="cxp__num">{{ p.facturas }}</td>
       </ng-container>
 
       <ng-container matColumnDef="pendiente">
-        <th mat-header-cell *matHeaderCellDef class="cxp__num">Por pagar</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc" class="cxp__num">Por pagar</th>
         <td mat-cell *matCellDef="let p" data-label="Por pagar" class="cxp__num">$ {{ p.pendiente | number: '1.0-0' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="vencido">
-        <th mat-header-cell *matHeaderCellDef class="cxp__num">Vencido</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc" class="cxp__num">Vencido</th>
         <td mat-cell *matCellDef="let p" data-label="Vencido" class="cxp__num">
           @if (p.vencido > 0) {
             <span class="cxp__vencido">$ {{ p.vencido | number: '1.0-0' }}</span>
@@ -145,7 +137,7 @@
       </ng-container>
 
       <ng-container matColumnDef="descuentos">
-        <th mat-header-cell *matHeaderCellDef class="cxp__num" matTooltip="Anticipos sin cruzar + pagos o notas crédito sin aplicar">Anticipos / a favor</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc" class="cxp__num" matTooltip="Anticipos sin cruzar + pagos o notas crédito sin aplicar">Anticipos / a favor</th>
         <td mat-cell *matCellDef="let p" data-label="Anticipos / a favor" class="cxp__num">
           @if (p.anticipos + p.saldoAFavor !== 0) {
             <span class="cxp__descuento">− $ {{ p.anticipos + p.saldoAFavor | number: '1.0-0' }}</span>
@@ -156,7 +148,7 @@
       </ng-container>
 
       <ng-container matColumnDef="neto">
-        <th mat-header-cell *matHeaderCellDef class="cxp__num">Neto a pagar</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc" class="cxp__num">Neto a pagar</th>
         <td mat-cell *matCellDef="let p" data-label="Neto a pagar" class="cxp__num">
           <strong [class.cxp__negativo]="p.neto < 0">$ {{ p.neto | number: '1.0-0' }}</strong>
           @if (p.enTramite > 0) {

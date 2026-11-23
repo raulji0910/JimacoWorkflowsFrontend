@@ -22,13 +22,13 @@ export class PagosService {
     return this.http.get<OrdenPagoPendiente[]>(`${this.baseUrl}/pendientes`);
   }
 
-  /** Paga como un lote: mismo banco y fecha, UN soporte PDF para todo (null si no sale plata). */
-  pagarLote(ids: number[], idCuentaBancoWO: number | null, fechaPago: string, soporte: File | null): Observable<LotePago> {
+  /** Paga como un lote: mismo banco y fecha, uno o varios soportes PDF (ninguno si no sale plata). */
+  pagarLote(ids: number[], idCuentaBancoWO: number | null, fechaPago: string, soportes: File[]): Observable<LotePago> {
     const datos = new FormData();
     datos.append('ids', ids.join(','));
     if (idCuentaBancoWO !== null) datos.append('idCuentaBancoWO', String(idCuentaBancoWO));
     datos.append('fechaPago', fechaPago);
-    if (soporte) datos.append('soporte', soporte, soporte.name);
+    for (const s of soportes) datos.append('soportes', s, s.name);
     return this.http.post<LotePago>(`${this.baseUrl}/lotes`, datos);
   }
 
@@ -44,7 +44,8 @@ export class PagosService {
     return this.http.get<Pagina<LotePago>>(`${this.baseUrl}/lotes`, { params: paramsFiltroPagos(filtro) });
   }
 
-  soporte(loteId: number): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/lotes/${loteId}/soporte`, { responseType: 'blob' });
+  /** Un soporte del lote (id 0 = el único de un lote anterior a 2026-11-23). */
+  soporte(loteId: number, soporteId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/lotes/${loteId}/soportes/${soporteId}`, { responseType: 'blob' });
   }
 }

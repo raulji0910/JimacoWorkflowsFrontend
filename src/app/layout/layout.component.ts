@@ -47,6 +47,8 @@ export class LayoutComponent {
   readonly puedeVerAlistamientoFerrealiados = this.authService.puedeVerAlistamientoFerrealiados();
   readonly puedeVerCuentasPorPagar = this.authService.puedeVerCuentasPorPagar();
   readonly puedePagarCuentas = this.authService.puedePagarCuentas();
+  readonly puedeVerPagos = this.authService.puedeVerPagos();
+  readonly puedeVerSeguimientoPagos = this.authService.puedeVerSeguimientoPagos();
   readonly version = environment.version;
 
   readonly esMovil = toSignal(

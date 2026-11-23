@@ -62,6 +62,28 @@ export const puedePagarCuentasGuard: CanActivateFn = () => {
   return false;
 };
 
+/** Menú "Pagos": el pagador o quien solo consulta (contable). */
+export const puedeVerPagosGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerPagos()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};
+
+/** Seguimiento de pagos: Gerencia Comercial o quien consulta pagos. */
+export const puedeVerSeguimientoPagosGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerSeguimientoPagos()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};
+
 export const puedeVerCuentasPorPagarGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);

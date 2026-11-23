@@ -208,3 +208,8 @@ $v90: #c62828;
 .cxp__relacion-texto {
   flex: 1 1 14rem;
 }
+
+// Encabezados de montos alineados a la derecha también con la flecha de orden (2026-11-23).
+th.cxp__num ::ng-deep .mat-sort-header-container {
+  justify-content: flex-end;
+}

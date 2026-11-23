@@ -2,6 +2,9 @@
   <div class="pag__header">
     <div>
       <h2>Pagos</h2>
+      @if (!puedePagar) {
+        <p class="pag__meta">Consulta de pagos: lotes pagados con sus comprobantes de egreso y soportes, y lo rechazado.</p>
+      }
       @if (pendientes(); as p) {
         <p class="pag__meta">
           {{ p.length }} {{ p.length === 1 ? 'orden' : 'órdenes' }} por pagar · $ {{ totalPendiente() | number: '1.0-0' }}
@@ -15,7 +18,8 @@
   </div>
 
   <mat-tab-group [selectedIndex]="pestana()" (selectedIndexChange)="pestana.set($event)" animationDuration="0ms">
-    <!-- ================= POR PAGAR ================= -->
+    <!-- ================= POR PAGAR (solo el pagador) ================= -->
+    @if (puedePagar) {
     <mat-tab label="Por pagar">
       @if (pendientes(); as p) {
         @if (!p.length) {
@@ -172,13 +176,34 @@
               </mat-form-field>
             </div>
             <div class="pag__soporte">
-              <button mat-stroked-button type="button" (click)="elegirArchivo()">
+              <button mat-stroked-button type="button" (click)="elegirArchivo()" [disabled]="archivos().length >= maximoSoportes">
                 <mat-icon>attach_file</mat-icon>
-                {{ archivo() ? 'Cambiar PDF' : 'Adjuntar soporte del pago (PDF)' }}
+                {{ archivos().length ? 'Agregar otro PDF' : 'Adjuntar soporte del pago (PDF)' }}
               </button>
-              <span class="pag__sub">{{ archivo()?.name ?? 'Un solo soporte para todo el lote' }}</span>
-              <input #inputArchivo type="file" accept=".pdf,application/pdf" hidden (change)="onArchivo($event)" />
+              <span class="pag__sub">
+                @if (archivos().length) {
+                  {{ archivos().length }} {{ archivos().length === 1 ? 'soporte' : 'soportes' }} para todo el lote
+                } @else {
+                  Obligatorio: al menos un PDF. Podés adjuntar varios (por ejemplo, una transferencia por banco).
+                }
+              </span>
+              <input #inputArchivo type="file" accept=".pdf,application/pdf" multiple hidden (change)="onArchivo($event)" />
             </div>
+            @if (archivos().length) {
+              <ul class="pag__archivos">
+                @for (a of archivos(); track a.name + a.size) {
+                  <li>
+                    <mat-icon inline>picture_as_pdf</mat-icon>
+                    <span class="pag__archivo-nombre">{{ a.name }}</span>
+                    <span class="pag__sub">{{ tamano(a.size) }}</span>
+                    <button mat-icon-button type="button" (click)="quitarArchivo(a)" [disabled]="enviando()"
+                      matTooltip="Quitar" [attr.aria-label]="'Quitar ' + a.name">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
           } @else {
             <p class="pag__sub">Los anticipos cubren todo: no sale plata, no hace falta banco ni soporte.</p>
             <mat-form-field appearance="outline">
@@ -208,6 +233,7 @@
         </div>
       }
     </mat-tab>
+    }
 
     <!-- ================= PAGADOS ================= -->
     <mat-tab label="Pagados">
@@ -226,13 +252,19 @@
                 </span>
               </div>
               <span class="pag__grupo-total">$ {{ l.total | number: '1.0-0' }}</span>
-              @if (l.tieneSoporte) {
-                <button mat-stroked-button (click)="verSoporte(l)">
-                  <mat-icon>picture_as_pdf</mat-icon>
-                  Soporte
-                </button>
-              }
             </header>
+            @if (soportesDe(l); as soportes) {
+              @if (soportes.length) {
+                <div class="pag__soportes-lote">
+                  @for (s of soportes; track s.id; let n = $index) {
+                    <button mat-stroked-button (click)="verSoporte(l, s)" [matTooltip]="s.nombreArchivo">
+                      <mat-icon>picture_as_pdf</mat-icon>
+                      {{ soportes.length === 1 ? 'Soporte' : 'Soporte ' + (n + 1) }}
+                    </button>
+                  }
+                </div>
+              }
+            }
             <ul class="pag__ordenes">
               @for (o of l.ordenes; track o.instanciaDocumentoId) {
                 <li class="pag__orden">

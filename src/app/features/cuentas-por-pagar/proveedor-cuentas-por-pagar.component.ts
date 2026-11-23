@@ -10,6 +10,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CuentasPorPagarService } from '../../core/services/cuentas-por-pagar.service';
 import { AnticipoPartida, DetalleProveedorCuentaPorPagar, EstadoPartida, PartidaCuentaPorPagar, RelacionBorrador } from '../../core/models/cuentas-por-pagar.model';
@@ -36,7 +37,8 @@ import { haceCuanto, textoVencimiento } from './cuentas-por-pagar.util';
     MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
-    MatChipsModule
+    MatChipsModule,
+    MatSortModule
   ],
   templateUrl: './proveedor-cuentas-por-pagar.component.html',
   styleUrl: './proveedor-cuentas-por-pagar.component.scss'
@@ -49,6 +51,24 @@ export class ProveedorCuentasPorPagarComponent implements OnInit {
   readonly columnas = ['seleccion', 'documento', 'facturaProveedor', 'fecha', 'vencimiento', 'saldo', 'estado'];
   readonly identificacion = this.route.snapshot.paramMap.get('identificacion') ?? '';
   readonly detalle = signal<DetalleProveedorCuentaPorPagar | null>(null);
+
+  // Orden con clic en los encabezados (2026-11-23): asc → desc → como llega (más vieja primero).
+  readonly orden = signal<Sort>({ active: '', direction: '' });
+  readonly partidasOrdenadas = computed<PartidaCuentaPorPagar[]>(() => {
+    const lista = this.detalle()?.partidas ?? [];
+    const orden = this.orden();
+    if (!orden.active || !orden.direction) return lista;
+    const signo = orden.direction === 'asc' ? 1 : -1;
+    return [...lista].sort((a, b) => {
+      const va = this.valorOrden(a, orden.active);
+      const vb = this.valorOrden(b, orden.active);
+      // Sin dato (sin vencimiento, sin factura del proveedor): siempre al final.
+      if (va === null || vb === null) return va === vb ? 0 : va === null ? 1 : -1;
+      const comparacion =
+        typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb), 'es', { numeric: true, sensitivity: 'base' });
+      return comparacion * signo;
+    });
+  });
   readonly error = signal<string | null>(null);
   readonly seleccionadas = signal<ReadonlySet<number>>(new Set());
   readonly guardando = signal(false);
@@ -162,6 +182,26 @@ export class ProveedorCuentasPorPagarComponent implements OnInit {
         );
       }
     });
+  }
+
+  /** El valor de cada columna para ordenar. Fechas ISO: se comparan bien como texto. */
+  private valorOrden(p: PartidaCuentaPorPagar, columna: string): string | number | null {
+    switch (columna) {
+      case 'documento':
+        return `${p.prefijo ?? ''} ${(p.numeroDocumento ?? '').padStart(12, '0')}`;
+      case 'facturaProveedor':
+        return p.numeroDocumentoExterno || null;
+      case 'fecha':
+        return p.fecha;
+      case 'vencimiento':
+        return p.vencimiento;
+      case 'saldo':
+        return p.pendiente;
+      case 'estado':
+        return this.estado(p);
+      default:
+        return null;
+    }
   }
 
   estado(p: PartidaCuentaPorPagar): EstadoPartida {

@@ -16,6 +16,8 @@ export interface Rol {
   puedePagarCuentas?: boolean;
   puedeGestionarAlistamientoFerrealiados?: boolean;
   puedeVerAlistamientoFerrealiados?: boolean;
+  // Consulta de pagos, solo lectura + reporte por correo de cada lote (2026-11-23) — ver Rol.PuedeConsultarPagos.
+  puedeConsultarPagos?: boolean;
 }
 
 export interface RolCrear {
@@ -30,6 +32,8 @@ export interface RolCrear {
   puedePagarCuentas?: boolean;
   puedeGestionarAlistamientoFerrealiados?: boolean;
   puedeVerAlistamientoFerrealiados?: boolean;
+  // Consulta de pagos, solo lectura + reporte por correo de cada lote (2026-11-23) — ver Rol.PuedeConsultarPagos.
+  puedeConsultarPagos?: boolean;
 }
 
 export interface RolActualizar {
@@ -45,4 +49,6 @@ export interface RolActualizar {
   puedePagarCuentas?: boolean;
   puedeGestionarAlistamientoFerrealiados?: boolean;
   puedeVerAlistamientoFerrealiados?: boolean;
+  // Consulta de pagos, solo lectura + reporte por correo de cada lote (2026-11-23) — ver Rol.PuedeConsultarPagos.
+  puedeConsultarPagos?: boolean;
 }

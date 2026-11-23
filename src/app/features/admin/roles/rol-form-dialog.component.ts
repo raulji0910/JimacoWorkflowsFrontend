@@ -34,6 +34,7 @@ export class RolFormDialogComponent {
   puedePagarCuentas = this.data.rol?.puedePagarCuentas ?? false;
   puedeGestionarAlistamientoFerrealiados = this.data.rol?.puedeGestionarAlistamientoFerrealiados ?? false;
   puedeVerAlistamientoFerrealiados = this.data.rol?.puedeVerAlistamientoFerrealiados ?? false;
+  puedeConsultarPagos = this.data.rol?.puedeConsultarPagos ?? false;
 
   guardar(): void {
     if (!this.nombre.trim()) return;
@@ -49,7 +50,8 @@ export class RolFormDialogComponent {
         puedeVerCuentasPorPagar: this.puedeVerCuentasPorPagar,
         puedePagarCuentas: this.puedePagarCuentas,
         puedeGestionarAlistamientoFerrealiados: this.puedeGestionarAlistamientoFerrealiados,
-        puedeVerAlistamientoFerrealiados: this.puedeVerAlistamientoFerrealiados
+        puedeVerAlistamientoFerrealiados: this.puedeVerAlistamientoFerrealiados,
+        puedeConsultarPagos: this.puedeConsultarPagos
       };
       this.dialogRef.close(dto);
     } else {
@@ -62,7 +64,8 @@ export class RolFormDialogComponent {
         puedeVerCuentasPorPagar: this.puedeVerCuentasPorPagar,
         puedePagarCuentas: this.puedePagarCuentas,
         puedeGestionarAlistamientoFerrealiados: this.puedeGestionarAlistamientoFerrealiados,
-        puedeVerAlistamientoFerrealiados: this.puedeVerAlistamientoFerrealiados
+        puedeVerAlistamientoFerrealiados: this.puedeVerAlistamientoFerrealiados,
+        puedeConsultarPagos: this.puedeConsultarPagos
       };
       this.dialogRef.close(dto);
     }

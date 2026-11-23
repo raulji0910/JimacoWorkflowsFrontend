@@ -99,6 +99,21 @@ export class AuthService {
     return this.sesion()?.puedePagarCuentas ?? false;
   }
 
+  /** Solo consulta los pagos (lotes con CE, soportes, rechazados) — ver Rol.PuedeConsultarPagos. */
+  puedeConsultarPagos(): boolean {
+    return this.sesion()?.puedeConsultarPagos ?? false;
+  }
+
+  /** Entra al menú "Pagos": quien paga, o quien solo consulta. */
+  puedeVerPagos(): boolean {
+    return this.puedePagarCuentas() || this.puedeConsultarPagos();
+  }
+
+  /** Seguimiento de pagos (solo lectura): quien ordena pagos o quien consulta pagos. */
+  puedeVerSeguimientoPagos(): boolean {
+    return this.puedeVerCuentasPorPagar() || this.puedeConsultarPagos();
+  }
+
   private leerSesionValida(): LoginResponse | null {
     const crudo = localStorage.getItem(CLAVE_STORAGE);
     if (!crudo) return null;

@@ -61,7 +61,18 @@
     </mat-slide-toggle>
     <p class="form-dialogo__ayuda">
       Menú "Pagos": recibe las relaciones de pago y los pagos extraordinarios, elige qué pagar como un
-      lote (un solo soporte) y rechaza lo que no. Pensado para Gerencia General.
+      lote (uno o varios soportes PDF) y rechaza lo que no. Pensado para Gerencia General.
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeConsultarPagos" name="puedeConsultarPagos">
+      Consulta de pagos (Contabilidad)
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Solo lectura: en "Pagos" ve los lotes pagados con sus comprobantes de egreso, soportes y
+      rechazados, y el Seguimiento de pagos; no puede pagar ni rechazar. Le llega por correo el
+      reporte de cada lote pagado, con los soportes y los CE.
     </p>
   </div>
 
