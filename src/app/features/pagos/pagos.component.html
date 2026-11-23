@@ -262,7 +262,7 @@
               }
               @if (loteTerminado(l)) {
                 <button mat-button class="pag__reporte" (click)="enviarReporte(l)" [disabled]="enviandoReporte() === l.id"
-                  matTooltip="Manda a Contabilidad el reporte del lote: terceros, facturas, CE, soportes y el PDF de cada orden">
+                  matTooltip="Manda a Contabilidad un correo con el lote: terceros, facturas y CE, con el o los soportes adjuntos">
                   <mat-icon>forward_to_inbox</mat-icon>
                   {{ enviandoReporte() === l.id ? 'Enviando…' : 'Enviar reporte a Contabilidad' }}
                 </button>
