@@ -253,18 +253,21 @@
               </div>
               <span class="pag__grupo-total">$ {{ l.total | number: '1.0-0' }}</span>
             </header>
-            @if (soportesDe(l); as soportes) {
-              @if (soportes.length) {
-                <div class="pag__soportes-lote">
-                  @for (s of soportes; track s.id; let n = $index) {
-                    <button mat-stroked-button (click)="verSoporte(l, s)" [matTooltip]="s.nombreArchivo">
-                      <mat-icon>picture_as_pdf</mat-icon>
-                      {{ soportes.length === 1 ? 'Soporte' : 'Soporte ' + (n + 1) }}
-                    </button>
-                  }
-                </div>
+            <div class="pag__soportes-lote">
+              @for (s of soportesDe(l); track s.id; let n = $index) {
+                <button mat-stroked-button (click)="verSoporte(l, s)" [matTooltip]="s.nombreArchivo">
+                  <mat-icon>picture_as_pdf</mat-icon>
+                  {{ soportesDe(l).length === 1 ? 'Soporte' : 'Soporte ' + (n + 1) }}
+                </button>
               }
-            }
+              @if (loteTerminado(l)) {
+                <button mat-button class="pag__reporte" (click)="enviarReporte(l)" [disabled]="enviandoReporte() === l.id"
+                  matTooltip="Manda a Contabilidad el reporte del lote: terceros, facturas, CE, soportes y el PDF de cada orden">
+                  <mat-icon>forward_to_inbox</mat-icon>
+                  {{ enviandoReporte() === l.id ? 'Enviando…' : 'Enviar reporte a Contabilidad' }}
+                </button>
+              }
+            </div>
             <ul class="pag__ordenes">
               @for (o of l.ordenes; track o.instanciaDocumentoId) {
                 <li class="pag__orden">

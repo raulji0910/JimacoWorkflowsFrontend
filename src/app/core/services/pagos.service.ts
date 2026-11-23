@@ -44,6 +44,11 @@ export class PagosService {
     return this.http.get<Pagina<LotePago>>(`${this.baseUrl}/lotes`, { params: paramsFiltroPagos(filtro) });
   }
 
+  /** Manda (o reenvía) a Contabilidad el reporte de un lote ya terminado. */
+  enviarReporteContabilidad(loteId: number): Observable<{ enviados: number }> {
+    return this.http.post<{ enviados: number }>(`${this.baseUrl}/lotes/${loteId}/reporte-contabilidad`, {});
+  }
+
   /** Un soporte del lote (id 0 = el único de un lote anterior a 2026-11-23). */
   soporte(loteId: number, soporteId: number): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/lotes/${loteId}/soportes/${soporteId}`, { responseType: 'blob' });

@@ -85,6 +85,8 @@ export class PagosComponent implements OnInit {
   readonly filtroRechazados = signal<ValorFiltroPagos>(filtroInicial());
   readonly cargandoRechazados = signal(false);
   readonly pestana = signal(0);
+  /** Lote cuyo reporte a Contabilidad se está mandando (para deshabilitar el botón mientras tanto). */
+  readonly enviandoReporte = signal<number | null>(null);
   readonly seleccion = signal<ReadonlySet<number>>(new Set());
   readonly expandidas = signal<ReadonlySet<number>>(new Set());
 
@@ -413,6 +415,25 @@ export class PagosComponent implements OnInit {
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
       },
       error: () => this.avisar('No se pudo abrir el soporte.')
+    });
+  }
+
+  /** El reporte sale solo cuando cada orden tiene su CE (o quedó con conflicto). */
+  loteTerminado(lote: LotePago): boolean {
+    return lote.ordenes.every((o) => o.numeroCE !== null || !!o.conflictoCreacionCE);
+  }
+
+  enviarReporte(lote: LotePago): void {
+    this.enviandoReporte.set(lote.id);
+    this.pagos.enviarReporteContabilidad(lote.id).subscribe({
+      next: (r) => {
+        this.enviandoReporte.set(null);
+        this.avisar(`Reporte del lote ${lote.numero} enviado a Contabilidad (${r.enviados} ${r.enviados === 1 ? 'persona' : 'personas'}), con los soportes y los CE.`);
+      },
+      error: (e: { error?: { mensaje?: string } }) => {
+        this.enviandoReporte.set(null);
+        this.avisar(e.error?.mensaje ?? 'No se pudo enviar el reporte.');
+      }
     });
   }
 
