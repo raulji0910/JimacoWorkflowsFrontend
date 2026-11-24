@@ -93,3 +93,14 @@ export const puedeVerCuentasPorPagarGuard: CanActivateFn = () => {
   router.navigate(['/pendientes']);
   return false;
 };
+
+/** Conciliación de facturas de proveedor vs OC (rol Conciliador, 2026-11-24). */
+export const puedeVerConciliacionGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerConciliacion()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};

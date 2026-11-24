@@ -1,0 +1,95 @@
+<div mat-dialog-title class="obs__titulo">
+  <div>
+    <span class="obs__sobretitulo">Revisión de factura</span>
+    <h2>
+      Factura {{ factura()?.numero ?? '…' }}
+      @if (factura()?.revisada) {
+        <span class="obs__marca"><mat-icon>task_alt</mat-icon> Revisada</span>
+      }
+    </h2>
+    @if (factura(); as f) {
+      <span class="obs__proveedor">{{ f.nombreProveedor }} · NIT {{ f.nitProveedor }} · {{ f.fechaEmision | date: 'dd/MM/yyyy' }}</span>
+    }
+  </div>
+  <button mat-icon-button aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content>
+  @if (!factura() && !error()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (factura(); as f) {
+    <div class="obs__cifras">
+      <div><span>Subtotal factura</span><strong>{{ f.subtotal | currency: 'COP' : 'symbol' : '1.0-0' }}</strong></div>
+      <div><span>IVA</span><strong>{{ f.iva | currency: 'COP' : 'symbol' : '1.0-0' }}</strong></div>
+      <div><span>Total</span><strong>{{ f.subtotal + f.iva | currency: 'COP' : 'symbol' : '1.0-0' }}</strong></div>
+    </div>
+
+    <div class="obs__nueva">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ etiquetaCampo(f.revisada) }}</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          maxlength="2000"
+          [(ngModel)]="texto"
+          (ngModelChange)="faltaTexto.set(false)"
+          [placeholder]="cambiarMarca ? 'Ej.: el proveedor subió el precio, autorizado por gerencia' : 'Qué se encontró al revisar esta factura'"
+        ></textarea>
+        <mat-hint align="end">{{ texto.length }}/2000</mat-hint>
+      </mat-form-field>
+      @if (faltaTexto()) {
+        <p class="obs__error obs__error--campo">
+          <mat-icon>error</mat-icon>
+          {{ cambiarMarca ? 'Escribe el motivo: es obligatorio para ' + (f.revisada ? 'quitar' : 'poner') + ' la marca.' : 'Escribe la observación.' }}
+        </p>
+      }
+      <div class="obs__acciones">
+        <mat-checkbox [(ngModel)]="cambiarMarca">
+          {{ f.revisada ? 'Quitar la marca "Revisada"' : 'Marcar como "Revisada"' }}
+        </mat-checkbox>
+        <button mat-flat-button (click)="guardar()" [disabled]="guardando()">
+          <mat-icon>{{ cambiarMarca ? (f.revisada ? 'remove_done' : 'task_alt') : 'add_comment' }}</mat-icon>
+          {{ guardando() ? 'Guardando…' : textoBoton(f.revisada) }}
+        </button>
+      </div>
+      <p class="obs__ayuda">
+        Las observaciones no se editan ni se borran: si algo cambia, agrega otra. Marcarla como revisada no cambia el resultado del
+        cruce, solo la saca de "Sin revisar".
+      </p>
+    </div>
+
+    @if (error()) {
+      <p class="obs__error"><mat-icon>error</mat-icon> {{ error() }}</p>
+    }
+
+    <h3>Historial ({{ f.historial.length }})</h3>
+    @if (f.historial.length === 0) {
+      <p class="obs__vacio">Todavía nadie ha revisado esta factura.</p>
+    } @else {
+      <ol class="obs__historial">
+        @for (h of f.historial; track h.id) {
+          <li [class]="'obs__entrada obs__entrada--' + h.tipo.toLowerCase()">
+            <div class="obs__cabecera">
+              <strong>{{ h.nombreUsuario }}</strong>
+              <span>{{ h.fecha | date: 'dd/MM/yyyy h:mm a' }}</span>
+              @if (h.tipo !== 'Observacion') {
+                <span class="obs__tipo">{{ etiquetas[h.tipo] }}</span>
+              }
+            </div>
+            <p>{{ h.texto }}</p>
+          </li>
+        }
+      </ol>
+    }
+  } @else if (error()) {
+    <p class="obs__error"><mat-icon>error</mat-icon> {{ error() }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cerrar()">Cerrar</button>
+</mat-dialog-actions>

@@ -77,6 +77,17 @@
   </div>
 
   <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeVerConciliacion" name="puedeVerConciliacion">
+      Conciliador
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Menú "Conciliación": cruza las facturas electrónicas de los proveedores (XML del correo de
+      facturación o ZIP de la DIAN) contra las OC de World Office. Carga ZIP de la DIAN, descarga XML y
+      deja observaciones en OC sin factura y en facturas parciales o con diferencia.
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
     <mat-slide-toggle [(ngModel)]="puedeGestionarAlistamientoFerrealiados" name="puedeGestionarAlistamientoFerrealiados">
       Puede gestionar el alistamiento de Ferrealiados
     </mat-slide-toggle>

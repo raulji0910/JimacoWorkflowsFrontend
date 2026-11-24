@@ -23,4 +23,6 @@ export interface LoginResponse {
   puedeVerAlistamientoFerrealiados?: boolean;
   // Consulta de pagos, solo lectura (contable, 2026-11-23) — ver Rol.PuedeConsultarPagos en el backend.
   puedeConsultarPagos?: boolean;
+  // Conciliación de facturas de proveedor vs OC (2026-11-24) — ver Rol.PuedeVerConciliacion en el backend.
+  puedeVerConciliacion?: boolean;
 }

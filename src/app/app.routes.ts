@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerAlistamientoFerrealiadosGuard, puedeVerCuentasPorPagarGuard, puedeVerPagosGuard, puedeVerSeguimientoPagosGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerAlistamientoFerrealiadosGuard, puedeVerCuentasPorPagarGuard, puedeVerPagosGuard, puedeVerSeguimientoPagosGuard, puedeVerConciliacionGuard } from './core/guards/auth.guard';
 import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 
 export const routes: Routes = [
@@ -93,6 +93,12 @@ export const routes: Routes = [
         path: 'pagos',
         loadComponent: () => import('./features/pagos/pagos.component').then((m) => m.PagosComponent),
         canActivate: [puedeVerPagosGuard]
+      },
+      {
+        // Conciliación de facturas de proveedor (XML DIAN) vs OC de World Office (2026-11-24).
+        path: 'conciliacion',
+        loadComponent: () => import('./features/conciliacion/conciliacion.component').then((m) => m.ConciliacionComponent),
+        canActivate: [puedeVerConciliacionGuard]
       },
       {
         path: 'cuentas-por-pagar/:identificacion',

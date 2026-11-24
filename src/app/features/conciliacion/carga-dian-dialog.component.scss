@@ -1,0 +1,315 @@
+:host {
+  --verde: #2e7d32;
+  --gris: var(--mat-sys-on-surface-variant);
+  --rojo: var(--mat-sys-error);
+}
+
+.carga {
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-right: 0.5rem !important;
+
+    h2 {
+      margin: 0;
+      font: var(--mat-sys-headline-small);
+      color: var(--mat-sys-on-surface);
+    }
+  }
+
+  &__sobretitulo {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mat-sys-on-surface-variant);
+    line-height: 1.4;
+  }
+
+  &__cerrar {
+    margin-left: auto;
+  }
+
+  &__ayuda {
+    margin: 0 0 1rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__zona {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 1.75rem 1rem;
+    border: 2px dashed var(--mat-sys-outline-variant);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--mat-sys-on-surface);
+    transition: border-color 120ms, background-color 120ms;
+
+    mat-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 40px;
+      color: var(--mat-sys-primary);
+    }
+
+    small {
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    &:hover,
+    &--activa {
+      border-color: var(--mat-sys-primary);
+      background-color: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+    }
+  }
+
+  &__mensaje {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 0.75rem 0 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+
+    mat-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      font-size: 20px;
+    }
+
+    &--aviso {
+      color: var(--mat-sys-on-surface);
+      background-color: var(--mat-sys-surface-container);
+    }
+
+    &--error {
+      color: var(--rojo);
+      background-color: color-mix(in srgb, var(--rojo) 10%, transparent);
+    }
+  }
+
+  &__avisos ul {
+    margin: 0;
+    padding-left: 1rem;
+    max-height: 7rem;
+    overflow: auto;
+  }
+
+  &__lista-encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__lista {
+    margin: 0.25rem 0 0;
+    padding: 0;
+    list-style: none;
+    max-height: 16rem;
+    overflow: auto;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 8px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0 0.25rem 0 0.75rem;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      > mat-icon {
+        flex-shrink: 0;
+        color: var(--mat-sys-on-surface-variant);
+      }
+
+      small {
+        flex-shrink: 0;
+        color: var(--mat-sys-on-surface-variant);
+      }
+    }
+  }
+
+  &__nombre {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__progreso {
+    padding: 2rem 0;
+
+    p {
+      margin: 0 0 0.75rem;
+    }
+  }
+
+  &__resumen {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  &__cifra {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border-left: 4px solid var(--acento);
+    background-color: color-mix(in srgb, var(--acento) 8%, var(--mat-sys-surface));
+
+    mat-icon {
+      grid-row: span 2;
+      color: var(--acento);
+    }
+
+    strong {
+      font-size: 1.5rem;
+      line-height: 1.2;
+    }
+
+    span {
+      font-size: 0.85rem;
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    &--nueva { --acento: var(--verde); }
+    &--duplicada { --acento: var(--gris); }
+    &--rechazada { --acento: var(--rojo); }
+  }
+
+  &__secundario {
+    margin: 0.75rem 0 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__tabla-contenedor {
+    margin-top: 1rem;
+    max-height: 22rem;
+    overflow: auto;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 8px;
+  }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+
+    th,
+    td {
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface-variant);
+      background-color: var(--mat-sys-surface-container-high);
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+  }
+
+  &__num {
+    text-align: right !important;
+    white-space: nowrap;
+  }
+
+  &__celda {
+    display: flex;
+    flex-direction: column;
+
+    small {
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+
+  &__estado {
+    display: inline-block;
+    padding: 0 0.5rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--acento);
+    background-color: color-mix(in srgb, var(--acento) 12%, transparent);
+
+    &--nueva { --acento: var(--verde); }
+    &--duplicada { --acento: var(--gris); }
+    &--otroreceptor,
+    &--noreconocida { --acento: var(--rojo); }
+  }
+
+  &__origen {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// En celular: las tres cifras en una fila (sin ícono) y la tabla solo con proveedor, factura y
+// resultado, para que el estado no quede escondido a la derecha.
+@media (max-width: 600px) {
+  .carga__resumen {
+    gap: 0.5rem;
+  }
+
+  .carga__cifra {
+    grid-template-columns: 1fr;
+    padding: 0.5rem 0.6rem;
+
+    mat-icon {
+      display: none;
+    }
+
+    strong {
+      font-size: 1.25rem;
+    }
+
+    span {
+      font-size: 0.75rem;
+      line-height: 1.2;
+    }
+  }
+
+  .carga__opcional {
+    display: none;
+  }
+
+  .carga__tabla th,
+  .carga__tabla td {
+    padding: 0.45rem 0.5rem;
+  }
+}

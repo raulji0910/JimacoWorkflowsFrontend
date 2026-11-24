@@ -60,6 +60,13 @@
         </a>
       }
 
+      @if (puedeVerConciliacion) {
+        <a mat-list-item routerLink="/conciliacion" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>receipt_long</mat-icon>
+          <span matListItemTitle>Conciliación</span>
+        </a>
+      }
+
       @if (esAdmin) {
         <mat-divider class="layout__divisor" />
         <a mat-list-item routerLink="/admin/roles" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">

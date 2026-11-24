@@ -18,6 +18,8 @@ export interface Rol {
   puedeVerAlistamientoFerrealiados?: boolean;
   // Consulta de pagos, solo lectura + reporte por correo de cada lote (2026-11-23) — ver Rol.PuedeConsultarPagos.
   puedeConsultarPagos?: boolean;
+  // Conciliación de facturas de proveedor vs OC (2026-11-24) — ver Rol.PuedeVerConciliacion en el backend.
+  puedeVerConciliacion?: boolean;
 }
 
 export interface RolCrear {
@@ -34,6 +36,8 @@ export interface RolCrear {
   puedeVerAlistamientoFerrealiados?: boolean;
   // Consulta de pagos, solo lectura + reporte por correo de cada lote (2026-11-23) — ver Rol.PuedeConsultarPagos.
   puedeConsultarPagos?: boolean;
+  // Conciliación de facturas de proveedor vs OC (2026-11-24) — ver Rol.PuedeVerConciliacion en el backend.
+  puedeVerConciliacion?: boolean;
 }
 
 export interface RolActualizar {
@@ -51,4 +55,6 @@ export interface RolActualizar {
   puedeVerAlistamientoFerrealiados?: boolean;
   // Consulta de pagos, solo lectura + reporte por correo de cada lote (2026-11-23) — ver Rol.PuedeConsultarPagos.
   puedeConsultarPagos?: boolean;
+  // Conciliación de facturas de proveedor vs OC (2026-11-24) — ver Rol.PuedeVerConciliacion en el backend.
+  puedeVerConciliacion?: boolean;
 }

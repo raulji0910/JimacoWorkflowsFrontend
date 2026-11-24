@@ -1,0 +1,188 @@
+<div mat-dialog-title class="carga__titulo">
+  <div>
+    <span class="carga__sobretitulo">Conciliación</span>
+    <h2>Cargar facturas de la DIAN</h2>
+  </div>
+  <button mat-icon-button aria-label="Cerrar" class="carga__cerrar" (click)="cerrar()" [disabled]="paso() === 'subiendo'">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content>
+  @switch (paso()) {
+    @case ('seleccion') {
+      <p class="carga__ayuda">
+        Sube los ZIP que descargaste del portal de la DIAN; puedes seleccionar <strong>varios a la vez</strong>.
+        También sirven XML sueltos o un ZIP que contenga otros ZIP. Las facturas que ya estaban (por ejemplo,
+        porque llegaron al correo) no se duplican.
+      </p>
+
+      <label
+        class="carga__zona"
+        [class.carga__zona--activa]="arrastrando()"
+        (dragover)="alArrastrar($event, true)"
+        (dragleave)="alArrastrar($event, false)"
+        (drop)="alSoltar($event)"
+      >
+        <mat-icon>cloud_upload</mat-icon>
+        <span><strong>Arrastra aquí los archivos</strong> o haz clic para elegirlos</span>
+        <small>.zip o .xml · varios a la vez</small>
+        <input type="file" multiple accept=".zip,.xml" (change)="alSeleccionar($event)" />
+      </label>
+
+      @if (omitidos().length) {
+        <p class="carga__mensaje carga__mensaje--aviso">
+          <mat-icon>info</mat-icon>
+          Se omitieron {{ omitidos().length }} archivo(s) que no son .zip ni .xml: {{ omitidos().join(', ') }}
+        </p>
+      }
+
+      @if (error()) {
+        <p class="carga__mensaje carga__mensaje--error">
+          <mat-icon>error</mat-icon>
+          {{ error() }}
+        </p>
+      }
+
+      @if (archivos().length) {
+        <div class="carga__lista-encabezado">
+          <span>
+            <strong>{{ archivos().length }}</strong> {{ archivos().length === 1 ? 'archivo' : 'archivos' }}
+            · {{ tamanoTotal() / 1048576 | number: '1.1-1' }} MB
+          </span>
+          <button mat-button (click)="limpiar()">
+            <mat-icon>delete_sweep</mat-icon>
+            Quitar todos
+          </button>
+        </div>
+        @if (excede()) {
+          <p class="carga__mensaje carga__mensaje--error">
+            <mat-icon>error</mat-icon>
+            Máximo 500 archivos y 55 MB por carga. Quita algunos y cárgalos en otra tanda.
+          </p>
+        }
+        <ul class="carga__lista">
+          @for (a of archivos(); track a) {
+            <li>
+              <mat-icon>{{ a.name.toLowerCase().endsWith('.zip') ? 'folder_zip' : 'description' }}</mat-icon>
+              <span class="carga__nombre" [matTooltip]="a.name">{{ a.name }}</span>
+              <small>{{ a.size / 1024 | number: '1.0-0' }} KB</small>
+              <button mat-icon-button aria-label="Quitar" (click)="quitar(a)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    }
+
+    @case ('subiendo') {
+      <div class="carga__progreso">
+        @if (avance() < 100) {
+          <p>Subiendo {{ archivos().length }} archivo(s)… {{ avance() }}%</p>
+          <mat-progress-bar mode="determinate" [value]="avance()" />
+        } @else {
+          <p>Leyendo las facturas…</p>
+          <mat-progress-bar mode="indeterminate" />
+        }
+      </div>
+    }
+
+    @case ('resultado') {
+      @if (resultado(); as r) {
+        <div class="carga__resumen">
+          <div class="carga__cifra carga__cifra--nueva">
+            <mat-icon>check_circle</mat-icon>
+            <strong>{{ r.nuevas }}</strong>
+            <span>{{ r.nuevas === 1 ? 'factura nueva' : 'facturas nuevas' }}</span>
+          </div>
+          <div class="carga__cifra carga__cifra--duplicada">
+            <mat-icon>content_copy</mat-icon>
+            <strong>{{ r.duplicadas }}</strong>
+            <span>ya estaban</span>
+          </div>
+          <div class="carga__cifra carga__cifra--rechazada">
+            <mat-icon>block</mat-icon>
+            <strong>{{ rechazadas() }}</strong>
+            <span>rechazadas</span>
+          </div>
+        </div>
+        <p class="carga__secundario">
+          {{ r.archivos }} {{ r.archivos === 1 ? 'archivo leído' : 'archivos leídos' }}.
+          @if (r.nuevas > 0) {
+            Las facturas nuevas ya entran al cruce con las OC.
+          }
+        </p>
+
+        @if (r.avisos.length) {
+          <div class="carga__mensaje carga__mensaje--aviso carga__avisos">
+            <mat-icon>info</mat-icon>
+            <ul>
+              @for (aviso of r.avisos; track $index) {
+                <li>{{ aviso }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (facturasOrdenadas().length) {
+          <div class="carga__tabla-contenedor">
+            <table class="carga__tabla">
+              <thead>
+                <tr>
+                  <th>Proveedor</th>
+                  <th>Factura</th>
+                  <th class="carga__opcional">Fecha</th>
+                  <th class="carga__num carga__opcional">Total</th>
+                  <th>Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (f of facturasOrdenadas(); track $index) {
+                  <tr>
+                    <td>
+                      <div class="carga__celda">
+                        {{ f.nombreProveedor || '—' }}
+                        <small>{{ f.nitProveedor ? 'NIT ' + f.nitProveedor : f.nombreArchivo }}</small>
+                      </div>
+                    </td>
+                    <td>{{ f.numero || '—' }}</td>
+                    <td class="carga__opcional">{{ f.fechaEmision ? (f.fechaEmision | date: 'dd/MM/yyyy') : '—' }}</td>
+                    <td class="carga__num carga__opcional">{{ f.total !== null ? (f.total | currency: 'COP' : 'symbol' : '1.0-0') : '—' }}</td>
+                    <td>
+                      <span class="carga__estado" [class]="'carga__estado carga__estado--' + f.estado.toLowerCase()">
+                        {{ etiquetasEstado[f.estado] }}
+                      </span>
+                      @if (f.origenExistente) {
+                        <small class="carga__origen">{{ etiquetasOrigen[f.origenExistente] }}</small>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  @switch (paso()) {
+    @case ('seleccion') {
+      <button mat-button (click)="cerrar()">Cancelar</button>
+      <button mat-flat-button (click)="cargar()" [disabled]="!archivos().length || excede()">
+        <mat-icon>upload</mat-icon>
+        Cargar {{ archivos().length || '' }}
+      </button>
+    }
+    @case ('resultado') {
+      <button mat-button (click)="otraCarga()">
+        <mat-icon>add</mat-icon>
+        Cargar más
+      </button>
+      <button mat-flat-button (click)="cerrar()">Listo</button>
+    }
+  }
+</mat-dialog-actions>

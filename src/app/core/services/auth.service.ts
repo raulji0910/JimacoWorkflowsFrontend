@@ -104,6 +104,11 @@ export class AuthService {
     return this.sesion()?.puedeConsultarPagos ?? false;
   }
 
+  /** Menú Conciliación (rol Conciliador) — ver Rol.PuedeVerConciliacion. */
+  puedeVerConciliacion(): boolean {
+    return this.sesion()?.puedeVerConciliacion ?? false;
+  }
+
   /** Entra al menú "Pagos": quien paga, o quien solo consulta. */
   puedeVerPagos(): boolean {
     return this.puedePagarCuentas() || this.puedeConsultarPagos();
