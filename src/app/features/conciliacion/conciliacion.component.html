@@ -1,0 +1,517 @@
+<div class="conciliacion">
+  <header class="conciliacion__header">
+    <div>
+      <h2>Conciliación de facturas</h2>
+      <p class="conciliacion__descripcion">
+        Facturas electrónicas del correo de facturación y de los ZIP de la DIAN, cruzadas contra las órdenes de compra de World Office
+        (NIT del proveedor, subtotal e IVA).
+      </p>
+    </div>
+    @if (conciliacion(); as datos) {
+      <div class="conciliacion__sincronizacion">
+        <span matTooltip="Última vez que el Sincronizador subió facturas del correo">
+          <mat-icon>mail</mat-icon>
+          {{ datos.ultimaFacturaRecibida ? (datos.ultimaFacturaRecibida | date: 'dd/MM h:mm a') : 'Sin facturas' }}
+        </span>
+        <span matTooltip="Última vez que el Sincronizador trajo las OC de World Office">
+          <mat-icon>sync</mat-icon>
+          {{ datos.ultimaSincronizacionOrdenes ? (datos.ultimaSincronizacionOrdenes | date: 'dd/MM h:mm a') : 'Nunca' }}
+        </span>
+      </div>
+    }
+  </header>
+
+  <section class="conciliacion__panel conciliacion__filtros">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="conciliacion__campo--rango">
+      <mat-label>Fecha de factura</mat-label>
+      <mat-date-range-input [rangePicker]="rango">
+        <input matStartDate [(ngModel)]="desde" placeholder="Desde" />
+        <input matEndDate [(ngModel)]="hasta" placeholder="Hasta" />
+      </mat-date-range-input>
+      <mat-datepicker-toggle matIconSuffix [for]="rango" />
+      <mat-date-range-picker #rango />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="conciliacion__campo--proveedor">
+      <mat-label>Proveedor o NIT</mat-label>
+      <mat-icon matPrefix>storefront</mat-icon>
+      <input matInput [ngModel]="proveedor()" (ngModelChange)="cambiarTexto('proveedor', $event)" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="conciliacion__campo--corto">
+      <mat-label>N.° OC</mat-label>
+      <input matInput inputmode="numeric" [ngModel]="numeroOc()" (ngModelChange)="cambiarTexto('numeroOc', $event)" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="conciliacion__campo--corto">
+      <mat-label>N.° factura</mat-label>
+      <input matInput [ngModel]="numeroFactura()" (ngModelChange)="cambiarTexto('numeroFactura', $event)" />
+    </mat-form-field>
+
+    <div class="conciliacion__acciones">
+      @if (hayFiltrosTexto()) {
+        <button mat-button (click)="limpiarFiltros()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Limpiar
+        </button>
+      }
+      @if (puedeCargar) {
+        <button mat-stroked-button (click)="abrirCargaDian()" matTooltip="Subir los ZIP de facturas descargados del portal de la DIAN">
+          <mat-icon>upload_file</mat-icon>
+          Cargar ZIP DIAN
+        </button>
+      }
+      <button mat-stroked-button (click)="todoElAnio()" [disabled]="cargando()" matTooltip="Desde el 1 de enero hasta hoy">
+        <mat-icon>calendar_month</mat-icon>
+        Todo el año
+      </button>
+      <button mat-flat-button (click)="cargar()" [disabled]="cargando()">
+        <mat-icon>refresh</mat-icon>
+        Consultar
+      </button>
+    </div>
+  </section>
+
+  @if (cargando()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (conciliacion()) {
+    <section class="conciliacion__tarjetas">
+      @for (t of tarjetas(); track t.filtro) {
+        <button
+          type="button"
+          class="conciliacion__tarjeta"
+          [class]="'conciliacion__tarjeta conciliacion__tarjeta--' + t.filtro.toLowerCase()"
+          [class.conciliacion__tarjeta--activa]="filtro() === t.filtro"
+          [attr.aria-pressed]="filtro() === t.filtro"
+          (click)="seleccionar(t.filtro)"
+        >
+          <span class="conciliacion__tarjeta-titulo">
+            <mat-icon>{{ t.icono }}</mat-icon>
+            {{ t.titulo }}
+          </span>
+          <span class="conciliacion__tarjeta-cantidad">{{ t.cantidad | number }}</span>
+          <span class="conciliacion__tarjeta-valor">
+            {{ t.valor | currency: 'COP' : 'symbol' : '1.0-0' }}
+            @if (t.filtro === 'Todas' && t.cantidad) {
+              · {{ porcentajeCuadran() | percent }} cuadra
+            }
+            @if (t.filtro === 'OrdenesPendientes') {
+              por facturar
+            }
+            @if (t.filtro === 'FacturadasSinXml') {
+              falta el XML
+            }
+          </span>
+        </button>
+      }
+    </section>
+
+    @if (cantidadInvalidas() > 0 && filtro() !== 'ReferenciasInvalidas') {
+      <button type="button" class="conciliacion__aviso" (click)="seleccionar('ReferenciasInvalidas')">
+        <mat-icon>report</mat-icon>
+        <span>
+          <strong>{{ cantidadInvalidas() }} {{ cantidadInvalidas() === 1 ? 'OC mal citada' : 'OC mal citadas' }}</strong>
+          en facturas de compra de World Office: la OC escrita por Contabilidad es de otro proveedor o no existe.
+        </span>
+        <span class="conciliacion__aviso-accion">Revisar</span>
+      </button>
+    }
+
+    <section class="conciliacion__panel conciliacion__tabla">
+      @if (filtro() === 'OrdenesPendientes') {
+        <div class="conciliacion__revision" role="group" aria-label="Filtrar por revisión">
+          <span>Revisión:</span>
+          @for (r of opcionesRevision; track r.valor) {
+            <button
+              type="button"
+              class="conciliacion__chip"
+              [class.conciliacion__chip--activo]="revision() === r.valor"
+              [attr.aria-pressed]="revision() === r.valor"
+              (click)="cambiarRevision(r.valor)"
+            >
+              {{ r.titulo }} ({{ conteoRevision()[r.valor] }})
+            </button>
+          }
+          <span class="conciliacion__secundario">Haz clic en una OC para ver o agregar observaciones.</span>
+        </div>
+        @if (totalFilas() === 0) {
+          <p class="conciliacion__vacio">
+            <mat-icon>inbox</mat-icon>
+            No hay órdenes de compra pendientes de factura con estos filtros.
+          </p>
+        } @else {
+          <table
+            mat-table
+            [dataSource]="paginaOrdenes()"
+            class="tabla-responsiva"
+            matSort
+            [matSortActive]="ordenOrdenes().active"
+            [matSortDirection]="ordenOrdenes().direction"
+            (matSortChange)="ordenar('ordenes', $event)"
+          >
+            <ng-container matColumnDef="fecha">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha OC</th>
+              <td mat-cell *matCellDef="let oc" data-label="Fecha OC">{{ oc.fecha | date: 'dd/MM/yyyy' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="dias">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Antigüedad</th>
+              <td mat-cell *matCellDef="let oc" data-label="Antigüedad">
+                <span class="conciliacion__antiguedad" [class.conciliacion__antiguedad--alerta]="diasDesde(oc) > 30">
+                  {{ diasDesde(oc) }} días
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="proveedor">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Proveedor</th>
+              <td mat-cell *matCellDef="let oc" data-label="Proveedor">
+                <div class="conciliacion__proveedor">
+                  {{ oc.nombreProveedor }}
+                  <span class="conciliacion__secundario">NIT {{ oc.nitProveedor }}</span>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="oc">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>OC</th>
+              <td mat-cell *matCellDef="let oc" data-label="OC">
+                <div class="conciliacion__proveedor">
+                  <span class="conciliacion__oc">{{ oc.numero }}</span>
+                  @if (oc.emisor) {
+                    <span class="conciliacion__emisor-oc" matTooltip="Emisor de la OC"><mat-icon>person</mat-icon>{{ oc.emisor }}</span>
+                  }
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="subtotal">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="conciliacion__num">Subtotal OC</th>
+              <td mat-cell *matCellDef="let oc" data-label="Subtotal OC" class="conciliacion__num">{{ oc.subtotal | currency: 'COP' : 'symbol' : '1.0-0' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="saldo">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="conciliacion__num">Saldo sin facturar</th>
+              <td mat-cell *matCellDef="let oc" data-label="Saldo sin facturar" class="conciliacion__num conciliacion__fuerte">
+                {{ oc.saldoSubtotal | currency: 'COP' : 'symbol' : '1.0-0' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="revision">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Revisión</th>
+              <td mat-cell *matCellDef="let oc" data-label="Revisión">
+                @if (oc.noRequiereFactura) {
+                  <span class="conciliacion__revisada conciliacion__revisada--no-requiere" [matTooltip]="oc.ultimaObservacion ?? ''">
+                    <mat-icon>task_alt</mat-icon> No requiere factura
+                  </span>
+                } @else if (oc.observaciones > 0) {
+                  <span class="conciliacion__revisada" [matTooltip]="oc.ultimaObservacion ?? ''">
+                    <mat-icon>check_circle</mat-icon> {{ oc.observaciones }} {{ oc.observaciones === 1 ? 'observación' : 'observaciones' }}
+                  </span>
+                } @else {
+                  <span class="conciliacion__secundario">Sin revisar</span>
+                }
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnasOrdenes; sticky: true"></tr>
+            <tr mat-row *matRowDef="let oc; columns: columnasOrdenes" class="conciliacion__fila" (click)="verObservaciones(oc)"></tr>
+          </table>
+        }
+      } @else if (filtro() === 'FacturadasSinXml') {
+        <p class="conciliacion__explicacion">
+          <mat-icon>info</mat-icon>
+          Contabilidad ya registró la factura en World Office con estas OC, pero el XML no llegó al correo de facturación.
+          Búscalo en la DIAN por el número de factura del proveedor y cárgalo.
+        </p>
+        @if (totalFilas() === 0) {
+          <p class="conciliacion__vacio">
+            <mat-icon>inbox</mat-icon>
+            No hay OC facturadas sin XML con estos filtros.
+          </p>
+        } @else {
+          <table
+            mat-table
+            [dataSource]="paginaFacturadas()"
+            class="tabla-responsiva"
+            matSort
+            [matSortActive]="ordenFacturadas().active"
+            [matSortDirection]="ordenFacturadas().direction"
+            (matSortChange)="ordenar('facturadas', $event)"
+          >
+            <ng-container matColumnDef="fecha">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha OC</th>
+              <td mat-cell *matCellDef="let o" data-label="Fecha OC">{{ o.fecha | date: 'dd/MM/yyyy' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="proveedor">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Proveedor</th>
+              <td mat-cell *matCellDef="let o" data-label="Proveedor">
+                <div class="conciliacion__proveedor">
+                  {{ o.nombreProveedor }}
+                  <span class="conciliacion__secundario">NIT {{ o.nitProveedor }}</span>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="oc">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>OC</th>
+              <td mat-cell *matCellDef="let o" data-label="OC">
+                <div class="conciliacion__proveedor">
+                  <span class="conciliacion__oc">{{ o.numero }}</span>
+                  @if (o.emisor) {
+                    <span class="conciliacion__emisor-oc" matTooltip="Emisor de la OC"><mat-icon>person</mat-icon>{{ o.emisor }}</span>
+                  }
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="subtotal">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="conciliacion__num">Subtotal OC</th>
+              <td mat-cell *matCellDef="let o" data-label="Subtotal OC" class="conciliacion__num">{{ o.subtotal | currency: 'COP' : 'symbol' : '1.0-0' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="fc">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>FC en World Office</th>
+              <td mat-cell *matCellDef="let o" data-label="FC en World Office">
+                <div class="conciliacion__proveedor">
+                  <span class="conciliacion__oc">FCJ {{ o.facturaCompraNumero }}</span>
+                  <span class="conciliacion__secundario">{{ o.facturaCompraFecha | date: 'dd/MM/yyyy' }}</span>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="documento">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Factura del proveedor</th>
+              <td mat-cell *matCellDef="let o" data-label="Factura del proveedor">{{ o.documentoExterno || '—' }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnasFacturadas; sticky: true"></tr>
+            <tr mat-row *matRowDef="let o; columns: columnasFacturadas"></tr>
+          </table>
+        }
+      } @else if (filtro() === 'ReferenciasInvalidas') {
+        <p class="conciliacion__explicacion conciliacion__explicacion--alerta">
+          <mat-icon>report</mat-icon>
+          En estas facturas de compra de World Office, la OC escrita en "Personalizado 1" no se pudo usar en el cruce.
+          Contabilidad puede corregirla en World Office (Más datos → Personalizados).
+        </p>
+        @if (totalFilas() === 0) {
+          <p class="conciliacion__vacio">
+            <mat-icon>inbox</mat-icon>
+            No hay OC mal citadas con estos filtros.
+          </p>
+        } @else {
+          <table
+            mat-table
+            [dataSource]="paginaInvalidas()"
+            class="tabla-responsiva"
+            matSort
+            [matSortActive]="ordenInvalidas().active"
+            [matSortDirection]="ordenInvalidas().direction"
+            (matSortChange)="ordenar('invalidas', $event)"
+          >
+            <ng-container matColumnDef="fecha">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha FC</th>
+              <td mat-cell *matCellDef="let r" data-label="Fecha FC">{{ r.fecha | date: 'dd/MM/yyyy' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="proveedor">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Proveedor</th>
+              <td mat-cell *matCellDef="let r" data-label="Proveedor">
+                <div class="conciliacion__proveedor">
+                  {{ r.nombreProveedor }}
+                  <span class="conciliacion__secundario">NIT {{ r.nitProveedor }}</span>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="fc">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>FC</th>
+              <td mat-cell *matCellDef="let r" data-label="FC"><span class="conciliacion__oc">FCJ {{ r.facturaCompraNumero }}</span></td>
+            </ng-container>
+            <ng-container matColumnDef="documento">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Factura del proveedor</th>
+              <td mat-cell *matCellDef="let r" data-label="Factura del proveedor">{{ r.documentoExterno || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="referencia">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Escrito en WO</th>
+              <td mat-cell *matCellDef="let r" data-label="Escrito en WO">
+                <div class="conciliacion__proveedor">
+                  {{ r.referenciaOrdenes }}
+                  <span class="conciliacion__secundario">OC {{ r.ordenCitada }}</span>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="motivo">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Problema</th>
+              <td mat-cell *matCellDef="let r" data-label="Problema" class="conciliacion__motivo">{{ r.motivo }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnasInvalidas; sticky: true"></tr>
+            <tr mat-row *matRowDef="let r; columns: columnasInvalidas"></tr>
+          </table>
+        }
+      } @else {
+        @if (filtroRevisionFacturaVisible()) {
+          <div class="conciliacion__revision" role="group" aria-label="Filtrar por revisión">
+            <span>Revisión:</span>
+            @for (r of opcionesRevisionFactura; track r.valor) {
+              <button
+                type="button"
+                class="conciliacion__chip"
+                [class.conciliacion__chip--activo]="revisionFactura() === r.valor"
+                [attr.aria-pressed]="revisionFactura() === r.valor"
+                (click)="cambiarRevisionFactura(r.valor)"
+              >
+                {{ r.titulo }} ({{ conteoRevisionFactura()[r.valor] }})
+              </button>
+            }
+            <span class="conciliacion__secundario">Usa el botón que está debajo del estado para dejar observaciones o marcar la factura como revisada.</span>
+          </div>
+        }
+        @if (seleccion().size > 0) {
+          <div class="conciliacion__seleccion" role="status">
+            <mat-icon>check_box</mat-icon>
+            <span>
+              <strong>{{ seleccion().size }}</strong> {{ seleccion().size === 1 ? 'factura elegida' : 'facturas elegidas' }}
+            </span>
+            <button mat-button (click)="limpiarSeleccion()">Quitar selección</button>
+            <button mat-flat-button (click)="descargarSeleccion()" [disabled]="descargando()">
+              <mat-icon>download</mat-icon>
+              {{ descargando() ? 'Descargando…' : 'Descargar XML (' + seleccion().size + ')' }}
+            </button>
+          </div>
+        }
+        @if (totalFilas() === 0) {
+          <p class="conciliacion__vacio">
+            <mat-icon>inbox</mat-icon>
+            No hay facturas en este grupo con estos filtros.
+          </p>
+        } @else {
+          <table
+            mat-table
+            [dataSource]="paginaFacturas()"
+            class="tabla-responsiva"
+            matSort
+            [matSortActive]="ordenFacturas().active"
+            [matSortDirection]="ordenFacturas().direction"
+            (matSortChange)="ordenar('facturas', $event)"
+          >
+            <ng-container matColumnDef="seleccion">
+              <th mat-header-cell *matHeaderCellDef class="conciliacion__check">
+                <mat-checkbox
+                  [checked]="todasSeleccionadas()"
+                  [indeterminate]="algunaSeleccionada()"
+                  (change)="alternarTodas()"
+                  matTooltip="Elegir todas las facturas de este filtro (todas las páginas) para descargar sus XML"
+                  aria-label="Elegir todas"
+                />
+              </th>
+              <td mat-cell *matCellDef="let f" class="conciliacion__check" (click)="$event.stopPropagation()">
+                <mat-checkbox [checked]="seleccion().has(f.facturaId)" (change)="alternarFactura(f)" [aria-label]="'Elegir factura ' + f.numero" />
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="fecha">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
+              <td mat-cell *matCellDef="let f" data-label="Fecha">{{ f.fechaEmision | date: 'dd/MM/yyyy' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="proveedor">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Proveedor</th>
+              <td mat-cell *matCellDef="let f" data-label="Proveedor">
+                <div class="conciliacion__proveedor">
+                  {{ f.nombreProveedor }}
+                  <span class="conciliacion__secundario">NIT {{ f.nitProveedor }}</span>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="factura">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Factura</th>
+              <td mat-cell *matCellDef="let f" data-label="Factura">
+                <div class="conciliacion__proveedor">
+                  {{ f.numero }}
+                  @if (f.origen === 'Dian') {
+                    <span class="conciliacion__via conciliacion__via--dian" matTooltip="No llegó al correo de facturación: se cargó desde un ZIP de la DIAN">
+                      DIAN
+                    </span>
+                  }
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="subtotal">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="conciliacion__num">Subtotal</th>
+              <td mat-cell *matCellDef="let f" data-label="Subtotal" class="conciliacion__num">{{ f.subtotal | currency: 'COP' : 'symbol' : '1.0-0' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="iva">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="conciliacion__num">IVA</th>
+              <td mat-cell *matCellDef="let f" data-label="IVA" class="conciliacion__num">{{ f.iva | currency: 'COP' : 'symbol' : '1.0-0' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="oc">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>OC</th>
+              <td mat-cell *matCellDef="let f" data-label="OC">
+                @if (f.ordenCompraNumero) {
+                  <div class="conciliacion__proveedor">
+                    <span class="conciliacion__oc">{{ f.ordenesCompra.join(', ') }}</span>
+                    <span class="conciliacion__secundario">{{ f.ordenCompraSubtotal | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                    @if (f.emisoresOrdenCompra?.length) {
+                      <span class="conciliacion__emisor-oc" matTooltip="Emisor de la OC"><mat-icon>person</mat-icon>{{ f.emisoresOrdenCompra.join(', ') }}</span>
+                    }
+                    @if (f.facturaCompraNumero) {
+                      <span class="conciliacion__via" matTooltip="Cruzada con la OC que Contabilidad escribió en la FC de World Office">
+                        vía FCJ {{ f.facturaCompraNumero }}
+                      </span>
+                    }
+                  </div>
+                } @else {
+                  <span class="conciliacion__secundario">—</span>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="diferencia">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="conciliacion__num">Diferencia</th>
+              <td mat-cell *matCellDef="let f" data-label="Diferencia" class="conciliacion__num">
+                @if (f.diferenciaSubtotal !== null && f.estado !== 'Cuadra') {
+                  <span [class.conciliacion__negativo]="f.diferenciaSubtotal < 0">
+                    {{ f.diferenciaSubtotal | currency: 'COP' : 'symbol' : '1.0-0' }}
+                  </span>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="estado">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+              <td mat-cell *matCellDef="let f" data-label="Estado">
+                <div class="conciliacion__estado">
+                  <mat-chip [class]="claseEstado(f.estado)">{{ etiqueta(f.estado) }}</mat-chip>
+                  @if (f.estado === 'Diferencia' || f.estado === 'Parcial' || f.observaciones > 0) {
+                    <button
+                      type="button"
+                      class="conciliacion__boton-revision"
+                      [class.conciliacion__boton-revision--revisada]="f.revisada"
+                      [class.conciliacion__boton-revision--observada]="!f.revisada && f.observaciones > 0"
+                      [matTooltip]="f.ultimaObservacion ?? 'Agregar una observación o marcarla como revisada'"
+                      (click)="verObservacionesFactura(f); $event.stopPropagation()"
+                    >
+                      <mat-icon>{{ f.revisada ? 'task_alt' : f.observaciones > 0 ? 'chat' : 'add_comment' }}</mat-icon>
+                      {{ f.revisada ? 'Revisada' : f.observaciones > 0 ? f.observaciones + (f.observaciones === 1 ? ' observación' : ' observaciones') : 'Revisar' }}
+                    </button>
+                  }
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let f" data-label="">
+                <button mat-icon-button aria-label="Ver detalle" (click)="verDetalle(f); $event.stopPropagation()">
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnasFacturas; sticky: true"></tr>
+            <tr mat-row *matRowDef="let f; columns: columnasFacturas" class="conciliacion__fila" (click)="verDetalle(f)"></tr>
+          </table>
+        }
+      }
+
+      @if (totalFilas() > 0) {
+        <mat-paginator
+          [length]="totalFilas()"
+          [pageIndex]="pageIndex()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          showFirstLastButtons
+          (page)="alCambiarPagina($event)"
+        />
+      }
+    </section>
+  }
+</div>

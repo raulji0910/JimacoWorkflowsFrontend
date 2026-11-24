@@ -316,3 +316,8 @@ $v90: #c62828;
     margin-top: 0.25rem;
   }
 }
+
+// Encabezado de montos alineado a la derecha también con la flecha de orden (2026-11-23).
+th.prov__num ::ng-deep .mat-sort-header-container {
+  justify-content: flex-end;
+}

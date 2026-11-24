@@ -1,0 +1,118 @@
+// Estilos de las adiciones de Jimaco a la conciliacion (2026-11-24): archivo aparte para no pasar
+// el limite de 8 kB por hoja de estilos de componente.
+
+.conciliacion__check {
+  width: 3rem;
+  padding-right: 0 !important;
+}
+
+// Emisor de la OC: va dentro de la celda de la OC (una columna aparte no cabía, 2026-11-24).
+.conciliacion__emisor-oc {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.2rem;
+  max-width: 11rem;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: var(--mat-sys-on-surface-variant);
+
+  mat-icon {
+    flex: none;
+    width: 0.9rem;
+    height: 0.9rem;
+    font-size: 0.9rem;
+  }
+}
+
+// Estado + botón de revisión en la misma celda.
+.conciliacion__estado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0.35rem 0;
+}
+
+.conciliacion__seleccion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: #e8f0fe;
+  color: #1a3b73;
+
+  mat-icon {
+    color: #1a73e8;
+  }
+
+  span {
+    flex: 1 1 auto;
+  }
+}
+
+.conciliacion__boton-revision {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 999px;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-primary);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in srgb, var(--mat-sys-primary) 8%, var(--mat-sys-surface));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+
+  mat-icon {
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+  }
+
+  &--observada {
+    border-color: #ef6c00;
+    color: #b45309;
+  }
+
+  &--revisada {
+    border-color: #2e7d32;
+    background-color: #e8f5e9;
+    color: #1e7d32;
+  }
+}
+
+// Si la tabla no cabe (portátiles de 1280 px o ventana angosta), se desplaza de lado dentro de su
+// recuadro en vez de quedar cortada. Por encima de 768 px; debajo, cada fila ya se vuelve tarjeta.
+@media (min-width: 769px) and (max-width: 1399px) {
+  .conciliacion__tabla {
+    overflow-x: auto !important;
+  }
+}
+
+// Celular: los botones de consulta en una fila que se reparte (antes el texto se partía en 3 líneas).
+@media (max-width: 600px) {
+  .conciliacion__acciones {
+    flex-wrap: wrap;
+    width: 100%;
+    margin-left: 0;
+
+    button {
+      flex: 1 1 auto;
+      white-space: nowrap;
+    }
+  }
+}

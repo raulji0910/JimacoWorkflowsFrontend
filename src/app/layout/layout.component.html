@@ -51,16 +51,26 @@
           <mat-icon matListItemIcon>request_quote</mat-icon>
           <span matListItemTitle>Cuentas por pagar</span>
         </a>
+      }
+
+      @if (puedeVerSeguimientoPagos) {
         <a mat-list-item routerLink="/cuentas-por-pagar/seguimiento" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
           <mat-icon matListItemIcon>fact_check</mat-icon>
           <span matListItemTitle>Seguimiento</span>
         </a>
       }
 
-      @if (puedePagarCuentas) {
+      @if (puedeVerPagos) {
         <a mat-list-item routerLink="/pagos" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
           <mat-icon matListItemIcon>payments</mat-icon>
           <span matListItemTitle>Pagos</span>
+        </a>
+      }
+
+      @if (puedeVerConciliacion) {
+        <a mat-list-item routerLink="/conciliacion" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>receipt_long</mat-icon>
+          <span matListItemTitle>Conciliación</span>
         </a>
       }
 

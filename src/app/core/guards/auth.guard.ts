@@ -72,11 +72,44 @@ export const puedePagarCuentasGuard: CanActivateFn = () => {
   return false;
 };
 
+/** Menú "Pagos": el pagador o quien solo consulta (contable). */
+export const puedeVerPagosGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerPagos()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};
+
+/** Seguimiento de pagos: Gerencia Comercial o quien consulta pagos. */
+export const puedeVerSeguimientoPagosGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerSeguimientoPagos()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};
+
 export const puedeVerCuentasPorPagarGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
   if (authService.puedeVerCuentasPorPagar()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};
+
+/** Conciliación de facturas de proveedor vs OC (rol Conciliador, 2026-11-24). */
+export const puedeVerConciliacionGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerConciliacion()) return true;
 
   router.navigate(['/pendientes']);
   return false;

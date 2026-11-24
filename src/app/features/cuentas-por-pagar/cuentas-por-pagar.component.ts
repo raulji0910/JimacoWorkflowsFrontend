@@ -9,7 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -19,8 +19,10 @@ import { PagoExtraordinarioDialogComponent } from './pago-extraordinario-dialog.
 import { haceCuanto } from './cuentas-por-pagar.util';
 
 const CLAVE_PAGE_SIZE = 'aprobaciones.cxp.pageSize';
+const CLAVE_ORDEN = 'aprobaciones.cxp.orden';
 
-type Orden = 'neto' | 'vencido' | 'dias' | 'nombre';
+/** Sin orden elegido (tercer clic en un encabezado) se vuelve a esto: lo que más se debe, primero. */
+const ORDEN_POR_DEFECTO: Sort = { active: 'neto', direction: 'desc' };
 
 /**
  * Cuentas por Pagar (2026-11-05) — Gerencia Comercial ve lo que se les debe a los proveedores según
@@ -43,7 +45,7 @@ type Orden = 'neto' | 'vencido' | 'dias' | 'nombre';
     MatPaginatorModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
+    MatSortModule,
     MatSlideToggleModule
   ],
   templateUrl: './cuentas-por-pagar.component.html',
@@ -62,7 +64,8 @@ export class CuentasPorPagarComponent implements OnInit {
   readonly error = signal<string | null>(null);
 
   readonly busqueda = signal('');
-  readonly orden = signal<Orden>('neto');
+  // Orden con clic en los encabezados (2026-11-23, como en los otros proyectos): asc → desc → por defecto.
+  readonly orden = signal<Sort>(this.leerOrden());
   // Por defecto solo quien tiene facturas por pagar — los terceros que solo tienen anticipos sin
   // cruzar (a favor de Jimaco) se ven activando el interruptor.
   readonly incluirSoloAnticipos = signal(false);
@@ -77,13 +80,16 @@ export class CuentasPorPagarComponent implements OnInit {
         (this.incluirSoloAnticipos() || p.facturas > 0) &&
         (!texto || p.nombre.toLowerCase().includes(texto) || p.identificacion.includes(texto))
     );
-    const comparar: Record<Orden, (a: ProveedorCuentaPorPagar, b: ProveedorCuentaPorPagar) => number> = {
-      neto: (a, b) => b.neto - a.neto,
-      vencido: (a, b) => b.vencido - a.vencido,
-      dias: (a, b) => b.diasMaximoVencido - a.diasMaximoVencido,
-      nombre: (a, b) => a.nombre.localeCompare(b.nombre)
-    };
-    return [...lista].sort(comparar[this.orden()]);
+    const orden = this.orden().direction ? this.orden() : ORDEN_POR_DEFECTO;
+    const signo = orden.direction === 'asc' ? 1 : -1;
+    return [...lista].sort((a, b) => {
+      const va = this.valorOrden(a, orden.active);
+      const vb = this.valorOrden(b, orden.active);
+      const comparacion =
+        typeof va === 'string' && typeof vb === 'string' ? va.localeCompare(vb, 'es', { sensitivity: 'base' }) : (va as number) - (vb as number);
+      // Empate: el que más se debe primero, siempre en el mismo orden.
+      return comparacion * signo || b.neto - a.neto || a.nombre.localeCompare(b.nombre);
+    });
   });
 
   readonly paginados = computed(() => {
@@ -133,9 +139,44 @@ export class CuentasPorPagarComponent implements OnInit {
     this.pageIndex.set(0);
   }
 
-  cambiarOrden(valor: Orden): void {
-    this.orden.set(valor);
+  cambiarOrden(orden: Sort): void {
+    this.orden.set(orden);
     this.pageIndex.set(0);
+    try {
+      localStorage.setItem(CLAVE_ORDEN, JSON.stringify(orden));
+    } catch {
+      // Navegación privada: no se recuerda el orden, no es crítico.
+    }
+  }
+
+  /** El valor de cada columna para ordenar — el mismo número que se ve en la celda. */
+  private valorOrden(p: ProveedorCuentaPorPagar, columna: string): string | number {
+    switch (columna) {
+      case 'proveedor':
+        return p.nombre;
+      case 'facturas':
+        return p.facturas;
+      case 'pendiente':
+        return p.pendiente;
+      case 'vencido':
+        // Mismo valor vencido: primero el de más días de mora.
+        return p.vencido + p.diasMaximoVencido / 100_000;
+      case 'descuentos':
+        return p.anticipos + p.saldoAFavor;
+      default:
+        return p.neto;
+    }
+  }
+
+  private leerOrden(): Sort {
+    try {
+      const guardado = JSON.parse(localStorage.getItem(CLAVE_ORDEN) ?? 'null') as Sort | null;
+      const columnas = ['proveedor', 'facturas', 'pendiente', 'vencido', 'descuentos', 'neto'];
+      if (guardado && columnas.includes(guardado.active) && ['asc', 'desc', ''].includes(guardado.direction)) return guardado;
+    } catch {
+      // Sin almacenamiento o dato viejo: orden por defecto.
+    }
+    return ORDEN_POR_DEFECTO;
   }
 
   alternarSoloAnticipos(valor: boolean): void {

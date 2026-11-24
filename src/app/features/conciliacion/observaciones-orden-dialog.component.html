@@ -1,0 +1,97 @@
+<div mat-dialog-title class="obs__titulo">
+  <div>
+    <span class="obs__sobretitulo">Revisión de OC sin factura</span>
+    <h2>
+      OC {{ orden()?.numero ?? '…' }}
+      @if (orden()?.noRequiereFactura) {
+        <span class="obs__marca"><mat-icon>task_alt</mat-icon> No requiere factura</span>
+      }
+    </h2>
+    @if (orden(); as o) {
+      <span class="obs__proveedor">{{ o.nombreProveedor }} · NIT {{ o.nitProveedor }} · {{ o.fecha | date: 'dd/MM/yyyy' }}</span>
+      @if (o.emisor) {
+        <span class="obs__proveedor">Emisor: {{ o.emisor }}</span>
+      }
+    }
+  </div>
+  <button mat-icon-button aria-label="Cerrar" (click)="cerrar()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content>
+  @if (!orden() && !error()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (orden(); as o) {
+    <div class="obs__cifras">
+      <div><span>Subtotal OC</span><strong>{{ o.subtotal | currency: 'COP' : 'symbol' : '1.0-0' }}</strong></div>
+      <div><span>IVA</span><strong>{{ o.iva | currency: 'COP' : 'symbol' : '1.0-0' }}</strong></div>
+      <div><span>Total</span><strong>{{ o.subtotal + o.iva | currency: 'COP' : 'symbol' : '1.0-0' }}</strong></div>
+    </div>
+
+    @if (data.puedeEscribir) {
+      <div class="obs__nueva">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ etiquetaCampo(o.noRequiereFactura) }}</mat-label>
+          <textarea
+            matInput
+            rows="3"
+            maxlength="2000"
+            [(ngModel)]="texto"
+            (ngModelChange)="faltaTexto.set(false)"
+            [placeholder]="cambiarMarca ? 'Ej.: se devolvió toda la mercancía' : 'Qué se encontró al revisar esta OC'"
+          ></textarea>
+          <mat-hint align="end">{{ texto.length }}/2000</mat-hint>
+        </mat-form-field>
+        @if (faltaTexto()) {
+          <p class="obs__error obs__error--campo">
+            <mat-icon>error</mat-icon>
+            {{ cambiarMarca ? 'Escribe el motivo: es obligatorio para ' + (o.noRequiereFactura ? 'quitar' : 'poner') + ' la marca.' : 'Escribe la observación.' }}
+          </p>
+        }
+        <div class="obs__acciones">
+          <mat-checkbox [(ngModel)]="cambiarMarca">
+            {{ o.noRequiereFactura ? 'Quitar la marca "No requiere factura"' : 'Marcar como "No requiere factura"' }}
+          </mat-checkbox>
+          <button mat-flat-button (click)="guardar()" [disabled]="guardando()">
+            <mat-icon>{{ cambiarMarca ? (o.noRequiereFactura ? 'remove_done' : 'task_alt') : 'add_comment' }}</mat-icon>
+            {{ guardando() ? 'Guardando…' : textoBoton(o.noRequiereFactura) }}
+          </button>
+        </div>
+        <p class="obs__ayuda">Las observaciones no se editan ni se borran: si algo cambia, agrega otra. La OC sigue en la lista hasta que llegue su factura.</p>
+      </div>
+    }
+
+    @if (error()) {
+      <p class="obs__error"><mat-icon>error</mat-icon> {{ error() }}</p>
+    }
+
+    <h3>Historial ({{ o.historial.length }})</h3>
+    @if (o.historial.length === 0) {
+      <p class="obs__vacio">Todavía nadie ha revisado esta OC.</p>
+    } @else {
+      <ol class="obs__historial">
+        @for (h of o.historial; track h.id) {
+          <li [class]="'obs__entrada obs__entrada--' + h.tipo.toLowerCase()">
+            <div class="obs__cabecera">
+              <strong>{{ h.nombreUsuario }}</strong>
+              <span>{{ h.fecha | date: 'dd/MM/yyyy h:mm a' }}</span>
+              @if (h.tipo !== 'Observacion') {
+                <span class="obs__tipo">{{ etiquetas[h.tipo] }}</span>
+              }
+            </div>
+            <p>{{ h.texto }}</p>
+          </li>
+        }
+      </ol>
+    }
+  } @else if (error()) {
+    <p class="obs__error"><mat-icon>error</mat-icon> {{ error() }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cerrar()">Cerrar</button>
+</mat-dialog-actions>

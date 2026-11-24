@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CuentasPorPagarService } from '../../core/services/cuentas-por-pagar.service';
+import { AuthService } from '../../core/services/auth.service';
 import {
   ConteoEstado,
   EstadoSeguimientoPago,
@@ -31,10 +32,12 @@ type Filtro = 'Todos' | EstadoSeguimientoPago;
   imports: [DatePipe, DecimalPipe, RouterLink, MatButtonModule, MatIconModule, MatProgressBarModule, FiltroPagosComponent, PaginadorComponent],
   template: `
     <div class="seg">
-      <a mat-button routerLink="/cuentas-por-pagar">
-        <mat-icon>arrow_back</mat-icon>
-        Cuentas por pagar
-      </a>
+      @if (puedeVerCuentasPorPagar) {
+        <a mat-button routerLink="/cuentas-por-pagar">
+          <mat-icon>arrow_back</mat-icon>
+          Cuentas por pagar
+        </a>
+      }
 
       <div class="seg__cabeza">
         <h2>Seguimiento de pagos</h2>
@@ -210,6 +213,8 @@ type Filtro = 'Todos' | EstadoSeguimientoPago;
 export class SeguimientoPagosComponent implements OnInit {
   private readonly servicio = inject(CuentasPorPagarService);
   private readonly snackBar = inject(MatSnackBar);
+  /** Contabilidad (solo consulta de pagos) entra al Seguimiento pero no al módulo de cuentas por pagar. */
+  readonly puedeVerCuentasPorPagar = inject(AuthService).puedeVerCuentasPorPagar();
 
   readonly filtros: { valor: Filtro; texto: string }[] = [
     { valor: 'PorPagar', texto: 'Por pagar' },

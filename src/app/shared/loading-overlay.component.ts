@@ -1,4 +1,6 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LoadingService } from '../core/services/loading.service';
 
@@ -6,8 +8,14 @@ import { LoadingService } from '../core/services/loading.service';
  * Rueda de espera de pantalla completa, montada una única vez en app.html. Espera un
  * poco (RETRASO_MS) antes de mostrarse para que una respuesta casi instantánea no la haga
  * parpadear — pero se oculta de inmediato apenas la última petición en vuelo termina.
+ *
+ * 2026-11-24: también cuenta la NAVEGACIÓN entre pantallas. Cada pantalla es un archivo aparte
+ * (loadComponent) que se descarga al hacer clic en el menú, y eso no pasa por HttpClient: con la
+ * red lenta la pantalla vieja se quedaba quieta 0,5–1 s sin rueda. Desde NavigationStart hasta
+ * NavigationEnd/Cancel/Error la rueda queda prendida, y el final se aplaza un ciclo para que
+ * empalme con las peticiones que la pantalla nueva dispara al abrir (sin parpadeo).
  */
-const RETRASO_MS = 150;
+const RETRASO_MS = 100;
 
 @Component({
   selector: 'app-loading-overlay',
@@ -41,6 +49,8 @@ const RETRASO_MS = 150;
 export class LoadingOverlayComponent {
   private readonly loading = inject(LoadingService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private navegando = false;
 
   readonly visible = signal(false);
   private temporizador: ReturnType<typeof setTimeout> | null = null;
@@ -54,6 +64,19 @@ export class LoadingOverlayComponent {
         this.temporizador = setTimeout(() => this.visible.set(true), RETRASO_MS);
       } else {
         this.visible.set(false);
+      }
+    });
+
+    this.router.events.pipe(takeUntilDestroyed()).subscribe((evento) => {
+      if (evento instanceof NavigationStart && !this.navegando) {
+        this.navegando = true;
+        this.loading.iniciar();
+      } else if (
+        (evento instanceof NavigationEnd || evento instanceof NavigationCancel || evento instanceof NavigationError) &&
+        this.navegando
+      ) {
+        this.navegando = false;
+        setTimeout(() => this.loading.finalizar());
       }
     });
 

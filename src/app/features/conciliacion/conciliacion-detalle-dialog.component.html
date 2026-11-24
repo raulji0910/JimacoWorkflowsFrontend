@@ -1,0 +1,166 @@
+<div mat-dialog-title class="detalle__titulo">
+  <div>
+    <span class="detalle__sobretitulo">Factura del proveedor</span>
+    <h2>{{ detalle()?.conciliacion?.numero ?? '…' }}</h2>
+  </div>
+  @if (detalle(); as d) {
+    <span class="detalle__estado" [class]="'detalle__estado detalle__estado--' + d.conciliacion.estado.toLowerCase()">
+      <mat-icon>{{ iconos[d.conciliacion.estado] }}</mat-icon>
+      {{ etiquetas[d.conciliacion.estado] }}
+    </span>
+  }
+  @if (detalle(); as d) {
+    <button
+      mat-stroked-button
+      class="detalle__xml"
+      (click)="descargarXml(d.conciliacion.facturaId)"
+      [disabled]="descargando()"
+      matTooltip="Bajar el XML de esta factura tal como llegó"
+    >
+      <mat-icon>download</mat-icon>
+      {{ descargando() ? 'Descargando…' : 'XML' }}
+    </button>
+  }
+  <button mat-icon-button mat-dialog-close aria-label="Cerrar" class="detalle__cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content>
+  @if (cargando()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (detalle(); as d) {
+    <div class="detalle__cabecera">
+      <div class="detalle__dato detalle__dato--ancho">
+        <span>Proveedor</span>
+        <strong>{{ d.conciliacion.nombreProveedor }}</strong>
+        <small>NIT {{ d.conciliacion.nitProveedor }}</small>
+      </div>
+      <div class="detalle__dato">
+        <span>Fecha factura</span>
+        <strong>{{ d.conciliacion.fechaEmision | date: 'dd/MM/yyyy' }}</strong>
+      </div>
+      <div class="detalle__dato">
+        <span>Orden de compra</span>
+        @if (d.conciliacion.ordenCompraNumero) {
+          <strong>OC {{ d.conciliacion.ordenesCompra.join(', ') }}</strong>
+          <small>{{ d.conciliacion.ordenCompraFecha | date: 'dd/MM/yyyy' }}</small>
+          @if (d.conciliacion.emisoresOrdenCompra?.length) {
+            <small>Emisor: {{ d.conciliacion.emisoresOrdenCompra!.join(', ') }}</small>
+          }
+        } @else {
+          <strong>—</strong>
+        }
+      </div>
+      <div class="detalle__dato">
+        <span>Recibida por</span>
+        <strong>{{ origenes[d.conciliacion.origen] }}</strong>
+      </div>
+      @if (d.conciliacion.facturaCompraNumero) {
+        <div class="detalle__dato">
+          <span>Cruzada vía</span>
+          <strong>FC {{ d.conciliacion.facturaCompraNumero }} de World Office</strong>
+          <small>OC escrita por Contabilidad</small>
+        </div>
+      }
+      @if (d.conciliacion.referenciaOrden) {
+        <div class="detalle__dato">
+          <span>OC citada en el XML</span>
+          <strong>{{ d.conciliacion.referenciaOrden }}</strong>
+        </div>
+      }
+    </div>
+
+    <p class="detalle__mensaje" [class]="'detalle__mensaje detalle__mensaje--' + d.conciliacion.estado.toLowerCase()">
+      <mat-icon>{{ iconos[d.conciliacion.estado] }}</mat-icon>
+      {{ d.conciliacion.detalle }}
+    </p>
+
+    <!-- Comparación de valores: factura vs OC y la diferencia de cada concepto. -->
+    <div class="detalle__comparacion">
+      <div class="detalle__comparacion-fila detalle__comparacion-fila--encabezado">
+        <span></span>
+        <span>Factura</span>
+        <span>OC</span>
+        <span>Diferencia</span>
+      </div>
+      @for (c of comparacion(d); track c.concepto) {
+        <div class="detalle__comparacion-fila" [class.detalle__comparacion-fila--total]="c.concepto === 'Total'">
+          <span>{{ c.concepto }}</span>
+          <span>{{ c.factura | currency: 'COP' : 'symbol' : '1.0-2' }}</span>
+          <span>{{ c.oc === null ? '—' : (c.oc | currency: 'COP' : 'symbol' : '1.0-2') }}</span>
+          <span [class.detalle__negativo]="(c.diferencia ?? 0) < -0.5" [class.detalle__positivo]="(c.diferencia ?? 0) > 0.5">
+            {{ c.diferencia === null ? '—' : (c.diferencia | currency: 'COP' : 'symbol' : '1.0-2') }}
+          </span>
+        </div>
+      }
+    </div>
+
+    <div class="detalle__columnas">
+      <section class="detalle__panel">
+        <h3>
+          <mat-icon>receipt_long</mat-icon>
+          Factura · {{ d.renglonesFactura.length }} {{ d.renglonesFactura.length === 1 ? 'renglón' : 'renglones' }}
+        </h3>
+        <ng-container *ngTemplateOutlet="tabla; context: { $implicit: d.renglonesFactura }" />
+      </section>
+
+      <section class="detalle__panel">
+        @if (d.conciliacion.ordenCompraNumero) {
+          <h3>
+            <mat-icon>assignment</mat-icon>
+            OC {{ d.conciliacion.ordenesCompra.join(', ') }} · {{ d.renglonesOrdenCompra.length }}
+            {{ d.renglonesOrdenCompra.length === 1 ? 'renglón' : 'renglones' }}
+          </h3>
+          <ng-container *ngTemplateOutlet="tabla; context: { $implicit: d.renglonesOrdenCompra }" />
+        } @else {
+          <h3>
+            <mat-icon>assignment</mat-icon>
+            Orden de compra
+          </h3>
+          <div class="detalle__vacio">
+            <mat-icon>search_off</mat-icon>
+            <p>No se encontró una OC de este proveedor con un valor parecido en World Office.</p>
+            <small>Si es un gasto (transporte, servicios, combustible…) es normal que no tenga OC.</small>
+          </div>
+        }
+      </section>
+    </div>
+  }
+
+  <ng-template #tabla let-renglones>
+    <div class="detalle__tabla-contenedor">
+      <table mat-table [dataSource]="renglones" class="detalle__tabla">
+        <ng-container matColumnDef="descripcion">
+          <th mat-header-cell *matHeaderCellDef>Producto</th>
+          <td mat-cell *matCellDef="let r">
+            {{ r.descripcion }}
+            @if (r.codigo) {
+              <small class="detalle__codigo">{{ r.codigo }}</small>
+            }
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="cantidad">
+          <th mat-header-cell *matHeaderCellDef class="detalle__num">Cant.</th>
+          <td mat-cell *matCellDef="let r" class="detalle__num">{{ r.cantidad | number: '1.0-3' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="valorUnitario">
+          <th mat-header-cell *matHeaderCellDef class="detalle__num">Unitario</th>
+          <td mat-cell *matCellDef="let r" class="detalle__num">{{ r.valorUnitario | currency: 'COP' : 'symbol' : '1.0-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="iva">
+          <th mat-header-cell *matHeaderCellDef class="detalle__num">IVA</th>
+          <td mat-cell *matCellDef="let r" class="detalle__num">{{ r.porcentajeIva === null ? '—' : (r.porcentajeIva | number: '1.0-2') + '%' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="subtotal">
+          <th mat-header-cell *matHeaderCellDef class="detalle__num">Subtotal</th>
+          <td mat-cell *matCellDef="let r" class="detalle__num detalle__fuerte">{{ r.subtotal | currency: 'COP' : 'symbol' : '1.0-2' }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columnas; sticky: true"></tr>
+        <tr mat-row *matRowDef="let r; columns: columnas"></tr>
+      </table>
+    </div>
+  </ng-template>
+</mat-dialog-content>

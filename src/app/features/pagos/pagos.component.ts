@@ -12,8 +12,9 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PagosService } from '../../core/services/pagos.service';
+import { AuthService } from '../../core/services/auth.service';
 import { CuentasPorPagarService } from '../../core/services/cuentas-por-pagar.service';
-import { CuentaBanco, LoteOrden, LotePago, OrdenPagoPendiente, Pagina, SeguimientoPago } from '../../core/models/cuentas-por-pagar.model';
+import { CuentaBanco, LoteOrden, LotePago, OrdenPagoPendiente, Pagina, SeguimientoPago, SoporteLotePago } from '../../core/models/cuentas-por-pagar.model';
 import { FiltroPagosComponent, ValorFiltroPagos, aFiltroApi, filtroInicial } from '../../shared/filtro-pagos.component';
 import { PaginadorComponent } from '../../shared/paginador.component';
 
@@ -30,11 +31,16 @@ interface GrupoOrdenes {
   ordenes: OrdenPagoPendiente[];
 }
 
+/** Tope de PDF por lote — el mismo que valida el backend (PagosService.MaximoSoportes). */
+const MAXIMO_SOPORTES = 15;
+
 /**
  * Menú "Pagos" (2026-11-09, pedido real) — el pagador (Gerencia General) ve lo que le mandaron
  * (relaciones de Gerencia Comercial y pagos extraordinarios), elige qué paga como un LOTE (mismo
- * banco, misma fecha y UN solo soporte PDF para todo — por dentro el sistema crea un comprobante de
- * egreso por tercero en World Office) y rechaza lo que no. Lo que no elige queda pendiente.
+ * banco, misma fecha y uno o varios soportes PDF para todo — por dentro el sistema crea un
+ * comprobante de egreso por tercero en World Office) y rechaza lo que no. Lo que no elige queda
+ * pendiente. 2026-11-23: quien solo tiene "Consulta de pagos" (Contabilidad) entra en modo lectura:
+ * solo Pagados y Rechazados.
  */
 @Component({
   selector: 'app-pagos',
@@ -63,6 +69,10 @@ export class PagosComponent implements OnInit {
   private readonly cuentasPorPagar = inject(CuentasPorPagarService);
   private readonly snackBar = inject(MatSnackBar);
 
+  /** false = Contabilidad (solo consulta): sin "Por pagar", sin pagar ni rechazar. */
+  readonly puedePagar = inject(AuthService).puedePagarCuentas();
+  readonly maximoSoportes = MAXIMO_SOPORTES;
+
   @ViewChild('inputArchivo') private inputRef?: ElementRef<HTMLInputElement>;
 
   readonly hoy = hoyColombia();
@@ -75,6 +85,8 @@ export class PagosComponent implements OnInit {
   readonly filtroRechazados = signal<ValorFiltroPagos>(filtroInicial());
   readonly cargandoRechazados = signal(false);
   readonly pestana = signal(0);
+  /** Lote cuyo reporte a Contabilidad se está mandando (para deshabilitar el botón mientras tanto). */
+  readonly enviandoReporte = signal<number | null>(null);
   readonly seleccion = signal<ReadonlySet<number>>(new Set());
   readonly expandidas = signal<ReadonlySet<number>>(new Set());
 
@@ -86,7 +98,7 @@ export class PagosComponent implements OnInit {
   readonly pagando = signal(false);
   readonly enviando = signal(false);
   readonly bancos = signal<CuentaBanco[]>([]);
-  readonly archivo = signal<File | null>(null);
+  readonly archivos = signal<File[]>([]);
   idBanco: number | null = null;
   fecha = this.hoy;
 
@@ -132,6 +144,7 @@ export class PagosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+    if (!this.puedePagar) return;
     this.cuentasPorPagar.bancos().subscribe((b) => {
       this.bancos.set(b);
       this.idBanco = b.find((x) => x.porDefecto)?.idCuentaContableWO ?? b[0]?.idCuentaContableWO ?? null;
@@ -139,6 +152,9 @@ export class PagosComponent implements OnInit {
   }
 
   cargar(): void {
+    this.cargarLotes(this.lotes()?.pagina ?? 1);
+    this.cargarRechazados(this.rechazados()?.pagina ?? 1);
+    if (!this.puedePagar) return;
     this.pagos.pendientes().subscribe({
       next: (p) => {
         this.pendientes.set(p);
@@ -147,8 +163,6 @@ export class PagosComponent implements OnInit {
       },
       error: (e: { error?: { mensaje?: string } }) => this.avisar(e.error?.mensaje ?? 'No se pudieron cargar los pagos pendientes.')
     });
-    this.cargarLotes(this.lotes()?.pagina ?? 1);
-    this.cargarRechazados(this.rechazados()?.pagina ?? 1);
   }
 
   estaSeleccionada(o: OrdenPagoPendiente): boolean {
@@ -230,23 +244,42 @@ export class PagosComponent implements OnInit {
 
   listoParaPagar(): boolean {
     if (!this.fecha || this.fecha > this.hoy || !this.seleccionadas().length) return false;
-    return this.totalSeleccionado() <= 0 || (this.idBanco !== null && this.archivo() !== null);
+    return this.totalSeleccionado() <= 0 || (this.idBanco !== null && this.archivos().length > 0);
   }
 
   elegirArchivo(): void {
     this.inputRef?.nativeElement.click();
   }
 
+  /** Se pueden elegir varios a la vez, o ir sumando de a uno; un mismo archivo no se repite. */
   onArchivo(evento: Event): void {
     const input = evento.target as HTMLInputElement;
-    const archivo = input.files?.[0];
-    if (!archivo) return;
-    if (archivo.type !== 'application/pdf' && !archivo.name.toLowerCase().endsWith('.pdf')) {
-      this.avisar('El soporte tiene que ser un PDF.');
-      input.value = '';
-      return;
+    const elegidos = Array.from(input.files ?? []);
+    input.value = '';
+    if (!elegidos.length) return;
+
+    const noPdf = elegidos.filter((a) => a.type !== 'application/pdf' && !a.name.toLowerCase().endsWith('.pdf'));
+    if (noPdf.length) {
+      this.avisar(`Solo se aceptan PDF: ${noPdf.map((a) => a.name).join(', ')} no se agregó.`);
     }
-    this.archivo.set(archivo);
+    const actuales = this.archivos();
+    const nuevos = elegidos
+      .filter((a) => !noPdf.includes(a))
+      .filter((a) => !actuales.some((x) => x.name === a.name && x.size === a.size));
+    const todos = [...actuales, ...nuevos];
+    if (todos.length > MAXIMO_SOPORTES) {
+      this.avisar(`Máximo ${MAXIMO_SOPORTES} PDF por lote.`);
+    }
+    this.archivos.set(todos.slice(0, MAXIMO_SOPORTES));
+  }
+
+  quitarArchivo(archivo: File): void {
+    this.archivos.set(this.archivos().filter((a) => a !== archivo));
+  }
+
+  tamano(bytes: number): string {
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   }
 
   confirmarPago(): void {
@@ -258,13 +291,13 @@ export class PagosComponent implements OnInit {
         this.seleccionadas().map((o) => o.instanciaDocumentoId),
         conPlata ? this.idBanco : null,
         this.fecha,
-        conPlata ? this.archivo() : null
+        conPlata ? this.archivos() : []
       )
       .subscribe({
         next: (lote) => {
           this.enviando.set(false);
           this.pagando.set(false);
-          this.archivo.set(null);
+          this.archivos.set([]);
           this.seleccion.set(new Set());
           this.avisar(`Lote ${lote.numero} registrado: el sistema crea los comprobantes de egreso en World Office en la próxima sincronización.`);
           this.cargar();
@@ -368,14 +401,39 @@ export class PagosComponent implements OnInit {
   }
 
 
-  verSoporte(lote: LotePago): void {
-    this.pagos.soporte(lote.id).subscribe({
+  /** Los soportes del lote; con la Api anterior (sin la lista) queda el único, con id 0. */
+  soportesDe(lote: LotePago): SoporteLotePago[] {
+    if (lote.soportes?.length) return lote.soportes;
+    return lote.tieneSoporte ? [{ id: 0, nombreArchivo: 'Soporte', tamanoBytes: 0 }] : [];
+  }
+
+  verSoporte(lote: LotePago, soporte: SoporteLotePago): void {
+    this.pagos.soporte(lote.id, soporte.id).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
         setTimeout(() => URL.revokeObjectURL(url), 60_000);
       },
       error: () => this.avisar('No se pudo abrir el soporte.')
+    });
+  }
+
+  /** El reporte sale solo cuando cada orden tiene su CE (o quedó con conflicto). */
+  loteTerminado(lote: LotePago): boolean {
+    return lote.ordenes.every((o) => o.numeroCE !== null || !!o.conflictoCreacionCE);
+  }
+
+  enviarReporte(lote: LotePago): void {
+    this.enviandoReporte.set(lote.id);
+    this.pagos.enviarReporteContabilidad(lote.id).subscribe({
+      next: (r) => {
+        this.enviandoReporte.set(null);
+        this.avisar(`Reporte del lote ${lote.numero} enviado a Contabilidad (${r.enviados} ${r.enviados === 1 ? 'persona' : 'personas'}), con los soportes y los CE.`);
+      },
+      error: (e: { error?: { mensaje?: string } }) => {
+        this.enviandoReporte.set(null);
+        this.avisar(e.error?.mensaje ?? 'No se pudo enviar el reporte.');
+      }
     });
   }
 

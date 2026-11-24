@@ -299,6 +299,14 @@ export interface LotePago {
   pagadoPor: string | null;
   tieneSoporte: boolean;
   ordenes: LoteOrden[];
+  /** Los PDF de soporte (2026-11-23: puede haber varios). Id 0 = el único de un lote anterior. */
+  soportes?: SoporteLotePago[];
+}
+
+export interface SoporteLotePago {
+  id: number;
+  nombreArchivo: string;
+  tamanoBytes: number;
 }
 
 // ---- Configuración que maneja el administrador (2026-11-11) ----
@@ -308,9 +316,12 @@ export interface ConfiguracionCuentasPorPagar {
   crearCEEnWorldOffice: boolean;
   fechaActualizacion: string | null;
   actualizadoPor: string | null;
+  /** Cuentas de WO (prefijos del código) que entran a Cuentas por Pagar, separadas por coma. */
+  cuentasIncluidas: string;
 }
 
 export interface ActualizarConfiguracionCuentasPorPagar {
   prefijoCE: string;
   crearCEEnWorldOffice: boolean;
+  cuentasIncluidas: string;
 }
