@@ -107,6 +107,8 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
     base.setDate(base.getDate() + (Number(this.vigenciaDias()) || 0));
     return base;
   });
+  /** "Más Datos" plegado por defecto (pedido 2026-11-25): se abre solo cuando hace falta llenarlo. */
+  readonly masDatosAbierto = signal(false);
   readonly masDatosLlenos = computed(() => Object.values(this.masDatos()).filter((v) => !!v?.trim()).length);
   readonly nombresBodega = computed(() => new Map((this.catalogo()?.bodegas ?? []).map((b) => [b.idBodega, b.nombre])));
 

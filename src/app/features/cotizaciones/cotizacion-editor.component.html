@@ -127,10 +127,12 @@
   <!-- ---------------- Más Datos (siempre visible: plegado no se encontraba) ---------------- -->
   @if ((catalogo()?.camposMasDatos ?? []).length > 0) {
     <div class="cot__panel cot__mas-datos">
-      <div class="cot__seccion">
+      <button type="button" class="cot__seccion" (click)="masDatosAbierto.set(!masDatosAbierto())" [attr.aria-expanded]="masDatosAbierto()">
+        <mat-icon>{{ masDatosAbierto() ? 'expand_less' : 'expand_more' }}</mat-icon>
         <h3>Más Datos</h3>
-        <span class="cot__tenue">Campos personalizados de la cotización en World Office · {{ masDatosLlenos() }} de {{ catalogo()!.camposMasDatos.length }} llenos</span>
-      </div>
+        <span class="cot__tenue">{{ masDatosLlenos() }} de {{ catalogo()!.camposMasDatos.length }} llenos · {{ masDatosAbierto() ? 'clic para ocultar' : 'clic para llenarlos' }}</span>
+      </button>
+      @if (masDatosAbierto()) {
       <div class="cot__mas-datos-campos">
         @for (campo of catalogo()!.camposMasDatos; track campo.numero) {
           <mat-form-field appearance="outline">
@@ -139,6 +141,7 @@
           </mat-form-field>
         }
       </div>
+      }
     </div>
   }
 

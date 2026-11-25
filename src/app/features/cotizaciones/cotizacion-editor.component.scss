@@ -74,12 +74,34 @@
     grid-column: span 2;
   }
 
+  &__mas-datos {
+    padding-block: 0.5rem;
+  }
+
+  &__mas-datos-campos {
+    margin-top: 0.75rem;
+  }
+
   &__seccion {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.25rem 0.75rem;
-    margin-bottom: 0.75rem;
+    align-items: center;
+    gap: 0.25rem 0.6rem;
+    width: 100%;
+    padding: 0.4rem 0.25rem;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--mat-sys-surface-container);
+      outline: none;
+    }
 
     h3 {
       margin: 0;
