@@ -20,6 +20,8 @@ export interface Rol {
   puedeConsultarPagos?: boolean;
   // Conciliación de facturas de proveedor vs OC (2026-11-24) — ver Rol.PuedeVerConciliacion en el backend.
   puedeVerConciliacion?: boolean;
+  // Cotizaciones creadas desde el portal en World Office (2026-11-25) — ver Rol.PuedeCrearCotizaciones en el backend.
+  puedeCrearCotizaciones?: boolean;
 }
 
 export interface RolCrear {
@@ -38,6 +40,8 @@ export interface RolCrear {
   puedeConsultarPagos?: boolean;
   // Conciliación de facturas de proveedor vs OC (2026-11-24) — ver Rol.PuedeVerConciliacion en el backend.
   puedeVerConciliacion?: boolean;
+  // Cotizaciones creadas desde el portal en World Office (2026-11-25) — ver Rol.PuedeCrearCotizaciones en el backend.
+  puedeCrearCotizaciones?: boolean;
 }
 
 export interface RolActualizar {
@@ -57,4 +61,6 @@ export interface RolActualizar {
   puedeConsultarPagos?: boolean;
   // Conciliación de facturas de proveedor vs OC (2026-11-24) — ver Rol.PuedeVerConciliacion en el backend.
   puedeVerConciliacion?: boolean;
+  // Cotizaciones creadas desde el portal en World Office (2026-11-25) — ver Rol.PuedeCrearCotizaciones en el backend.
+  puedeCrearCotizaciones?: boolean;
 }

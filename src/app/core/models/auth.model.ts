@@ -25,4 +25,6 @@ export interface LoginResponse {
   puedeConsultarPagos?: boolean;
   // Conciliación de facturas de proveedor vs OC (2026-11-24) — ver Rol.PuedeVerConciliacion en el backend.
   puedeVerConciliacion?: boolean;
+  // Menú Cotizaciones (2026-11-25) — ver Rol.PuedeCrearCotizaciones en el backend.
+  puedeCrearCotizaciones?: boolean;
 }

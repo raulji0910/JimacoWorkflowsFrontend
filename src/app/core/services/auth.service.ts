@@ -109,6 +109,11 @@ export class AuthService {
     return this.sesion()?.puedeVerConciliacion ?? false;
   }
 
+  /** Menú Cotizaciones (rol "Crea cotizaciones") — ver Rol.PuedeCrearCotizaciones. */
+  puedeCrearCotizaciones(): boolean {
+    return this.sesion()?.puedeCrearCotizaciones ?? false;
+  }
+
   /** Entra al menú "Pagos": quien paga, o quien solo consulta. */
   puedeVerPagos(): boolean {
     return this.puedePagarCuentas() || this.puedeConsultarPagos();

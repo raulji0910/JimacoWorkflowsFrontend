@@ -88,6 +88,16 @@
   </div>
 
   <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeCrearCotizaciones" name="puedeCrearCotizaciones">
+      Crea cotizaciones
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Menú "Cotizaciones": arma la cotización en el portal (productos de World Office con sus
+      existencias, cliente, "Más Datos") y al enviarla se crea en World Office, que le asigna el número.
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
     <mat-slide-toggle [(ngModel)]="puedeGestionarAlistamientoFerrealiados" name="puedeGestionarAlistamientoFerrealiados">
       Puede gestionar el alistamiento de Ferrealiados
     </mat-slide-toggle>
