@@ -74,6 +74,19 @@
     grid-column: span 2;
   }
 
+  &__seccion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+
+    h3 {
+      margin: 0;
+      font: var(--mat-sys-title-medium);
+    }
+  }
+
   &__mas-datos-campos {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -111,10 +124,6 @@
 @media (max-width: 600px) {
   .cot__cliente {
     grid-column: auto;
-  }
-
-  .cot__mas-datos mat-panel-description {
-    display: none;
   }
 }
 

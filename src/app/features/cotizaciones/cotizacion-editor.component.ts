@@ -1,5 +1,5 @@
 import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
-import { CurrencyPipe, DatePipe, DecimalPipe, PercentPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe, Location, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -11,7 +11,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CotizacionService } from '../../core/services/cotizacion.service';
@@ -55,7 +54,7 @@ const SEGUNDOS_CONSULTA = 5;
   selector: 'app-cotizacion-editor',
   standalone: true,
   imports: [CurrencyPipe, DatePipe, DecimalPipe, PercentPipe, FormsModule, RouterLink, MatButtonModule, MatIconModule,
-    MatFormFieldModule, MatInputModule, MatSelectModule, MatAutocompleteModule, MatExpansionModule, MatTooltipModule],
+    MatFormFieldModule, MatInputModule, MatSelectModule, MatAutocompleteModule, MatTooltipModule],
   templateUrl: './cotizacion-editor.component.html',
   styleUrls: ['./cotizacion-editor.component.scss', './cotizacion-editor-tabla.component.scss']
 })
@@ -63,6 +62,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
   private readonly servicio = inject(CotizacionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -73,6 +73,8 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
   readonly ocupado = signal(false);
   readonly cambios = signal(false);
   readonly confirmandoBorrado = signal(false);
+  /** Mientras se guarda o se envía, nada se puede tocar. */
+  readonly bloqueado = computed(() => this.ocupado() || !this.editable());
 
   // ---- Encabezado ----
   readonly cliente = signal<ClienteCatalogo | null>(null);
@@ -105,6 +107,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
     base.setDate(base.getDate() + (Number(this.vigenciaDias()) || 0));
     return base;
   });
+  readonly masDatosLlenos = computed(() => Object.values(this.masDatos()).filter((v) => !!v?.trim()).length);
   readonly nombresBodega = computed(() => new Map((this.catalogo()?.bodegas ?? []).map((b) => [b.idBodega, b.nombre])));
 
   readonly totales = computed(() => {
@@ -331,8 +334,10 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
   // ---------------- Acciones ----------------
 
   guardar(): void {
+    this.ocupado.set(true);
     this.guardar$().subscribe({
       next: (c) => {
+        this.ocupado.set(false);
         this.despuesDeGuardar(c);
         this.snackBar.open('Borrador guardado.', 'Cerrar', { duration: 3000 });
       },
@@ -342,11 +347,12 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
 
   /** Guarda y envía: la Api valida todo y la deja para que el Sincronizador la cree en WO. */
   enviar(): void {
+    // Bloqueado desde el primer clic hasta que la Api responda (ni doble envío ni edición a medias).
+    this.ocupado.set(true);
     this.guardar$()
       .pipe(
         switchMap((c) => {
           this.despuesDeGuardar(c);
-          this.ocupado.set(true);
           return this.servicio.enviar(c.id);
         })
       )
@@ -396,7 +402,10 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
   private despuesDeGuardar(c: Cotizacion): void {
     const eraNueva = !this.cotizacion();
     this.aplicar(c);
-    if (eraNueva) this.router.navigate(['/cotizaciones', c.id], { replaceUrl: true });
+    // Solo se cambia la dirección (nueva → /cotizaciones/id), SIN volver a navegar: navegar recreaba la
+    // pantalla y la copia nueva leía la cotización antes de terminar el envío, mostrándola editable
+    // aunque ya estuviera "Creando en WO" (reportado 2026-11-25).
+    if (eraNueva) this.location.replaceState(`/cotizaciones/${c.id}`);
   }
 
   private armarDto(): GuardarCotizacion {

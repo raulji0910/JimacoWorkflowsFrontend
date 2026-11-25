@@ -73,10 +73,10 @@
         [ngModel]="textoCliente"
         (ngModelChange)="buscarCliente($event)"
         [matAutocomplete]="autoCliente"
-        [disabled]="!editable()"
+        [disabled]="bloqueado()"
         placeholder="Nombre o NIT"
       />
-      @if (cliente() && editable()) {
+      @if (cliente() && !bloqueado()) {
         <button matSuffix mat-icon-button type="button" (click)="quitarCliente()" aria-label="Quitar cliente"><mat-icon>close</mat-icon></button>
       }
       @if (cliente()) {
@@ -93,7 +93,7 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Sucursal</mat-label>
-      <mat-select [value]="idDireccion()" (selectionChange)="idDireccion.set($event.value); marcarCambio()" [disabled]="!editable() || !cliente()">
+      <mat-select [value]="idDireccion()" (selectionChange)="idDireccion.set($event.value); marcarCambio()" [disabled]="bloqueado() || !cliente()">
         @for (d of direcciones(); track d.idDireccion) {
           <mat-option [value]="d.idDireccion">{{ textoDireccion(d) }}{{ d.principal ? ' (principal)' : '' }}</mat-option>
         }
@@ -105,7 +105,7 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Forma de pago</mat-label>
-      <mat-select [value]="idFormaPago()" (selectionChange)="idFormaPago.set($event.value); marcarCambio()" [disabled]="!editable()">
+      <mat-select [value]="idFormaPago()" (selectionChange)="idFormaPago.set($event.value); marcarCambio()" [disabled]="bloqueado()">
         @for (f of catalogo()?.formasPago ?? []; track f.idFormaPago) {
           <mat-option [value]="f.idFormaPago">{{ f.nombre }}</mat-option>
         }
@@ -114,37 +114,37 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Concepto</mat-label>
-      <input matInput maxlength="500" [ngModel]="concepto()" (ngModelChange)="concepto.set($event); marcarCambio()" [disabled]="!editable()" />
+      <input matInput maxlength="500" [ngModel]="concepto()" (ngModelChange)="concepto.set($event); marcarCambio()" [disabled]="bloqueado()" />
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="cot__vigencia">
       <mat-label>Vigencia (días)</mat-label>
-      <input matInput type="number" min="0" max="365" [ngModel]="vigenciaDias()" (ngModelChange)="vigenciaDias.set($event); marcarCambio()" [disabled]="!editable()" />
+      <input matInput type="number" min="0" max="365" [ngModel]="vigenciaDias()" (ngModelChange)="vigenciaDias.set($event); marcarCambio()" [disabled]="bloqueado()" />
       <mat-hint>Vigente hasta el {{ venceEl() | date: 'dd/MM/yyyy' }}</mat-hint>
     </mat-form-field>
   </div>
 
-  <!-- ---------------- Más Datos ---------------- -->
+  <!-- ---------------- Más Datos (siempre visible: plegado no se encontraba) ---------------- -->
   @if ((catalogo()?.camposMasDatos ?? []).length > 0) {
-    <mat-expansion-panel class="cot__mas-datos" [expanded]="false">
-      <mat-expansion-panel-header>
-        <mat-panel-title>Más Datos</mat-panel-title>
-        <mat-panel-description>Los campos personalizados que la cotización usa en World Office</mat-panel-description>
-      </mat-expansion-panel-header>
+    <div class="cot__panel cot__mas-datos">
+      <div class="cot__seccion">
+        <h3>Más Datos</h3>
+        <span class="cot__tenue">Campos personalizados de la cotización en World Office · {{ masDatosLlenos() }} de {{ catalogo()!.camposMasDatos.length }} llenos</span>
+      </div>
       <div class="cot__mas-datos-campos">
         @for (campo of catalogo()!.camposMasDatos; track campo.numero) {
           <mat-form-field appearance="outline">
             <mat-label>{{ campo.etiqueta }}</mat-label>
-            <input matInput maxlength="500" [ngModel]="masDatos()[campo.numero] ?? ''" (ngModelChange)="cambiarMasDato(campo.numero, $event)" [disabled]="!editable()" />
+            <input matInput maxlength="500" [ngModel]="masDatos()[campo.numero] ?? ''" (ngModelChange)="cambiarMasDato(campo.numero, $event)" [disabled]="bloqueado()" />
           </mat-form-field>
         }
       </div>
-    </mat-expansion-panel>
+    </div>
   }
 
   <!-- ---------------- Productos ---------------- -->
   <div class="cot__panel">
-    @if (editable()) {
+    @if (!bloqueado()) {
       <mat-form-field appearance="outline" class="cot__buscar-producto" subscriptSizing="dynamic">
         <mat-label>Agregar producto</mat-label>
         <mat-icon matPrefix>add_shopping_cart</mat-icon>
@@ -191,7 +191,7 @@
                 <div class="cot__tenue">{{ r.unidadMedida }}</div>
               </td>
               <td>
-                <select class="cot__control" [value]="r.idBodega" (change)="actualizarRenglon(r, { idBodega: $any($event.target).value })" [disabled]="!editable()" aria-label="Bodega">
+                <select class="cot__control" [value]="r.idBodega" (change)="actualizarRenglon(r, { idBodega: $any($event.target).value })" [disabled]="bloqueado()" aria-label="Bodega">
                   @for (b of catalogo()?.bodegas ?? []; track b.idBodega) {
                     <option [value]="b.idBodega" [selected]="b.idBodega === r.idBodega">{{ b.nombre }}</option>
                   }
@@ -204,21 +204,21 @@
               </td>
               <td class="numero">
                 <input class="cot__control cot__control--numero" type="number" min="0" step="any" [value]="r.cantidad"
-                  (input)="actualizarRenglon(r, { cantidad: +$any($event.target).value })" [disabled]="!editable()" aria-label="Cantidad" />
+                  (input)="actualizarRenglon(r, { cantidad: +$any($event.target).value })" [disabled]="bloqueado()" aria-label="Cantidad" />
               </td>
               <td class="numero">
                 <input class="cot__control cot__control--numero cot__control--valor" type="number" min="0" step="any" [value]="r.valorUnitario"
-                  (input)="actualizarRenglon(r, { valorUnitario: +$any($event.target).value })" [disabled]="!editable()" aria-label="Valor unitario" />
+                  (input)="actualizarRenglon(r, { valorUnitario: +$any($event.target).value })" [disabled]="bloqueado()" aria-label="Valor unitario" />
               </td>
               <td class="numero">{{ r.iva | percent }}</td>
               <td class="numero">{{ totalRenglon(r) | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
               <td>
                 <input class="cot__control cot__control--nota" maxlength="500" [value]="r.nota"
-                  (input)="actualizarRenglon(r, { nota: $any($event.target).value })" [disabled]="!editable()" aria-label="Nota del renglón" />
+                  (input)="actualizarRenglon(r, { nota: $any($event.target).value })" [disabled]="bloqueado()" aria-label="Nota del renglón" />
               </td>
               @if (editable()) {
                 <td>
-                  <button mat-icon-button type="button" (click)="quitarRenglon(r)" aria-label="Quitar producto"><mat-icon>delete_outline</mat-icon></button>
+                  <button mat-icon-button type="button" (click)="quitarRenglon(r)" [disabled]="ocupado()" aria-label="Quitar producto"><mat-icon>delete_outline</mat-icon></button>
                 </td>
               }
             </tr>
