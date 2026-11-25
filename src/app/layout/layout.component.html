@@ -60,6 +60,13 @@
         </a>
       }
 
+      @if (puedeCrearCotizaciones) {
+        <a mat-list-item routerLink="/cotizaciones" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>request_quote</mat-icon>
+          <span matListItemTitle>Cotizaciones</span>
+        </a>
+      }
+
       @if (puedeVerConciliacion) {
         <a mat-list-item routerLink="/conciliacion" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
           <mat-icon matListItemIcon>receipt_long</mat-icon>

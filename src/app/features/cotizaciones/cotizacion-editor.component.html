@@ -1,0 +1,251 @@
+<section class="cot">
+  <header class="cot__header">
+    <div class="cot__titulo">
+      <a mat-icon-button routerLink="/cotizaciones" aria-label="Volver a cotizaciones"><mat-icon>arrow_back</mat-icon></a>
+      <h2>
+        @if (cotizacion()?.numeroWO != null) {
+          Cotización {{ cotizacion()!.prefijoWO }} {{ cotizacion()!.numeroWO }}
+        } @else if (cotizacion()) {
+          Cotización (borrador #{{ cotizacion()!.id }})
+        } @else {
+          Nueva cotización
+        }
+      </h2>
+      <span [class]="'estado estado--' + estado()">{{ etiquetas[estado()] }}</span>
+    </div>
+
+    <div class="cot__acciones">
+      @if (cotizacion()) {
+        <button mat-stroked-button type="button" (click)="copiar()" matTooltip="Crea una cotización nueva en borrador con este mismo contenido">
+          <mat-icon>content_copy</mat-icon> Copiar
+        </button>
+      }
+      @if (cotizacion() && estado() === 'Borrador') {
+        <button mat-stroked-button type="button" class="cot__borrar" (click)="eliminar()">
+          <mat-icon>delete</mat-icon> {{ confirmandoBorrado() ? '¿Seguro? Borrar' : 'Borrar' }}
+        </button>
+      }
+      @if (editable()) {
+        <button mat-stroked-button type="button" (click)="guardar()" [disabled]="ocupado()">
+          <mat-icon>save</mat-icon> Guardar borrador
+        </button>
+        <button mat-flat-button type="button" (click)="enviar()" [disabled]="ocupado() || renglones().length === 0">
+          <mat-icon>send</mat-icon> Crear en World Office
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (estado() === 'PorCrear') {
+    <div class="cot__aviso cot__aviso--creando">
+      <mat-icon>hourglass_top</mat-icon>
+      <span>Creando en World Office… el número aparece aquí solo en menos de un minuto (no hace falta recargar).</span>
+    </div>
+  }
+  @if (estado() === 'Creada') {
+    <div class="cot__aviso cot__aviso--creada">
+      <mat-icon>check_circle</mat-icon>
+      <span>
+        Creada en World Office como <strong>{{ cotizacion()!.prefijoWO }} {{ cotizacion()!.numeroWO }}</strong>
+        el {{ cotizacion()!.fechaCreacionWO | date: 'dd/MM/yyyy HH:mm' }}. Cualquier corrección se hace en World Office.
+      </span>
+    </div>
+  }
+  @if (estado() === 'Error') {
+    <div class="cot__aviso cot__aviso--error">
+      <mat-icon>error</mat-icon>
+      <span>World Office no la aceptó: {{ cotizacion()!.mensajeError }} Corrígela y vuelve a enviarla.</span>
+    </div>
+  }
+  @if (error()) {
+    <div class="cot__aviso cot__aviso--error" role="alert">
+      <mat-icon>warning</mat-icon>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- ---------------- Encabezado ---------------- -->
+  <div class="cot__panel cot__encabezado">
+    <mat-form-field appearance="outline" class="cot__cliente">
+      <mat-label>Cliente</mat-label>
+      <input
+        matInput
+        [ngModel]="textoCliente"
+        (ngModelChange)="buscarCliente($event)"
+        [matAutocomplete]="autoCliente"
+        [disabled]="!editable()"
+        placeholder="Nombre o NIT"
+      />
+      @if (cliente() && editable()) {
+        <button matSuffix mat-icon-button type="button" (click)="quitarCliente()" aria-label="Quitar cliente"><mat-icon>close</mat-icon></button>
+      }
+      @if (cliente()) {
+        <mat-hint>NIT {{ cliente()!.identificacion }}</mat-hint>
+      }
+      <mat-autocomplete #autoCliente="matAutocomplete" [displayWith]="nombreCliente" (optionSelected)="elegirCliente($event)">
+        @for (c of clientesEncontrados(); track c.idTercero) {
+          <mat-option [value]="c">
+            <span>{{ c.nombre }}</span> <small class="cot__tenue">· {{ c.identificacion }}</small>
+          </mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Sucursal</mat-label>
+      <mat-select [value]="idDireccion()" (selectionChange)="idDireccion.set($event.value); marcarCambio()" [disabled]="!editable() || !cliente()">
+        @for (d of direcciones(); track d.idDireccion) {
+          <mat-option [value]="d.idDireccion">{{ textoDireccion(d) }}{{ d.principal ? ' (principal)' : '' }}</mat-option>
+        }
+      </mat-select>
+      @if (!cliente()) {
+        <mat-hint>Primero elige el cliente</mat-hint>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Forma de pago</mat-label>
+      <mat-select [value]="idFormaPago()" (selectionChange)="idFormaPago.set($event.value); marcarCambio()" [disabled]="!editable()">
+        @for (f of catalogo()?.formasPago ?? []; track f.idFormaPago) {
+          <mat-option [value]="f.idFormaPago">{{ f.nombre }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Concepto</mat-label>
+      <input matInput maxlength="500" [ngModel]="concepto()" (ngModelChange)="concepto.set($event); marcarCambio()" [disabled]="!editable()" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cot__vigencia">
+      <mat-label>Vigencia (días)</mat-label>
+      <input matInput type="number" min="0" max="365" [ngModel]="vigenciaDias()" (ngModelChange)="vigenciaDias.set($event); marcarCambio()" [disabled]="!editable()" />
+      <mat-hint>Vigente hasta el {{ venceEl() | date: 'dd/MM/yyyy' }}</mat-hint>
+    </mat-form-field>
+  </div>
+
+  <!-- ---------------- Más Datos ---------------- -->
+  @if ((catalogo()?.camposMasDatos ?? []).length > 0) {
+    <mat-expansion-panel class="cot__mas-datos" [expanded]="false">
+      <mat-expansion-panel-header>
+        <mat-panel-title>Más Datos</mat-panel-title>
+        <mat-panel-description>Los campos personalizados que la cotización usa en World Office</mat-panel-description>
+      </mat-expansion-panel-header>
+      <div class="cot__mas-datos-campos">
+        @for (campo of catalogo()!.camposMasDatos; track campo.numero) {
+          <mat-form-field appearance="outline">
+            <mat-label>{{ campo.etiqueta }}</mat-label>
+            <input matInput maxlength="500" [ngModel]="masDatos()[campo.numero] ?? ''" (ngModelChange)="cambiarMasDato(campo.numero, $event)" [disabled]="!editable()" />
+          </mat-form-field>
+        }
+      </div>
+    </mat-expansion-panel>
+  }
+
+  <!-- ---------------- Productos ---------------- -->
+  <div class="cot__panel">
+    @if (editable()) {
+      <mat-form-field appearance="outline" class="cot__buscar-producto" subscriptSizing="dynamic">
+        <mat-label>Agregar producto</mat-label>
+        <mat-icon matPrefix>add_shopping_cart</mat-icon>
+        <input matInput [ngModel]="textoProducto" (ngModelChange)="buscarProducto($event)" [matAutocomplete]="autoProducto" placeholder="Código o palabras de la descripción (ej. az carta)" />
+        <mat-autocomplete #autoProducto="matAutocomplete" [displayWith]="sinTexto" (optionSelected)="agregarProducto($event)" class="cot__opciones-producto">
+          @if (buscandoProductos()) {
+            <mat-option disabled>Buscando…</mat-option>
+          }
+          @for (p of productosEncontrados(); track p.idInventario) {
+            <mat-option [value]="p">
+              <div class="cot__opcion">
+                <span><strong>{{ p.codigo }}</strong> {{ p.descripcion }}</span>
+                <small class="cot__tenue">IVA {{ p.iva | percent }} · {{ textoExistencias(p.existencias) }}</small>
+              </div>
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+    }
+
+    <div class="cot__tabla-contenedor">
+      <table class="cot__tabla">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Producto</th>
+            <th>Bodega</th>
+            <th class="numero">Cantidad</th>
+            <th class="numero">Valor unit.</th>
+            <th class="numero">IVA</th>
+            <th class="numero">Total</th>
+            <th>Nota</th>
+            @if (editable()) {
+              <th></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of renglones(); track r.clave; let i = $index) {
+            <tr>
+              <td class="cot__tenue">{{ i + 1 }}</td>
+              <td class="cot__producto">
+                <strong>{{ r.codigo }}</strong> {{ r.descripcion }}
+                <div class="cot__tenue">{{ r.unidadMedida }}</div>
+              </td>
+              <td>
+                <select class="cot__control" [value]="r.idBodega" (change)="actualizarRenglon(r, { idBodega: $any($event.target).value })" [disabled]="!editable()" aria-label="Bodega">
+                  @for (b of catalogo()?.bodegas ?? []; track b.idBodega) {
+                    <option [value]="b.idBodega" [selected]="b.idBodega === r.idBodega">{{ b.nombre }}</option>
+                  }
+                </select>
+                @if (existenciaEnBodega(r); as existencia) {
+                  <div class="cot__tenue">Existencia: {{ existencia | number: '1.0-2' }}</div>
+                } @else if (r.existencias) {
+                  <div class="cot__sin-existencia">Sin existencia</div>
+                }
+              </td>
+              <td class="numero">
+                <input class="cot__control cot__control--numero" type="number" min="0" step="any" [value]="r.cantidad"
+                  (input)="actualizarRenglon(r, { cantidad: +$any($event.target).value })" [disabled]="!editable()" aria-label="Cantidad" />
+              </td>
+              <td class="numero">
+                <input class="cot__control cot__control--numero cot__control--valor" type="number" min="0" step="any" [value]="r.valorUnitario"
+                  (input)="actualizarRenglon(r, { valorUnitario: +$any($event.target).value })" [disabled]="!editable()" aria-label="Valor unitario" />
+              </td>
+              <td class="numero">{{ r.iva | percent }}</td>
+              <td class="numero">{{ totalRenglon(r) | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+              <td>
+                <input class="cot__control cot__control--nota" maxlength="500" [value]="r.nota"
+                  (input)="actualizarRenglon(r, { nota: $any($event.target).value })" [disabled]="!editable()" aria-label="Nota del renglón" />
+              </td>
+              @if (editable()) {
+                <td>
+                  <button mat-icon-button type="button" (click)="quitarRenglon(r)" aria-label="Quitar producto"><mat-icon>delete_outline</mat-icon></button>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="editable() ? 9 : 8" class="cot__vacio">Sin productos. Búscalos arriba por código o descripción.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <dl class="cot__totales">
+      <div><dt>Cantidades</dt><dd>{{ totales().cantidades | number: '1.0-2' }}</dd></div>
+      <div><dt>Subtotal</dt><dd>{{ totales().subtotal | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</dd></div>
+      <div><dt>IVA</dt><dd>{{ totales().iva | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</dd></div>
+      <div class="cot__total"><dt>Total</dt><dd>{{ totales().total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</dd></div>
+    </dl>
+  </div>
+
+  @if (cambios() && editable()) {
+    <p class="cot__tenue cot__sin-guardar">Hay cambios sin guardar.</p>
+  }
+  @if (catalogo(); as c) {
+    <p class="cot__tenue">
+      Catálogo de World Office: productos actualizados {{ c.estado.fechaProductos | date: 'dd/MM HH:mm' }},
+      existencias {{ c.estado.fechaExistencias | date: 'dd/MM HH:mm' }}.
+    </p>
+  }
+</section>

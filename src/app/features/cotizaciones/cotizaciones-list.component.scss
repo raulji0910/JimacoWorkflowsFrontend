@@ -1,0 +1,93 @@
+@use './estado-cotizacion' as *;
+
+.cotizaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  h2 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+  }
+
+  &__header,
+  &__filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__descripcion,
+  &__tenue {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__tenue {
+    font-size: 0.8rem;
+  }
+
+  &__buscar {
+    width: min(100%, 320px);
+  }
+
+  &__error {
+    color: var(--mat-sys-error);
+    margin: 0;
+  }
+
+  &__tabla-contenedor {
+    overflow-x: auto;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 8px;
+  }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+
+    th,
+    td {
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      white-space: nowrap;
+    }
+
+    th {
+      font-weight: 500;
+      color: var(--mat-sys-on-surface-variant);
+      background: var(--mat-sys-surface-container-low);
+    }
+
+    .numero {
+      text-align: right;
+    }
+
+    tbody tr {
+      cursor: pointer;
+
+      &:hover,
+      &:focus-visible {
+        background: var(--mat-sys-surface-container);
+        outline: none;
+      }
+    }
+  }
+
+  &__numero {
+    font-weight: 600;
+  }
+
+  &__vacio td {
+    text-align: center;
+    color: var(--mat-sys-on-surface-variant);
+    cursor: default;
+    white-space: normal;
+  }
+}
+
+@include estados-cotizacion;

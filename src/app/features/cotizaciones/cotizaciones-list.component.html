@@ -1,0 +1,88 @@
+<section class="cotizaciones">
+  <header class="cotizaciones__header">
+    <div>
+      <h2>Cotizaciones</h2>
+      <p class="cotizaciones__descripcion">
+        Se arman aquí y al enviarlas se crean en World Office, que les asigna el número.
+      </p>
+    </div>
+    <a mat-flat-button routerLink="/cotizaciones/nueva">
+      <mat-icon>add</mat-icon>
+      Nueva cotización
+    </a>
+  </header>
+
+  <div class="cotizaciones__filtros">
+    <mat-button-toggle-group [value]="filtro()" (change)="filtro.set($event.value)" aria-label="Estado">
+      <mat-button-toggle value="Todas">Todas ({{ conteo().Todas }})</mat-button-toggle>
+      <mat-button-toggle value="Borrador">Borrador ({{ conteo().Borrador }})</mat-button-toggle>
+      <mat-button-toggle value="PorCrear">Creando ({{ conteo().PorCrear }})</mat-button-toggle>
+      <mat-button-toggle value="Creada">Creadas ({{ conteo().Creada }})</mat-button-toggle>
+      <mat-button-toggle value="Error">Rechazadas ({{ conteo().Error }})</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <mat-form-field appearance="outline" class="cotizaciones__buscar" subscriptSizing="dynamic">
+      <mat-label>Buscar cliente, NIT o número</mat-label>
+      <input matInput [ngModel]="buscar()" (ngModelChange)="buscar.set($event)" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </div>
+
+  @if (error()) {
+    <p class="cotizaciones__error">{{ error() }}</p>
+  }
+
+  <div class="cotizaciones__tabla-contenedor">
+    <table class="cotizaciones__tabla">
+      <thead>
+        <tr>
+          <th>Estado</th>
+          <th>Número WO</th>
+          <th>Cliente</th>
+          <th class="numero">Productos</th>
+          <th class="numero">Total</th>
+          <th>Última modificación</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of visibles(); track c.id) {
+          <tr (click)="abrir(c)" tabindex="0" (keydown.enter)="abrir(c)">
+            <td>
+              <span class="estado" [class]="'estado estado--' + c.estado" [matTooltip]="c.mensajeError ?? ''">
+                {{ etiquetas[c.estado] }}
+              </span>
+            </td>
+            <td class="cotizaciones__numero">
+              @if (c.numeroWO !== null) {
+                {{ c.prefijoWO }} {{ c.numeroWO }}
+              } @else {
+                <span class="cotizaciones__tenue">—</span>
+              }
+            </td>
+            <td>
+              <div>{{ c.clienteNombre ?? 'Sin cliente' }}</div>
+              @if (c.clienteIdentificacion) {
+                <div class="cotizaciones__tenue">{{ c.clienteIdentificacion }}</div>
+              }
+            </td>
+            <td class="numero">{{ c.renglones }}</td>
+            <td class="numero">{{ c.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+            <td>{{ c.fechaActualizacion | date: 'dd/MM/yyyy HH:mm' }}</td>
+          </tr>
+        } @empty {
+          @if (!cargando()) {
+            <tr class="cotizaciones__vacio">
+              <td colspan="6">
+                @if (cotizaciones().length === 0) {
+                  Todavía no has armado cotizaciones. Empieza con "Nueva cotización".
+                } @else {
+                  Ninguna cotización coincide con el filtro.
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

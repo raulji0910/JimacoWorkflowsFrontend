@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerAlistamientoFerrealiadosGuard, puedeVerCuentasPorPagarGuard, puedeVerPagosGuard, puedeVerSeguimientoPagosGuard, puedeVerConciliacionGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerAlistamientoFerrealiadosGuard, puedeVerCuentasPorPagarGuard, puedeVerPagosGuard, puedeVerSeguimientoPagosGuard, puedeVerConciliacionGuard, puedeCrearCotizacionesGuard } from './core/guards/auth.guard';
 import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 
 export const routes: Routes = [
@@ -99,6 +99,24 @@ export const routes: Routes = [
         path: 'conciliacion',
         loadComponent: () => import('./features/conciliacion/conciliacion.component').then((m) => m.ConciliacionComponent),
         canActivate: [puedeVerConciliacionGuard]
+      },
+      {
+        // Cotizaciones armadas en el portal y creadas en World Office (2026-11-25).
+        path: 'cotizaciones',
+        loadComponent: () => import('./features/cotizaciones/cotizaciones-list.component').then((m) => m.CotizacionesListComponent),
+        canActivate: [puedeCrearCotizacionesGuard]
+      },
+      {
+        path: 'cotizaciones/nueva',
+        loadComponent: () => import('./features/cotizaciones/cotizacion-editor.component').then((m) => m.CotizacionEditorComponent),
+        canActivate: [puedeCrearCotizacionesGuard],
+        canDeactivate: [cambiosSinGuardarGuard]
+      },
+      {
+        path: 'cotizaciones/:id',
+        loadComponent: () => import('./features/cotizaciones/cotizacion-editor.component').then((m) => m.CotizacionEditorComponent),
+        canActivate: [puedeCrearCotizacionesGuard],
+        canDeactivate: [cambiosSinGuardarGuard]
       },
       {
         path: 'cuentas-por-pagar/:identificacion',

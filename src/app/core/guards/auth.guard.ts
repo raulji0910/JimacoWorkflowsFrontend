@@ -104,3 +104,14 @@ export const puedeVerConciliacionGuard: CanActivateFn = () => {
   router.navigate(['/pendientes']);
   return false;
 };
+
+/** Menú Cotizaciones (2026-11-25) — rol "Crea cotizaciones" (ver Rol.PuedeCrearCotizaciones). */
+export const puedeCrearCotizacionesGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeCrearCotizaciones()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};

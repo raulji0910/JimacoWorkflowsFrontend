@@ -49,6 +49,7 @@ export class LayoutComponent {
   readonly puedePagarCuentas = this.authService.puedePagarCuentas();
   readonly puedeVerPagos = this.authService.puedeVerPagos();
   readonly puedeVerConciliacion = this.authService.puedeVerConciliacion();
+  readonly puedeCrearCotizaciones = this.authService.puedeCrearCotizaciones();
   readonly puedeVerSeguimientoPagos = this.authService.puedeVerSeguimientoPagos();
   readonly version = environment.version;
 

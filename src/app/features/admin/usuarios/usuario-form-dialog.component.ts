@@ -46,6 +46,7 @@ export class UsuarioFormDialogComponent {
   usuarioWO = this.data.usuario?.usuarioWO ?? '';
   usuarioWOFerrealiados = this.data.usuario?.usuarioWOFerrealiados ?? '';
   nombresCompletosWO = this.data.usuario?.nombresCompletosWO ?? '';
+  idTerceroWO: number | null = this.data.usuario?.idTerceroWO ?? null;
   activo = this.data.usuario?.activo ?? true;
   password = '';
   rolesIds: number[] = this.data.usuario?.roles.map((r) => r.id) ?? [];
@@ -86,6 +87,7 @@ export class UsuarioFormDialogComponent {
         usuarioWO: this.usuarioWO || null,
         usuarioWOFerrealiados: this.usuarioWOFerrealiados.trim() || null,
         nombresCompletosWO: this.nombresCompletosWO || null,
+        idTerceroWO: this.idTerceroWO ? Number(this.idTerceroWO) : null,
         activo: this.activo,
         rolesIds: this.rolesIds
       };
@@ -99,6 +101,7 @@ export class UsuarioFormDialogComponent {
         usuarioWO: this.usuarioWO || null,
         usuarioWOFerrealiados: this.usuarioWOFerrealiados.trim() || null,
         nombresCompletosWO: this.nombresCompletosWO || null,
+        idTerceroWO: this.idTerceroWO ? Number(this.idTerceroWO) : null,
         rolesIds: this.rolesIds
       };
       this.dialogRef.close(dto);

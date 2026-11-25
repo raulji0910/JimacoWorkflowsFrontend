@@ -9,6 +9,8 @@ export interface Usuario {
   nombresCompletosWO: string | null;
   /** Su usuario en el World Office de FERREALIADOS (vacío = el mismo de Jimaco). */
   usuarioWOFerrealiados?: string | null;
+  /** Tercero "elaborado por" de WO para los documentos que crea desde el portal (ej. Laura = 9602). */
+  idTerceroWO?: number | null;
   activo: boolean;
   roles: Rol[];
 }
@@ -22,6 +24,8 @@ export interface UsuarioCrear {
   nombresCompletosWO: string | null;
   /** Su usuario en el World Office de FERREALIADOS (vacío = el mismo de Jimaco). */
   usuarioWOFerrealiados?: string | null;
+  /** Tercero "elaborado por" de WO para los documentos que crea desde el portal (ej. Laura = 9602). */
+  idTerceroWO?: number | null;
   rolesIds: number[];
 }
 
@@ -33,6 +37,8 @@ export interface UsuarioActualizar {
   nombresCompletosWO: string | null;
   /** Su usuario en el World Office de FERREALIADOS (vacío = el mismo de Jimaco). */
   usuarioWOFerrealiados?: string | null;
+  /** Tercero "elaborado por" de WO para los documentos que crea desde el portal (ej. Laura = 9602). */
+  idTerceroWO?: number | null;
   activo: boolean;
   rolesIds: number[];
 }
