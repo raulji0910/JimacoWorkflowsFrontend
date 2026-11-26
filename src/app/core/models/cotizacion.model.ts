@@ -149,3 +149,12 @@ function redondearPesos(valor: number): number {
   const limpio = Math.round(valor * 1e6) / 1e6;
   return Math.sign(limpio) * Math.round(Math.abs(limpio));
 }
+
+/** Administración → Config. de cotizaciones (2026-11-26). */
+export interface ConfiguracionDocumentosWO {
+  prefijoCotizacion: string;
+  crearCotizacionesEnWorldOffice: boolean;
+  fechaActualizacion: string | null;
+  actualizadoPor: string | null;
+  cotizacionesEnCola: number;
+}

@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { SIN_RUEDA } from '../interceptors/loading.interceptor';
 import {
   CatalogoCotizacion,
+  ConfiguracionDocumentosWO,
   ClienteCatalogo,
   Cotizacion,
   CotizacionResumen,
@@ -38,6 +39,16 @@ export class CotizacionService {
 
   direcciones(idTercero: number): Observable<DireccionCliente[]> {
     return this.http.get<DireccionCliente[]>(`${this.catalogoUrl}/clientes/${idTercero}/direcciones`, this.sinRueda);
+  }
+
+  // ---- Configuración (solo administradores) ----
+
+  configuracion(): Observable<ConfiguracionDocumentosWO> {
+    return this.http.get<ConfiguracionDocumentosWO>(`${this.catalogoUrl}/configuracion`);
+  }
+
+  actualizarConfiguracion(dto: { prefijoCotizacion: string; crearCotizacionesEnWorldOffice: boolean }): Observable<ConfiguracionDocumentosWO> {
+    return this.http.put<ConfiguracionDocumentosWO>(`${this.catalogoUrl}/configuracion`, dto);
   }
 
   // ---- Cotizaciones ----

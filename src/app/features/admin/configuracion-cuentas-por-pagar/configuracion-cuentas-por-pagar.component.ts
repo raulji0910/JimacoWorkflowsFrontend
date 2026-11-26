@@ -67,7 +67,7 @@ function separarCuentas(texto: string): string[] {
 
           <mat-form-field appearance="outline" class="cfg__prefijo">
             <mat-label>Prefijo del CE</mat-label>
-            <input matInput [ngModel]="prefijo()" (ngModelChange)="prefijo.set($event.toUpperCase())" maxlength="20" autocomplete="off" />
+            <input matInput [ngModel]="prefijo()" (ngModelChange)="prefijo.set($event.toUpperCase())" maxlength="20" autocomplete="off" style="text-transform: uppercase" />
             <mat-hint>Producción: CEJ · Pruebas: {{ prefijoPrueba }}</mat-hint>
           </mat-form-field>
           @if (prefijo() && !prefijoValido()) {

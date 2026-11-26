@@ -96,6 +96,10 @@
           <mat-icon matListItemIcon>tune</mat-icon>
           <span matListItemTitle>Config. de pagos</span>
         </a>
+        <a mat-list-item routerLink="/admin/cotizaciones" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>request_quote</mat-icon>
+          <span matListItemTitle>Config. de cotizaciones</span>
+        </a>
       }
     </mat-nav-list>
 

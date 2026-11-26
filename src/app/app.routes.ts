@@ -149,6 +149,15 @@ export const routes: Routes = [
         canActivate: [adminGuard]
       },
       {
+        // Prefijo e interruptor de la creación de cotizaciones en WO (2026-11-26).
+        path: 'admin/cotizaciones',
+        loadComponent: () =>
+          import('./features/admin/configuracion-cotizaciones/configuracion-cotizaciones.component').then(
+            (m) => m.ConfiguracionCotizacionesComponent
+          ),
+        canActivate: [adminGuard]
+      },
+      {
         path: 'admin/flujos',
         loadComponent: () => import('./features/admin/flujos/flujos-list.component').then((m) => m.FlujosListComponent),
         canActivate: [adminGuard]
