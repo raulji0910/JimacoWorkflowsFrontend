@@ -16,6 +16,10 @@
 
     <div class="cot__acciones">
       @if (cotizacion()) {
+        <button mat-stroked-button type="button" (click)="alternarImpresion()" [disabled]="cargandoPdf()"
+          matTooltip="La cotización con el formato de impresión de World Office">
+          <mat-icon>{{ pdfUrl() ? 'close' : 'print' }}</mat-icon> {{ pdfUrl() ? 'Cerrar impresión' : 'Ver impresión' }}
+        </button>
         <button mat-stroked-button type="button" (click)="copiar()" matTooltip="Crea una cotización nueva en borrador con este mismo contenido">
           <mat-icon>content_copy</mat-icon> Copiar
         </button>
@@ -62,6 +66,10 @@
       <mat-icon>warning</mat-icon>
       <span>{{ error() }}</span>
     </div>
+  }
+
+  @if (pdfUrl(); as url) {
+    <iframe [src]="url" class="cot__pdf" title="Impresión de la cotización"></iframe>
   }
 
   <!-- ---------------- Encabezado ---------------- -->

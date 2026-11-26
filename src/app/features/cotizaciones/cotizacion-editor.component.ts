@@ -2,6 +2,8 @@ import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } fr
 import { CurrencyPipe, DatePipe, DecimalPipe, Location, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { esDispositivoMovil } from '../../shared/dispositivo';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
@@ -63,6 +65,13 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+  private readonly sanitizer = inject(DomSanitizer);
+
+  // ---- Impresión (PDF con el formato de WO), igual que la vista previa de la OC ----
+  readonly esMovil = esDispositivoMovil();
+  readonly pdfUrl = signal<SafeResourceUrl | null>(null);
+  readonly cargandoPdf = signal(false);
+  private pdfObjectUrl: string | null = null;
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -170,6 +179,44 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
 
   ngOnDestroy(): void {
     this.detenerConsulta();
+    this.cerrarImpresion();
+  }
+
+  // ---------------- Impresión ----------------
+
+  /** En computador abre/cierra el PDF dentro de la pantalla; en el celular lo abre en otra pestaña. */
+  alternarImpresion(): void {
+    const id = this.cotizacion()?.id;
+    if (!id) return;
+    if (this.pdfUrl()) {
+      this.cerrarImpresion();
+      return;
+    }
+    // La pestaña se abre YA, dentro del clic (Safari bloquea window.open después de una espera).
+    const ventana = this.esMovil ? window.open('', '_blank') : null;
+    this.cargandoPdf.set(true);
+    this.servicio.pdf(id).subscribe({
+      next: (blob) => {
+        this.cargandoPdf.set(false);
+        this.pdfObjectUrl = URL.createObjectURL(blob);
+        if (ventana) {
+          ventana.location.href = this.pdfObjectUrl;
+          return;
+        }
+        this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfObjectUrl));
+      },
+      error: () => {
+        this.cargandoPdf.set(false);
+        ventana?.close();
+        this.snackBar.open('No se pudo generar la impresión.', 'Cerrar', { duration: 4000 });
+      }
+    });
+  }
+
+  cerrarImpresion(): void {
+    if (this.pdfObjectUrl) URL.revokeObjectURL(this.pdfObjectUrl);
+    this.pdfObjectUrl = null;
+    this.pdfUrl.set(null);
   }
 
   // ---------------- Carga ----------------
@@ -186,6 +233,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy, ConCambiosS
   /** Pone en pantalla lo que devolvió la Api. */
   private aplicar(c: Cotizacion): void {
     const estabaCreando = this.cotizacion()?.estado === 'PorCrear';
+    if (this.pdfUrl() && (this.cotizacion()?.id !== c.id || this.cotizacion()?.fechaActualizacion !== c.fechaActualizacion)) this.cerrarImpresion();
     this.cotizacion.set(c);
     this.cliente.set(c.idTercero ? { idTercero: c.idTercero, identificacion: c.clienteIdentificacion ?? '', nombre: c.clienteNombre ?? '' } : null);
     this.textoCliente = c.clienteNombre ?? '';

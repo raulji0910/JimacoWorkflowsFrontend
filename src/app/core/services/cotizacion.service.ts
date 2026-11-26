@@ -77,6 +77,11 @@ export class CotizacionService {
     return this.http.post<Cotizacion>(`${this.baseUrl}/${id}/enviar`, {});
   }
 
+  /** PDF con el formato de "Imprimir Cotización" de WO. */
+  pdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${id}/pdf`, { responseType: 'blob' });
+  }
+
   copiar(id: number): Observable<Cotizacion> {
     return this.http.post<Cotizacion>(`${this.baseUrl}/${id}/copiar`, {});
   }
