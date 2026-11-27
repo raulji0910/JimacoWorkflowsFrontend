@@ -253,6 +253,13 @@
         </mat-nav-list>
       </mat-card-content>
 
+      @if (d.estado === 'EnProceso' && d.pasoActualRequiereGiroCaja) {
+        <p class="detalle__aviso-caja">
+          Esta OC se paga con la caja menor: antes de aprobar, registra el giro en
+          <a routerLink="/cajas">Cajas</a> (Nuevo giro → elige esta OC).
+        </p>
+      }
+
       <mat-card-actions>
         @if (d.estado === 'EnProceso') {
           <button

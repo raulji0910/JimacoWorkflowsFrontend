@@ -22,6 +22,11 @@ export interface Rol {
   puedeVerConciliacion?: boolean;
   // Cotizaciones creadas desde el portal en World Office (2026-11-25) — ver Rol.PuedeCrearCotizaciones en el backend.
   puedeCrearCotizaciones?: boolean;
+  // Cajas menores (2026-11-27): administrador y girador de cada caja.
+  puedeAdministrarCajaJimaco?: boolean;
+  puedeGirarCajaJimaco?: boolean;
+  puedeAdministrarCajaFerrealiados?: boolean;
+  puedeGirarCajaFerrealiados?: boolean;
 }
 
 export interface RolCrear {
@@ -42,6 +47,11 @@ export interface RolCrear {
   puedeVerConciliacion?: boolean;
   // Cotizaciones creadas desde el portal en World Office (2026-11-25) — ver Rol.PuedeCrearCotizaciones en el backend.
   puedeCrearCotizaciones?: boolean;
+  // Cajas menores (2026-11-27): administrador y girador de cada caja.
+  puedeAdministrarCajaJimaco?: boolean;
+  puedeGirarCajaJimaco?: boolean;
+  puedeAdministrarCajaFerrealiados?: boolean;
+  puedeGirarCajaFerrealiados?: boolean;
 }
 
 export interface RolActualizar {
@@ -63,4 +73,9 @@ export interface RolActualizar {
   puedeVerConciliacion?: boolean;
   // Cotizaciones creadas desde el portal en World Office (2026-11-25) — ver Rol.PuedeCrearCotizaciones en el backend.
   puedeCrearCotizaciones?: boolean;
+  // Cajas menores (2026-11-27): administrador y girador de cada caja.
+  puedeAdministrarCajaJimaco?: boolean;
+  puedeGirarCajaJimaco?: boolean;
+  puedeAdministrarCajaFerrealiados?: boolean;
+  puedeGirarCajaFerrealiados?: boolean;
 }

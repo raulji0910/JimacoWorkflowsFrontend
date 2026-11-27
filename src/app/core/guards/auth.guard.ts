@@ -115,3 +115,14 @@ export const puedeCrearCotizacionesGuard: CanActivateFn = () => {
   router.navigate(['/pendientes']);
   return false;
 };
+
+/** Menú Cajas (2026-11-27) — administrador o girador de alguna caja menor. */
+export const puedeVerCajasGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.puedeVerCajas()) return true;
+
+  router.navigate(['/pendientes']);
+  return false;
+};

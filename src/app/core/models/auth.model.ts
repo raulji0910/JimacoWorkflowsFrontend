@@ -27,4 +27,6 @@ export interface LoginResponse {
   puedeVerConciliacion?: boolean;
   // Menú Cotizaciones (2026-11-25) — ver Rol.PuedeCrearCotizaciones en el backend.
   puedeCrearCotizaciones?: boolean;
+  // Menú Cajas (2026-11-27): administrador o girador de alguna caja menor.
+  puedeVerCajas?: boolean;
 }

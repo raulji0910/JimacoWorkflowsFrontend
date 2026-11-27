@@ -114,6 +114,11 @@ export class AuthService {
     return this.sesion()?.puedeCrearCotizaciones ?? false;
   }
 
+  /** Menú Cajas (2026-11-27): administrador o girador de alguna caja menor. */
+  puedeVerCajas(): boolean {
+    return this.sesion()?.puedeVerCajas ?? false;
+  }
+
   /** Entra al menú "Pagos": quien paga, o quien solo consulta. */
   puedeVerPagos(): boolean {
     return this.puedePagarCuentas() || this.puedeConsultarPagos();

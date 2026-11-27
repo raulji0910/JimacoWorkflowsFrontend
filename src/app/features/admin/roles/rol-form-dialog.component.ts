@@ -37,6 +37,10 @@ export class RolFormDialogComponent {
   puedeConsultarPagos = this.data.rol?.puedeConsultarPagos ?? false;
   puedeVerConciliacion = this.data.rol?.puedeVerConciliacion ?? false;
   puedeCrearCotizaciones = this.data.rol?.puedeCrearCotizaciones ?? false;
+  puedeAdministrarCajaJimaco = this.data.rol?.puedeAdministrarCajaJimaco ?? false;
+  puedeGirarCajaJimaco = this.data.rol?.puedeGirarCajaJimaco ?? false;
+  puedeAdministrarCajaFerrealiados = this.data.rol?.puedeAdministrarCajaFerrealiados ?? false;
+  puedeGirarCajaFerrealiados = this.data.rol?.puedeGirarCajaFerrealiados ?? false;
 
   guardar(): void {
     if (!this.nombre.trim()) return;
@@ -55,7 +59,11 @@ export class RolFormDialogComponent {
         puedeVerAlistamientoFerrealiados: this.puedeVerAlistamientoFerrealiados,
         puedeConsultarPagos: this.puedeConsultarPagos,
         puedeVerConciliacion: this.puedeVerConciliacion,
-        puedeCrearCotizaciones: this.puedeCrearCotizaciones
+        puedeCrearCotizaciones: this.puedeCrearCotizaciones,
+        puedeAdministrarCajaJimaco: this.puedeAdministrarCajaJimaco,
+        puedeGirarCajaJimaco: this.puedeGirarCajaJimaco,
+        puedeAdministrarCajaFerrealiados: this.puedeAdministrarCajaFerrealiados,
+        puedeGirarCajaFerrealiados: this.puedeGirarCajaFerrealiados
       };
       this.dialogRef.close(dto);
     } else {
@@ -71,7 +79,11 @@ export class RolFormDialogComponent {
         puedeVerAlistamientoFerrealiados: this.puedeVerAlistamientoFerrealiados,
         puedeConsultarPagos: this.puedeConsultarPagos,
         puedeVerConciliacion: this.puedeVerConciliacion,
-        puedeCrearCotizaciones: this.puedeCrearCotizaciones
+        puedeCrearCotizaciones: this.puedeCrearCotizaciones,
+        puedeAdministrarCajaJimaco: this.puedeAdministrarCajaJimaco,
+        puedeGirarCajaJimaco: this.puedeGirarCajaJimaco,
+        puedeAdministrarCajaFerrealiados: this.puedeAdministrarCajaFerrealiados,
+        puedeGirarCajaFerrealiados: this.puedeGirarCajaFerrealiados
       };
       this.dialogRef.close(dto);
     }

@@ -1,0 +1,326 @@
+<section class="caja">
+  <a class="caja__volver" routerLink="/cajas"><mat-icon>arrow_back</mat-icon> Cajas</a>
+
+  @if (error()) {
+    <p class="caja__error">{{ error() }}</p>
+  }
+
+  @if (caja(); as c) {
+    <header class="caja__header">
+      <div>
+        <h2>{{ c.nombre }}</h2>
+        <p class="caja__tenue">{{ c.esAdministrador ? 'Administrador de la caja' : 'Girador' }}</p>
+      </div>
+      <div class="caja__acciones">
+        @if (c.esAdministrador) {
+          <button mat-stroked-button (click)="arqueo()"><mat-icon>fact_check</mat-icon> Arqueo</button>
+          <button mat-stroked-button (click)="recargarCaja()"><mat-icon>add_card</mat-icon> Recargar</button>
+        }
+        <button mat-flat-button (click)="nuevoGiro()"><mat-icon>payments</mat-icon> Nuevo giro</button>
+      </div>
+    </header>
+
+    <div class="caja__tarjetas">
+      <div class="tarjeta tarjeta--principal" [class.tarjeta--alerta]="c.saldoBajo">
+        <span class="tarjeta__etiqueta">Efectivo en caja</span>
+        <span class="tarjeta__valor">{{ c.saldoActual | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="tarjeta__nota">
+          @if (c.saldoBajo) {
+            Por debajo del mínimo · hay que recargar
+          } @else if (c.faltaParaTope > 0) {
+            Faltan {{ c.faltaParaTope | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} para el tope
+          } @else {
+            En el tope
+          }
+        </span>
+      </div>
+      <div class="tarjeta">
+        <span class="tarjeta__etiqueta">Por legalizar</span>
+        <span class="tarjeta__valor">{{ c.valorGirosAbiertos | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="tarjeta__nota">{{ c.girosAbiertos }} giro(s) en manos de alguien</span>
+      </div>
+      <div class="tarjeta" [class.tarjeta--alerta]="c.valorVueltasPendientes > 0">
+        <span class="tarjeta__etiqueta">Vueltas pendientes</span>
+        <span class="tarjeta__valor">{{ c.valorVueltasPendientes | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="tarjeta__nota">{{ c.girosConVueltaPendiente }} giro(s) deben devolver</span>
+      </div>
+      <div class="tarjeta">
+        <span class="tarjeta__etiqueta">Tope de la caja</span>
+        <span class="tarjeta__valor">{{ c.tope | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="tarjeta__nota">
+          {{ c.saldoMinimoAlerta > 0 ? 'Aviso de recarga bajo ' + ('$' + miles(c.saldoMinimoAlerta)) : 'Sin aviso de saldo mínimo' }}
+        </span>
+      </div>
+    </div>
+
+    <mat-tab-group (selectedIndexChange)="cambioPestana($event)" animationDuration="0ms">
+      <!-- ============ Pendientes ============ -->
+      <mat-tab [label]="'Pendientes (' + pendientes().length + ')'">
+        <div class="caja__tabla-contenedor">
+          <table class="caja__tabla">
+            <thead>
+              <tr>
+                <th>Giro</th>
+                <th>Estado</th>
+                <th>Persona</th>
+                <th>Concepto</th>
+                <th class="numero">Entregado</th>
+                <th class="numero">Vuelta</th>
+                <th>Hace</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (g of pendientes(); track g.id) {
+                <tr (click)="verGiro(g.id)" tabindex="0" (keydown.enter)="verGiro(g.id)" [class.caja__atrasado]="g.horasPendiente >= 24">
+                  <td class="caja__numero">#{{ g.numero }}</td>
+                  <td><span class="estado" [class]="'estado estado--' + g.estado">{{ estados[g.estado] }}</span></td>
+                  <td>
+                    <div>{{ g.beneficiario }}</div>
+                    @if (g.ordenesCompra.length) {
+                      <div class="caja__tenue">{{ g.ordenesCompra.join(', ') }}</div>
+                    }
+                  </td>
+                  <td>{{ g.concepto }}</td>
+                  <td class="numero">{{ g.valorEntregado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+                  <td class="numero">
+                    @if (g.vueltaPendiente > 0) {
+                      <strong>{{ g.vueltaPendiente | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+                    } @else {
+                      <span class="caja__tenue">—</span>
+                    }
+                  </td>
+                  <td [matTooltip]="g.horasPendiente >= 24 ? 'Lleva más de 24 horas: ya se mandó recordatorio' : ''">
+                    {{ g.horasPendiente < 24 ? (g.horasPendiente | number: '1.0-0') + ' h' : (g.horasPendiente / 24 | number: '1.0-0') + ' d' }}
+                  </td>
+                  <td class="caja__accion" (click)="$event.stopPropagation()">
+                    @if (g.estado === 'Abierto') {
+                      <button mat-stroked-button (click)="accionGiro(g.id, 'legalizar')">Legalizar</button>
+                    } @else {
+                      <button mat-stroked-button (click)="accionGiro(g.id, 'vuelta')">Recibir vuelta</button>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr class="caja__vacio"><td colspan="8">No hay giros pendientes: todo está legalizado y sin vueltas por recibir.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+
+      <!-- ============ Todos los giros ============ -->
+      <mat-tab label="Giros">
+        <div class="caja__tabla-contenedor">
+          <table class="caja__tabla">
+            <thead>
+              <tr>
+                <th>Giro</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Persona</th>
+                <th>Concepto</th>
+                <th class="numero">Entregado</th>
+                <th class="numero">Gastado</th>
+                <th>Girado por</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (g of todos() ?? []; track g.id) {
+                <tr (click)="verGiro(g.id)" tabindex="0" (keydown.enter)="verGiro(g.id)">
+                  <td class="caja__numero">#{{ g.numero }}</td>
+                  <td>{{ g.fecha | date: 'dd/MM/yyyy hh:mm a' }}</td>
+                  <td><span class="estado" [class]="'estado estado--' + g.estado">{{ estados[g.estado] }}</span></td>
+                  <td>
+                    <div>{{ g.beneficiario }}</div>
+                    @if (g.ordenesCompra.length) {
+                      <div class="caja__tenue">{{ g.ordenesCompra.join(', ') }}</div>
+                    }
+                  </td>
+                  <td>{{ g.concepto }}</td>
+                  <td class="numero">{{ g.valorEntregado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+                  <td class="numero">
+                    @if (g.valorLegalizado !== null) {
+                      {{ g.valorLegalizado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                    } @else {
+                      <span class="caja__tenue">—</span>
+                    }
+                  </td>
+                  <td>{{ g.giradoPor }}</td>
+                </tr>
+              } @empty {
+                @if (todos() !== null) {
+                  <tr class="caja__vacio"><td colspan="8">Todavía no hay giros.</td></tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+
+      <!-- ============ Historial ============ -->
+      <mat-tab label="Historial">
+        <div class="caja__filtros">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Tipo</mat-label>
+            <mat-select [(ngModel)]="filtroTipo" (selectionChange)="cargarHistorial(1)">
+              <mat-option value="">Todos</mat-option>
+              @for (t of tiposFiltro; track t) {
+                <mat-option [value]="t">{{ tipos[t] }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Desde</mat-label>
+            <input matInput type="date" [(ngModel)]="filtroDesde" (change)="cargarHistorial(1)" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Hasta</mat-label>
+            <input matInput type="date" [(ngModel)]="filtroHasta" (change)="cargarHistorial(1)" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="caja__buscar" subscriptSizing="dynamic">
+            <mat-label>Persona, cédula, OC o nota</mat-label>
+            <input matInput [(ngModel)]="filtroTexto" (keydown.enter)="cargarHistorial(1)" />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          <button mat-button (click)="limpiarFiltros()">Limpiar</button>
+        </div>
+
+        @if (historial(); as h) {
+          <p class="caja__totales">
+            Entradas <strong>{{ h.totalEntradas | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong> ·
+            Salidas <strong>{{ h.totalSalidas | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+            <span class="caja__tenue">(sin anulados, con los filtros aplicados)</span>
+          </p>
+          <div class="caja__tabla-contenedor">
+            <table class="caja__tabla">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Movimiento</th>
+                  <th>Detalle</th>
+                  <th class="numero">Valor</th>
+                  <th class="numero">Saldo</th>
+                  <th>Usuario</th>
+                  @if (esAdmin()) { <th></th> }
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of h.movimientos; track m.id) {
+                  <tr [class.caja__anulado]="m.anulado" (click)="m.giroId && verGiro(m.giroId)" [class.caja__sin-clic]="!m.giroId">
+                    <td>{{ m.fecha | date: 'dd/MM/yyyy hh:mm a' }}</td>
+                    <td>
+                      {{ tipos[m.tipo] }}
+                      @if (m.giroNumero) { <span class="caja__tenue">#{{ m.giroNumero }}</span> }
+                    </td>
+                    <td>
+                      @if (m.beneficiario) {
+                        <div>{{ m.beneficiario }} · {{ m.concepto }}</div>
+                      }
+                      @if (m.nota) {
+                        <div class="caja__tenue">{{ m.nota }}</div>
+                      }
+                      @if (m.anulado) {
+                        <div class="caja__error-texto">Anulado por {{ m.anuladoPor }}: {{ m.motivoAnulacion }}</div>
+                      }
+                    </td>
+                    <td class="numero" [class.caja__entra]="m.valor > 0" [class.caja__sale]="m.valor < 0">
+                      {{ m.valor > 0 ? '+' : '' }}{{ m.valor | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                    </td>
+                    <td class="numero">{{ m.saldoDespues | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+                    <td>{{ m.usuario }}</td>
+                    @if (esAdmin()) {
+                      <td class="caja__accion" (click)="$event.stopPropagation()">
+                        @if (!m.anulado && (m.tipo === 'Recarga' || m.tipo === 'Ajuste')) {
+                          <button mat-icon-button matTooltip="Anular" (click)="anularMovimiento(m)"><mat-icon>block</mat-icon></button>
+                        }
+                      </td>
+                    }
+                  </tr>
+                } @empty {
+                  <tr class="caja__vacio"><td [attr.colspan]="esAdmin() ? 7 : 6">No hay movimientos con esos filtros.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-paginador [total]="h.total" [pagina]="pagina()" [tamano]="tamanoPagina" unidad="movimientos"
+            [cargando]="cargandoHistorial()" (irA)="cargarHistorial($event)" />
+        }
+      </mat-tab>
+
+      <!-- ============ Configuración (administrador) ============ -->
+      @if (c.esAdministrador) {
+        <mat-tab label="Configuración">
+          <div class="caja__config">
+            <section class="bloque">
+              <h3>Fondo de la caja</h3>
+              <div class="caja__fila">
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-label>Tope</mat-label>
+                  <span matTextPrefix>$&nbsp;</span>
+                  <input matInput type="number" min="1" step="1" [(ngModel)]="tope" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-label>Avisar para recargar cuando baje de</mat-label>
+                  <span matTextPrefix>$&nbsp;</span>
+                  <input matInput type="number" min="0" step="1" [(ngModel)]="saldoMinimo" />
+                  <mat-hint>0 = sin aviso</mat-hint>
+                </mat-form-field>
+                <button mat-flat-button (click)="guardarConfiguracion()">Guardar</button>
+              </div>
+              @if (c.actualizadoPor) {
+                <p class="caja__tenue">Última modificación: {{ c.actualizadoPor }}, {{ c.fechaActualizacion | date: 'dd/MM/yyyy hh:mm a' }}</p>
+              }
+            </section>
+
+            <section class="bloque">
+              <h3>Conceptos</h3>
+              <div class="caja__fila">
+                <mat-form-field appearance="outline" class="caja__crece" subscriptSizing="dynamic">
+                  <mat-label>Nuevo concepto</mat-label>
+                  <input matInput [(ngModel)]="nuevoConcepto" (keydown.enter)="crearConcepto()" maxlength="100" />
+                </mat-form-field>
+                <button mat-stroked-button (click)="crearConcepto()" [disabled]="!nuevoConcepto.trim()"><mat-icon>add</mat-icon> Agregar</button>
+              </div>
+              <ul class="caja__conceptos">
+                @for (k of conceptos(); track k.id) {
+                  <li>
+                    <mat-slide-toggle [checked]="k.activo" (change)="alternarConcepto(k)">{{ k.nombre }}</mat-slide-toggle>
+                  </li>
+                } @empty {
+                  <li class="caja__tenue">Sin conceptos. Crea al menos uno para poder girar.</li>
+                }
+              </ul>
+            </section>
+
+            <section class="bloque">
+              <h3>Pasos de OC que se pagan con esta caja</h3>
+              <p class="caja__tenue">
+                En el paso marcado, la OC no se puede aprobar sin un giro de esta caja. Marca "Entrega Asistente Gerencia"
+                del flujo de contado hasta $300.000. Ojo: las OC que ya estén en ese paso también van a pedir el giro.
+              </p>
+              @if (pasos(); as lista) {
+                <ul class="caja__pasos">
+                  @for (p of lista; track p.pasoId) {
+                    <li>
+                      <mat-slide-toggle [checked]="p.requiereGiroCaja" (change)="marcarPaso(p, $event.checked)">
+                        <strong>{{ p.flujo }}</strong> · {{ p.orden }}. {{ p.paso }}
+                      </mat-slide-toggle>
+                      @if (p.ordenesEnElPaso > 0) {
+                        <span class="caja__tenue">({{ p.ordenesEnElPaso }} OC en este paso)</span>
+                      }
+                    </li>
+                  } @empty {
+                    <li class="caja__tenue">No hay flujos activos de OC para esta empresa.</li>
+                  }
+                </ul>
+              } @else {
+                <p class="caja__tenue">Cargando…</p>
+              }
+            </section>
+          </div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+  }
+</section>

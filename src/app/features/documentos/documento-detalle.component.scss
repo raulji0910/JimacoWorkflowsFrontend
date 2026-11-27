@@ -162,3 +162,12 @@
   }
 
 }
+
+// Cajas menores (2026-11-27): la OC se paga con un giro de la caja antes de aprobar.
+.detalle__aviso-caja {
+  margin: 0 1rem 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}

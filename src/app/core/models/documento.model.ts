@@ -173,6 +173,8 @@ export interface DocumentoDetalle {
   pagoProveedor: PagoProveedor | null;
   // true si aprobar el paso actual es confirmar el pago de una orden de pago (pide banco y fecha).
   pasoActualConfirmaPagoProveedor: boolean;
+  // Cajas menores (2026-11-27): aprobar el paso actual exige que la OC tenga giro de la caja menor.
+  pasoActualRequiereGiroCaja?: boolean;
 }
 
 export interface EjecutarAccion {

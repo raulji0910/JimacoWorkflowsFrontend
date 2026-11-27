@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerAlistamientoFerrealiadosGuard, puedeVerCuentasPorPagarGuard, puedeVerPagosGuard, puedeVerSeguimientoPagosGuard, puedeVerConciliacionGuard, puedeCrearCotizacionesGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, puedeDevolverCualquierDocumentoGuard, puedeVerAlistamientoGuard, puedeVerAlistamientoFerrealiadosGuard, puedeVerCuentasPorPagarGuard, puedeVerPagosGuard, puedeVerSeguimientoPagosGuard, puedeVerConciliacionGuard, puedeCrearCotizacionesGuard, puedeVerCajasGuard } from './core/guards/auth.guard';
 import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 
 export const routes: Routes = [
@@ -117,6 +117,17 @@ export const routes: Routes = [
         loadComponent: () => import('./features/cotizaciones/cotizacion-editor.component').then((m) => m.CotizacionEditorComponent),
         canActivate: [puedeCrearCotizacionesGuard],
         canDeactivate: [cambiosSinGuardarGuard]
+      },
+      {
+        // Cajas menores de efectivo (2026-11-27).
+        path: 'cajas',
+        loadComponent: () => import('./features/cajas/cajas-list.component').then((m) => m.CajasListComponent),
+        canActivate: [puedeVerCajasGuard]
+      },
+      {
+        path: 'cajas/:id',
+        loadComponent: () => import('./features/cajas/caja-detalle.component').then((m) => m.CajaDetalleComponent),
+        canActivate: [puedeVerCajasGuard]
       },
       {
         path: 'cuentas-por-pagar/:identificacion',

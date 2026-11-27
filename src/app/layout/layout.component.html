@@ -67,6 +67,13 @@
         </a>
       }
 
+      @if (puedeVerCajas) {
+        <a mat-list-item routerLink="/cajas" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
+          <mat-icon matListItemIcon>savings</mat-icon>
+          <span matListItemTitle>Cajas</span>
+        </a>
+      }
+
       @if (puedeVerConciliacion) {
         <a mat-list-item routerLink="/conciliacion" routerLinkActive="activo" (click)="esMovil() && sidenav.close()">
           <mat-icon matListItemIcon>receipt_long</mat-icon>

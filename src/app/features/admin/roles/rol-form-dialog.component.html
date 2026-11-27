@@ -98,6 +98,40 @@
   </div>
 
   <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeAdministrarCajaJimaco" name="puedeAdministrarCajaJimaco">
+      Administrador de la caja menor de Jimaco
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Menú "Cajas": define el tope, el saldo mínimo y los conceptos, registra recargas y arqueos, anula
+      movimientos y marca qué paso de las OC se paga con la caja. También puede girar.
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeGirarCajaJimaco" name="puedeGirarCajaJimaco">
+      Girador de la caja menor de Jimaco
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">
+      Menú "Cajas": entrega el efectivo (giros, incluido el pago de OC de contado), legaliza lo gastado y
+      recibe las vueltas. Le llegan los recordatorios de giros pendientes.
+    </p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeAdministrarCajaFerrealiados" name="puedeAdministrarCajaFerrealiados">
+      Administrador de la caja menor de Ferrealiados
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">Igual que el administrador de Jimaco, para la caja de FERREALIADOS.</p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
+    <mat-slide-toggle [(ngModel)]="puedeGirarCajaFerrealiados" name="puedeGirarCajaFerrealiados">
+      Girador de la caja menor de Ferrealiados
+    </mat-slide-toggle>
+    <p class="form-dialogo__ayuda">Igual que el girador de Jimaco, para la caja de FERREALIADOS.</p>
+  </div>
+
+  <div class="rol-dialogo__opcion">
     <mat-slide-toggle [(ngModel)]="puedeGestionarAlistamientoFerrealiados" name="puedeGestionarAlistamientoFerrealiados">
       Puede gestionar el alistamiento de Ferrealiados
     </mat-slide-toggle>
